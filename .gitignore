@@ -1,0 +1,9 @@
+*.suo
+Debug
+Release
+obj
+bin
+/packages
+/.vs
+/EPPlusSample.NET
+/unused
