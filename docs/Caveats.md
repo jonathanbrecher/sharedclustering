@@ -1,3 +1,8 @@
+---
+title: New Page
+layout: default
+---
+
 There can be exceptions to the general rule that clusters represent groups of people who share the same DNA segment.
 
 Fortunately, exceptions seem to be, well, exceptions. Most clusters do seem to highlight people who share a DNA segment, and are related through the the genealogical path taken by that segment.
