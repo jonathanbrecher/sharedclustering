@@ -1,0 +1,5 @@
+Shared clustering is distributed under the Open Source [MIT License](https://github.com/jonathanbrecher/sharedclustering/blob/master/LICENSE). You may use this software free of charge any way you like, as long as you acknowledge the original copyright as described in the license.
+
+If you don't like the way that this software behaves, you can make changes! You can propose that those changes get incorporated into this master copy, or you can fork your own copy of the code that you maintain yourself.
+
+The MIT License even allows this code to be incorporate into commercial software. No special permission is needed. You don't have to pay for it, even if you end up making money from it yourself. Still, if you do incorporate this into a commercial product, it would be nice if you offered a license to that product as a fair exchange. Per the terms of the MIT License, that's definitely not required. It would be nice, though.
