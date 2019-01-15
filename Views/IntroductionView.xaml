@@ -1,0 +1,34 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:viewmodels="clr-namespace:AncestryDnaClustering.ViewModels">
+
+    <DataTemplate DataType="{x:Type viewmodels:IntroductionViewModel}">
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" Margin="10">
+            <TextBlock FontSize="30" HorizontalAlignment="Center" Text="Shared Clustering"/>
+            <TextBlock/>
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                <TextBlock FontSize="18" Text="Quick Start:"/>
+                <TextBlock/>
+                <TextBlock Text="1. Switch to the Download tab (or skip to Step 2 if clustering m_*.csv and icw_*.csv files from DNAGedcom)."/>
+                <TextBlock Text="    a. Enter your Ancestry DNA name and password, then click Sign In."/>
+                <TextBlock Text="    b. Select the 'Fast but incomplete' option."/>
+                <TextBlock Text="    c. Click Get DNA Matches. You will be prompted for a location to save the downloaded data."/>
+                <TextBlock Text="    d. Wait until the progress bar reports that it is Done."/>
+                <TextBlock/>
+                <TextBlock Text="2. Switch to the Cluster tab."/>
+                <TextBlock Text="    a. Select the file that you just downloaded (or the icw_*.csv file from DNAGedcom)."/>
+                <TextBlock Text="    b. Select the file where you will save the correlated clusters."/>
+                <TextBlock Text="    c. Select the 'All visible shared matches' option."/>
+                <TextBlock Text="    d. Click Process Saved Data."/>
+                <TextBlock Text="    e. Wait until the progress bar reports that it is Done."/>
+                <TextBlock/>
+                <TextBlock>
+                    <Hyperlink Command="{Binding ShowDocumentationCommand}">
+                        Full documentation is available online
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+</ResourceDictionary>

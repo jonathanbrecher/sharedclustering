@@ -1,0 +1,36 @@
+﻿<Window x:Class="AncestryDnaClustering.AncestryDnaToolsView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        Title="MainWindow" Height="560" Width="850">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="IntroductionView.xaml" />
+                <ResourceDictionary Source="AncestryDnaDownloadingView.xaml" />
+                <ResourceDictionary Source="AncestryDnaHierarchicalClusteringView.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <TabControl ItemsSource="{Binding Tabs}" SelectedIndex="{Binding SelectedTabIndex}">
+        <TabControl.ItemTemplate>
+            <DataTemplate>
+                <TextBlock
+                    Text="{Binding Header}" />
+            </DataTemplate>
+        </TabControl.ItemTemplate>
+        <TabControl.ContentTemplate>
+            <DataTemplate>
+                <ContentControl Content="{Binding}" />
+            </DataTemplate>
+        </TabControl.ContentTemplate>
+    </TabControl>
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding WindowClosingCommand}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+</Window>

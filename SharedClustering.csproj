@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C24A02B8-5CBB-478A-9CC2-87E3876FB719}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>AncestryDnaClustering</RootNamespace>
+    <AssemblyName>SharedClustering</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <InstallUrl>https://raw.githubusercontent.com/jonathanbrecher/sharedclustering/master/SharedClustering/SharedClustering/publish/</InstallUrl>
+    <SupportUrl>https://github.com/jonathanbrecher/sharedclustering/wiki</SupportUrl>
+    <ProductName>Shared Clustering</ProductName>
+    <PublisherName>Shared Clustering</PublisherName>
+    <SuiteName>Shared Clustering</SuiteName>
+    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
+    <WebPage>publish.htm</WebPage>
+    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>AncestryDnaClustering.App</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>SharedClustering.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>C601A79AB6A799BFDBD0A2B4600F4D18B49026E0</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>SharedClustering_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="Views\App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="Models\AncestryDnaClusteringModel.cs" />
+    <Compile Include="Models\AncestryLoginHelper.cs" />
+    <Compile Include="Models\AncestryMatchesRetriever.cs" />
+    <Compile Include="Models\AncestryTestsRetriever.cs" />
+    <Compile Include="Models\HierarchicalClustering\ClusterableMatch.cs" />
+    <Compile Include="Models\HierarchicalClustering\MatrixBuilders\AppearanceWeightedMatrixBuilder.cs" />
+    <Compile Include="Models\HierarchicalClustering\ClusterNode.cs" />
+    <Compile Include="Models\HierarchicalClustering\Distance\Antiproximity.cs" />
+    <Compile Include="Models\HierarchicalClustering\Distance\Correlation.cs" />
+    <Compile Include="Models\HierarchicalClustering\Distance\Overlap.cs" />
+    <Compile Include="Models\HierarchicalClustering\Distance\OverlapWeightedEuclideanDistanceSquared.cs" />
+    <Compile Include="Models\HierarchicalClustering\Distance\StrengthWeightedEuclideanDistanceSquared.cs" />
+    <Compile Include="Models\EnumerableExtensions.cs" />
+    <Compile Include="Models\HierarchicalClustering\Distance\EuclideanDistanceSquared.cs" />
+    <Compile Include="Models\FileUtils.cs" />
+    <Compile Include="Models\HierarchicalClustering\CorrelationWriters\ExcelCorrelationWriter.cs" />
+    <Compile Include="Models\HierarchicalClustering\CorrelationWriters\ICorrelationWriter.cs" />
+    <Compile Include="Models\HierarchicalClustering\MatrixBuilders\IMatrixBuilder.cs" />
+    <Compile Include="Models\HierarchicalClustering\LeafNode.cs" />
+    <Compile Include="Models\HierarchicalClustering\MatrixBuilders\CountBasedMatrixBuilder.cs" />
+    <Compile Include="Models\HierarchicalClustering\Neighbor.cs" />
+    <Compile Include="Models\HierarchicalClustering\Node.cs" />
+    <Compile Include="Models\HierarchicalClustering\PrimaryClusterFinders\HalfMatchPrimaryClusterFinder.cs" />
+    <Compile Include="Models\HierarchicalClustering\PrimaryClusterFinders\IPrimaryClusterFinder.cs" />
+    <Compile Include="Models\HierarchicalClustering\HierarchicalCustering.cs" />
+    <Compile Include="Models\HierarchicalClustering\IClusterableMatch.cs" />
+    <Compile Include="Models\HierarchicalClustering\Distance\IDistanceMetric.cs" />
+    <Compile Include="Models\MatchCounts.cs" />
+    <Compile Include="Models\SavedData\DnaGedcomMatchesReader.cs" />
+    <Compile Include="Models\SavedData\ISerializedMatchesReader.cs" />
+    <Compile Include="Models\SavedData\Match.cs" />
+    <Compile Include="Models\SavedData\Serialized.cs" />
+    <Compile Include="Models\SavedData\SharedClusteringMatchesReader.cs" />
+    <Compile Include="Models\SavedData\TreeType.cs" />
+    <Compile Include="ViewModels\AncestryDnaHierarchicalClusteringViewModel.cs" />
+    <Compile Include="ViewModels\AncestryDnaDownloadingViewModel.cs" />
+    <Compile Include="ViewModels\ObservableObject.cs" />
+    <Compile Include="ViewModels\IntroductionViewModel.cs" />
+    <Compile Include="ViewModels\ProgressData.cs" />
+    <Compile Include="ViewModels\RelayCommand.cs" />
+    <Compile Include="ViewModels\AncestryDnaToolsViewModel.cs" />
+    <Page Include="Views\IntroductionView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\AncestryDnaHierarchicalClusteringView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\AncestryDnaDownloadingView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\AncestryDnaToolsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="Views\App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\AncestryDnaToolsView.xaml.cs">
+      <DependentUpon>AncestryDnaToolsView.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+    <None Include="SharedClustering_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="SharedClustering.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Accord">
+      <Version>3.8.0</Version>
+    </PackageReference>
+    <PackageReference Include="Accord.Statistics">
+      <Version>3.8.0</Version>
+    </PackageReference>
+    <PackageReference Include="CsvHelper">
+      <Version>12.1.1</Version>
+    </PackageReference>
+    <PackageReference Include="EPPlus">
+      <Version>4.5.2.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNet.WebApi.Client">
+      <Version>5.2.6</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>11.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="QuickGraph">
+      <Version>3.6.61119.7</Version>
+    </PackageReference>
+    <PackageReference Include="System.Windows.Interactivity.WPF">
+      <Version>2.0.20525</Version>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
