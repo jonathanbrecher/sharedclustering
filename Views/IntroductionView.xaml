@@ -9,7 +9,7 @@
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                 <TextBlock FontSize="18" Text="Quick Start:"/>
                 <TextBlock/>
-                <TextBlock Text="1. Switch to the Download tab (or skip to Step 2 if clustering m_*.csv and icw_*.csv files from DNAGedcom)."/>
+                <TextBlock Text="1. Switch to the Download tab (or skip to Step 2 if clustering icw_*.csv files from DNAGedcom)."/>
                 <TextBlock Text="    a. Enter your Ancestry DNA name and password, then click Sign In."/>
                 <TextBlock Text="    b. Select the 'Fast but incomplete' option."/>
                 <TextBlock Text="    c. Click Get DNA Matches. You will be prompted for a location to save the downloaded data."/>

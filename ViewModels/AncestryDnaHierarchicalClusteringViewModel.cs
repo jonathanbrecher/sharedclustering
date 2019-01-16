@@ -82,6 +82,7 @@ namespace AncestryDnaClustering.ViewModels
             {
                 InitialDirectory = string.IsNullOrEmpty(Filename) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(Filename),
                 FileName = Filename,
+                Filter = "DNAGedcom icw_ files (*.csv)|*.csv|Shared Clustering downloaded data (*.txt)|*.txt;*.json|All files (*.*)|*.*",
             };
             if (openFileDialog.ShowDialog() == true)
             {

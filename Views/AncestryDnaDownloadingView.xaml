@@ -117,19 +117,22 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="2*" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
                 <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Background="White" Padding="10">
                     <Run Text="Downloading is currently disabled pending some sort of acknowledgement from Ancestry that this tool will not overload or otherwise harm their website."/>
                     <LineBreak/>
                     <LineBreak/>
-                    <Run Text="Clustering can still be performed on m_*.csv and icw_*.csv files from DNAGedcom."/>
+                    <Run Text="Clustering can still be performed on icw_*.csv files from DNAGedcom."/>
+                    <LineBreak/>
+                    <LineBreak/>
+                    <Run Text="Does anyone have a good contact at Ancestry who could discuss this? Please have them contact me."/>
                 </TextBlock>
             </Grid>
         </Grid>
