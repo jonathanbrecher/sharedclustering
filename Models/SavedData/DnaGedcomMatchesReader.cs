@@ -65,6 +65,8 @@ namespace AncestryDnaClustering.Models.SavedData
             using (var matchReader = new StreamReader(matchFile))
             using (var csv = new CsvReader(matchReader))
             {
+                csv.Configuration.HeaderValidated = null;
+                csv.Configuration.MissingFieldFound = null;
                 csv.Configuration.RegisterClassMap<DnaGedcomMatchMap>();
                 var dnaGedcomMatches = csv.GetRecords<DnaGedcomMatch>();
 
@@ -89,13 +91,13 @@ namespace AncestryDnaClustering.Models.SavedData
                         MatchTestAdminDisplayName = match.Admin,
                         MatchTestDisplayName = match.Name,
                         TestGuid = match.MatchId,
-                        SharedCentimorgans = match.SharedCm,
-                        SharedSegments = match.SharedSegments,
+                        SharedCentimorgans = double.TryParse(match.SharedCm, out var sharedCmDouble) ? sharedCmDouble : 0.0,
+                        SharedSegments = int.TryParse(match.SharedSegments, out var sharedSegmentsInt) ? sharedSegmentsInt : 0,
 
                         // DNAGedcom does not include information about unlinked trees
-                        TreeType = match.People > 0 ? TreeType.Public : TreeType.Undetermined,
+                        TreeType = int.TryParse(match.People, out var peopleInt) && peopleInt > 0 ? TreeType.Public : TreeType.Undetermined,
 
-                        TreeSize = match.People,
+                        TreeSize = peopleInt,
                         Note = match.Note,
                     })
                     // Do not assume that the DNAGedcom data is free of duplicates.
@@ -116,6 +118,8 @@ namespace AncestryDnaClustering.Models.SavedData
             using (var icwReader = new StreamReader(icwFile))
             using (var csv = new CsvReader(icwReader))
             {
+                csv.Configuration.HeaderValidated = null;
+                csv.Configuration.MissingFieldFound = null;
                 csv.Configuration.RegisterClassMap<DnaGedcomIcwMap>();
 
                 // Translate the ICW data.
@@ -145,17 +149,18 @@ namespace AncestryDnaClustering.Models.SavedData
             return serialized;
         }
 
+        // Load all fields as strings and parse manually, to protect against parse failures
         private class DnaGedcomMatch
         {
             public string TestId { get; set; }
             public string MatchId { get; set; }
             public string Name { get; set; }
             public string Admin { get; set; }
-            public int People { get; set; }
+            public string People { get; set; }
             //public string Range { get; set; }
             //public double Confidence { get; set; }
-            public double SharedCm { get; set; }
-            public int SharedSegments { get; set; }
+            public string SharedCm { get; set; }
+            public string SharedSegments { get; set; }
             //lastlogin { get; set; }
             //starred { get; set; }
             //viewed { get; set; }
