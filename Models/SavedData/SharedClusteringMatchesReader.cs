@@ -10,6 +10,8 @@ namespace AncestryDnaClustering.Models.SavedData
     {
         public bool IsSupportedFileType(string fileName) => fileName != null && Path.GetExtension(fileName).ToLower() == ".txt";
 
+        public string GetTrimmedFileName(string fileName) => IsSupportedFileType(fileName) ? Path.GetFileNameWithoutExtension(fileName) : null;
+
         public async Task<(Serialized, string)> ReadFileAsync(string fileName)
         {
             if (!IsSupportedFileType(fileName))

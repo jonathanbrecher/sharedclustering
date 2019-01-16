@@ -15,6 +15,25 @@ namespace AncestryDnaClustering.Models.SavedData
     {
         public bool IsSupportedFileType(string fileName) => fileName != null && Path.GetExtension(fileName).ToLower() == ".csv";
 
+        public string GetTrimmedFileName(string fileName)
+        {
+            if (!IsSupportedFileType(fileName))
+            {
+                return null;
+            }
+
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+            foreach (var prefix in new[] { "m_", "icw_" })
+            {
+                if (fileNameWithoutExtension.StartsWith(prefix))
+                {
+                    return fileNameWithoutExtension.Substring(prefix.Length);
+                }
+            }
+
+            return null;
+        }
+
         public async Task<(Serialized, string)> ReadFileAsync(string fileName)
         {
             if (!IsSupportedFileType(fileName))
@@ -24,23 +43,15 @@ namespace AncestryDnaClustering.Models.SavedData
 
             // DNAGedcom saves two files: a match file starting with m_,
             // and an in-common-with file starting with icw_
-            var path = Path.GetDirectoryName(fileName);
-            var matchFile = Path.GetFileName(fileName);
-            var icwFile = matchFile;
-            if (matchFile.Substring(0, 2).ToLower() == "m_")
-            {
-                icwFile = Path.Combine(path, "icw_" + matchFile.Substring(2));
-                matchFile = Path.Combine(path, matchFile);
-            }
-            else if (matchFile.Substring(0, 4).ToLower() == "icw_")
-            {
-                matchFile = Path.Combine(path, "m_" + matchFile.Substring(4));
-                icwFile = Path.Combine(path, icwFile);
-            }
-            else
+            var trimmedFileName = GetTrimmedFileName(fileName);
+            if (trimmedFileName == null)
             {
                 return (null, "File name does not start with m_ or icw_");
             }
+
+            var path = Path.GetDirectoryName(fileName);
+            var matchFile = Path.Combine(path, $"m_{trimmedFileName}.csv");
+            var icwFile = Path.Combine(path, $"icw_{trimmedFileName}.csv");
 
             if (!File.Exists(matchFile) || !File.Exists(icwFile))
             {

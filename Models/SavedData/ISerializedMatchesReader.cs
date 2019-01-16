@@ -10,6 +10,11 @@ namespace AncestryDnaClustering.Models.SavedData
         bool IsSupportedFileType(string fileName);
 
         /// <summary>
+        /// A trimmed version of the file name, suitable for renaming, or null if not a a supported file type.
+        /// </summary>
+        string GetTrimmedFileName(string fileName);
+
+        /// <summary>
         /// Read the file, or return an error message
         /// </summary>
         Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName);

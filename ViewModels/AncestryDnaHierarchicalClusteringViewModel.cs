@@ -86,6 +86,12 @@ namespace AncestryDnaClustering.ViewModels
             if (openFileDialog.ShowDialog() == true)
             {
                 Filename = openFileDialog.FileName;
+
+                var trimmedFileName = _serializedMatchesReaders.Select(reader => reader.GetTrimmedFileName(Filename)).FirstOrDefault(f => f != null);
+                if (trimmedFileName != null)
+                {
+                    CorrelationFilename = Path.Combine(Path.GetDirectoryName(Filename), trimmedFileName + "-clusters.xlsx");
+                }
             }
         }
 
