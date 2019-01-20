@@ -283,7 +283,7 @@ namespace AncestryDnaClustering.ViewModels
 
             var hierachicalClustering = new HierarchicalCustering(
                 MinClusterSize,
-                immediateFamily => new OverlapWeightedEuclideanDistanceSquared(immediateFamily),
+                _ => new OverlapWeightedEuclideanDistanceSquared(),
                 new AppearanceWeightedMatrixBuilder(ProgressData),
                 new HalfMatchPrimaryClusterFinder(),
                 new ExcelCorrelationWriter(CorrelationFilename, testTakerTestGuid, ProgressData),

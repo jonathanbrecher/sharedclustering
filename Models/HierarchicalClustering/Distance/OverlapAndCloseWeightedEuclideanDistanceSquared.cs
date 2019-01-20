@@ -10,9 +10,20 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
     /// Values less than 1 in any dimension are treated as zero.
     /// The sum of shared distance in each dimension is divided by the total scale of each set of dimensions.
     /// This puts a high weight towards similar sets of dimensions, while also incurring some penalty where dimensions differ.
+    ///
+    /// Additionally, matches from immediate family members are strongly weighted,
+    /// in an attempt to force for example all maternal-side relatives to stay together.
+    /// Unfortunately, over-weighting the immediate family matches also tends to fragment the more distant clusters.
     /// </summary>
-    public class OverlapWeightedEuclideanDistanceSquared : IDistanceMetric
+    public class OverlapAndCloseWeightedEuclideanDistanceSquared : IDistanceMetric
     {
+        private readonly List<int> _immediateFamilyIndexes;
+
+        public OverlapAndCloseWeightedEuclideanDistanceSquared(List<IClusterableMatch> immediateFamily)
+        {
+            _immediateFamilyIndexes = immediateFamily.Select(match => match.Index).ToList();
+        }
+
         public double Calculate(Dictionary<int, double> coords1, Dictionary<int, double> coords2)
         {
             var fewerCoords = coords1.Count() < coords2.Count() ? coords1 : coords2;
@@ -43,6 +54,15 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
                 if (otherCoord.Value >= 1)
                 {
                     distSquared += otherCoord.Value * otherCoord.Value;
+                }
+            }
+
+            foreach (var index in _immediateFamilyIndexes)
+            {
+                if (fewerCoords.TryGetValue(index, out var coordValue) && coordValue >= 1
+                    && moreCoords.TryGetValue(index, out var otherCoordValue) && otherCoordValue >= 1)
+                {
+                    overlap += Math.Min(coordValue, otherCoordValue) * 10;
                 }
             }
 
