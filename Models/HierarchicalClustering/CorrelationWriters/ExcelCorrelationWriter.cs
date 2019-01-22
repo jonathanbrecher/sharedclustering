@@ -74,7 +74,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 
                     if (!string.IsNullOrEmpty(_testTakerTestGuid))
                     {
-                        p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestGuid}/match/");
+                        // Google Sheets does not support HyperlinkBase
+                        // p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestGuid}/match/");
                         var namedStyle = p.Workbook.Styles.CreateNamedStyle("HyperLink");   // Language-dependent
                         namedStyle.Style.Font.UnderLine = true;
                         namedStyle.Style.Font.Color.SetColor(Color.Blue);
@@ -161,8 +162,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         if (!string.IsNullOrEmpty(_testTakerTestGuid))
                         {
                             ws.Cells[row, col].StyleName = "HyperLink";
-                            ws.Cells[row, col++].Hyperlink = new ExcelHyperLink(match.Match.TestGuid, UriKind.Relative) { Display = "Link" };
-                            p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestGuid}/match/");
+                            ws.Cells[row, col++].Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestGuid}/match/{match.Match.TestGuid}", UriKind.Absolute) { Display = "Link" };
                         }
                         ws.Cells[row, col++].Value = match.Match.SharedCentimorgans;
                         ws.Cells[row, col++].Value = match.Match.SharedSegments;
