@@ -58,37 +58,50 @@ namespace AncestryDnaClustering.Models.SavedData
                 return (null, $"Could not find both {matchFile} and {icwFile}");
             }
 
+            var serialized = new Serialized();
+
             try
             {
-                var serialized = await Task.Run(() => ReadFile(matchFile, icwFile));
-                return (serialized, null);
+                await Task.Run(() => ReadMatchFile(serialized, matchFile));
             }
             catch (Exception ex)
             {
-                return (null, $"Unexpected error while reading DNAGedcom files: {ex.Message}");
+                return (null, $"Unexpected error while reading DNAGedcom match file: {ex.Message}");
             }
+
+            try
+            {
+                await Task.Run(() => ReadIcwFile(serialized, icwFile));
+            }
+            catch (Exception ex)
+            {
+                return (null, $"Unexpected error while reading DNAGedcom icw file: {ex.Message}");
+            }
+
+            return (serialized, null);
         }
 
-        private Serialized ReadFile(string matchFile, string icwFile)
+        private void ReadMatchFile(Serialized serialized, string matchFile)
         {
-            var serialized = new Serialized();
-
             using (var matchReader = new StreamReader(matchFile))
             using (var csv = new CsvReader(matchReader))
             {
                 csv.Configuration.HeaderValidated = null;
                 csv.Configuration.MissingFieldFound = null;
+                csv.Configuration.BadDataFound = null;
+                csv.Configuration.LineBreakInQuotedFieldIsBadData = false;
                 csv.Configuration.RegisterClassMap<DnaGedcomMatchMap>();
                 var dnaGedcomMatches = csv.GetRecords<DnaGedcomMatch>();
 
                 // In case DNAGedcom file has data from more than one test, find the test ID with the largest number of matches.
                 var matches = dnaGedcomMatches
+                    .Where(match => match != null)
                     .GroupBy(match => match.TestId ?? "")
                     .OrderByDescending(g => g.Count())
                     .FirstOrDefault();
                 if (matches == null)
                 {
-                    return serialized;
+                    return;
                 }
 
                 // This is the Test GUID for the person taking the test
@@ -125,19 +138,26 @@ namespace AncestryDnaClustering.Models.SavedData
                 .Distinct()
                 .Select((id, index) => new { Id = id, Index = index })
                 .ToDictionary(pair => pair.Id, pair => pair.Index);
+        }
 
+        private void ReadIcwFile(Serialized serialized, string icwFile)
+        {
             using (var icwReader = new StreamReader(icwFile))
             using (var csv = new CsvReader(icwReader))
             {
                 csv.Configuration.HeaderValidated = null;
                 csv.Configuration.MissingFieldFound = null;
+                csv.Configuration.BadDataFound = null;
+                csv.Configuration.LineBreakInQuotedFieldIsBadData = false;
                 csv.Configuration.RegisterClassMap<DnaGedcomIcwMap>();
 
                 // Translate the ICW data.
                 // Shared Clustering assumes that every match also matches themselves.
                 // DNAGedcom does not include the self-matches in the saved ICW data,
                 // so the self-matches need to be added during the translation.
-                serialized.Icw = csv.GetRecords<DnaGedcomIcw>().GroupBy(icw => icw.MatchId, icw => icw.IcwId)
+                serialized.Icw = csv.GetRecords<DnaGedcomIcw>()
+                    .Where(icw => icw != null)
+                    .GroupBy(icw => icw.MatchId, icw => icw.IcwId)
                     .ToDictionary
                     (
                         g => g.Key, 
@@ -156,8 +176,6 @@ namespace AncestryDnaClustering.Models.SavedData
                     serialized.Icw[guidAndIndex.Key] = new List<int> { guidAndIndex.Value };
                 }
             }
-
-            return serialized;
         }
 
         // Load all fields as strings and parse manually, to protect against parse failures
