@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -86,6 +87,7 @@ namespace AncestryDnaClustering.Models.SavedData
             using (var matchReader = new StreamReader(matchFile))
             using (var csv = new CsvReader(matchReader))
             {
+                csv.Configuration.Delimiter = ",";
                 csv.Configuration.HeaderValidated = null;
                 csv.Configuration.MissingFieldFound = null;
                 csv.Configuration.BadDataFound = null;
@@ -115,7 +117,7 @@ namespace AncestryDnaClustering.Models.SavedData
                         MatchTestAdminDisplayName = match.Admin,
                         MatchTestDisplayName = match.Name,
                         TestGuid = match.MatchId,
-                        SharedCentimorgans = double.TryParse(match.SharedCm, out var sharedCmDouble) ? sharedCmDouble : 0.0,
+                        SharedCentimorgans = GetDouble(match.SharedCm),
                         SharedSegments = int.TryParse(match.SharedSegments, out var sharedSegmentsInt) ? sharedSegmentsInt : 0,
 
                         // DNAGedcom does not include information about unlinked trees
@@ -140,11 +142,27 @@ namespace AncestryDnaClustering.Models.SavedData
                 .ToDictionary(pair => pair.Id, pair => pair.Index);
         }
 
+        private static IFormatProvider[] _cultures = new[] { CultureInfo.CurrentCulture, CultureInfo.GetCultureInfo("en-US"), CultureInfo.InvariantCulture };
+
+        public static double GetDouble(string value)
+        {
+            foreach (var culture in _cultures)
+            {
+                if (double.TryParse(value, NumberStyles.Any, culture, out var result))
+                {
+                    return result;
+                }
+            }
+
+            return 0.0;
+        }
+
         private void ReadIcwFile(Serialized serialized, string icwFile)
         {
             using (var icwReader = new StreamReader(icwFile))
             using (var csv = new CsvReader(icwReader))
             {
+                csv.Configuration.Delimiter = ",";
                 csv.Configuration.HeaderValidated = null;
                 csv.Configuration.MissingFieldFound = null;
                 csv.Configuration.BadDataFound = null;
