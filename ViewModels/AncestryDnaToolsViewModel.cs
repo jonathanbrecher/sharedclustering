@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Deployment.Application;
 using System.Windows.Input;
 using AncestryDnaClustering.Properties;
 
@@ -22,6 +23,10 @@ namespace AncestryDnaClustering.ViewModels
         }
 
         public ICommand WindowClosingCommand { get; } = new RelayCommand(() => Settings.Default.Save());
+
+        public string WindowTitle => ApplicationDeployment.IsNetworkDeployed
+            ? $"Shared Clustering {ApplicationDeployment.CurrentDeployment.CurrentVersion}"
+            : "Shared Clustering";
 
         public List<object> Tabs { get; }
 
