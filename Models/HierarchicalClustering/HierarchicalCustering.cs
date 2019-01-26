@@ -55,8 +55,8 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
 
             var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
 
-            var immediateFamily = clusterableMatches.Where(match => match.Match.SharedCentimorgans > 200).ToList();
-            if (immediateFamily.Count > clusterableMatches.Count / 2)
+            var immediateFamily = clusterableMatchesToCorrelateList.Where(match => match.Match.SharedCentimorgans > 200).ToList();
+            if (immediateFamily.Count > clusterableMatchesToCorrelateList.Count / 2)
             {
                 immediateFamily.Clear();
             }
