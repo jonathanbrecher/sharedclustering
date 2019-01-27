@@ -289,19 +289,18 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
 
             progressData.Reset($"Finding closest pairwise distances for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
 
-            var result = await Task.Run(() =>
+            var buckets = await Task.Run(() => Enumerable.Range(0, maxIndex + 1)
+                .ToDictionary(i => i, i => leafNodes.Where(leafNode => leafNode.Coords.ContainsKey(i)).ToList<Node>()));
+
+            var calculateNeighborsByDistanceTasks = leafNodes.Select(async leafNode =>
             {
-                var buckets = Enumerable.Range(0, maxIndex + 1)
-                    .ToDictionary(i => i, i => leafNodes.Where(leafNode => leafNode.Coords.ContainsKey(i)).ToList<Node>());
-
-                Parallel.ForEach(leafNodes, leafNode =>
-                {
-                    leafNode.NeighborsByDistance = GetNeighborsByDistance(leafNode, buckets);
-                    progressData.Increment();
-                });
-
-                return leafNodes.Where(leafNode => leafNode.NeighborsByDistance.Count > 0).ToList();
+                leafNode.NeighborsByDistance = await Task.Run(() => GetNeighborsByDistance(leafNode, buckets));
+                progressData.Increment();
             });
+
+            await Task.WhenAll(calculateNeighborsByDistanceTasks);
+
+            var result =  leafNodes.Where(leafNode => leafNode.NeighborsByDistance.Count > 0).ToList();
 
             progressData.Reset();
             return result;

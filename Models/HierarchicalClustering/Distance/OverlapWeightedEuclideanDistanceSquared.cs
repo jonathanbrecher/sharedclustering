@@ -38,9 +38,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
             {
                 return double.PositiveInfinity;
             }
-            foreach (var otherCoord in moreCoords.Where(otherCoord => !fewerCoords.ContainsKey(otherCoord.Key)))
+            foreach (var otherCoord in moreCoords)
             {
-                if (otherCoord.Value >= 1)
+                if (otherCoord.Value >= 1 && !fewerCoords.ContainsKey(otherCoord.Key))
                 {
                     distSquared += otherCoord.Value * otherCoord.Value;
                 }
