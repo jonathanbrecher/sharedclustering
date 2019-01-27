@@ -36,7 +36,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
         {
             _progressData.Reset("Correlating data...", clusterableMatches.Count * 2);
 
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
                 var matchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
                 clusterableMatches = clusterableMatches.Skip(immediateFamily.Count).ToList();
@@ -50,41 +50,40 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 var matrix = new ConcurrentDictionary<int, double[]>();
 
                 // For the immediate family, populate the matrix based only on direct shared matches.
-                Parallel.ForEach(immediateFamily, match =>
+                var immediateFamilyTasks = immediateFamily.Select(async match => Task.Run(() =>
                 {
                     ExtendMatrixDirect(matrix, match, maxIndex);
-
                     _progressData.Increment();
                     _progressData.Increment();
-                });
+                }));
+                await Task.WhenAll(immediateFamilyTasks);
 
                 // For the other clusterable matches, first populate the matrix based on the indirect matches.
-                Parallel.ForEach(clusterableMatches, match =>
+                var clusterableMatchesTasks = clusterableMatches.Select(match => Task.Run(() =>
                 {
                     ExtendMatrixIndirect(matrix, match, maxIndex, _indirectCorrelationValue);
-
                     _progressData.Increment();
-                });
+                }));
+                await Task.WhenAll(clusterableMatchesTasks);
 
                 // But make sure that the total indirect match value is no greater than half of the direct match value.
                 var maxIndirectCorrectionValue = _directCorrelationValue / 2;
-                Parallel.ForEach(matrix, kvp =>
+                var matrixTasks = matrix.Select(kvp => Task.Run(() =>
                 {
                     for (var i = 0; i <= maxIndex; ++i)
                     {
                         kvp.Value[i] = Math.Min(kvp.Value[i], maxIndirectCorrectionValue);
                     }
-
                     _progressData.Increment();
-                });
+                }));
+                await Task.WhenAll(matrixTasks);
 
-                // For the other clusterable matches, now increment the matrix based on the direct matches.
-                Parallel.ForEach(clusterableMatches, match =>
+                clusterableMatchesTasks = clusterableMatches.Select(match => Task.Run(() =>
                 {
                     ExtendMatrixDirect(matrix, match, maxIndex);
-
                     _progressData.Increment();
-                });
+                }));
+                await Task.WhenAll(clusterableMatchesTasks);
 
                 _progressData.Reset("Done");
 

@@ -33,7 +33,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
         {
             _progressData.Reset("Correlating data...", clusterableMatches.Count);
 
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
                 var matchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
                 var matchesDictionary = clusterableMatches.ToDictionary(match => match.Match.TestGuid);
@@ -63,21 +63,21 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 var matrix = new ConcurrentDictionary<int, double[]>();
 
                 // For the immediate family, populate the matrix based only on direct shared matches.
-                Parallel.ForEach(immediateFamily, match =>
+                var immediateFamilyTasks = immediateFamily.Select(async match => Task.Run(() =>
                 {
                     ExtendMatrixDirect(matrix, match, maxIndex, 1.0);
-
                     _progressData.Increment();
-                });
+                }));
+                await Task.WhenAll(immediateFamilyTasks);
 
                 // For the other clusterable matches, populate the matrix based on both the direct and indirect matches.
-                Parallel.ForEach(clusterableMatches, match =>
+                var clusterableMatchesTasks = clusterableMatches.Select(match => Task.Run(() =>
                 {
                     ExtendMatrixDirect(matrix, match, maxIndex, 1.0);
                     ExtendMatrixIndirect(matrix, match, appearances, immediateFamilyIndexes, maxIndex);
-
                     _progressData.Increment();
-                });
+                }));
+                await Task.WhenAll(clusterableMatchesTasks);
 
                 _progressData.Reset("Done");
 

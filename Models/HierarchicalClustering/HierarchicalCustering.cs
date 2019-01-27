@@ -206,7 +206,7 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
         {
             progressData.Reset($"Building clusters for {nodes.Count} matches...", nodes.Count - 1);
 
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 while (nodes.Count > 1)
                 {
@@ -235,25 +235,27 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
 
                     if (clusterNode.First.FirstLeaf != clusterNode.First.SecondLeaf)
                     {
-                        Parallel.ForEach(nodes, node =>
+                        var removeNeighborsTasks = nodes.Select(node => Task.Run(() => 
                         {
                             node.FirstLeaf.NeighborsByDistance?.RemoveAll(neighbor => neighbor.Node == clusterNode.First.SecondLeaf);
                             if (node.FirstLeaf != node.SecondLeaf)
                             {
                                 node.SecondLeaf.NeighborsByDistance?.RemoveAll(neighbor => neighbor.Node == clusterNode.First.SecondLeaf);
                             }
-                        });
+                        }));
+                        await Task.WhenAll(removeNeighborsTasks);
                     }
                     if (clusterNode.Second.FirstLeaf != clusterNode.Second.SecondLeaf)
                     {
-                        Parallel.ForEach(nodes, node =>
+                        var removeNeighborsTasks = nodes.Select(node => Task.Run(() =>
                         {
                             node.FirstLeaf.NeighborsByDistance?.RemoveAll(neighbor => neighbor.Node == clusterNode.Second.FirstLeaf);
                             if (node.FirstLeaf != node.SecondLeaf)
                             {
                                 node.SecondLeaf.NeighborsByDistance?.RemoveAll(neighbor => neighbor.Node == clusterNode.Second.FirstLeaf);
                             }
-                        });
+                        }));
+                        await Task.WhenAll(removeNeighborsTasks);
                     }
 
                     nodes.Remove(clusterNode.First);
