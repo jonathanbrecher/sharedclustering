@@ -48,5 +48,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
 
             return distSquared / overlap;
         }
+
+        public IEnumerable<int> SignficantCoordinates(Dictionary<int, double> coords)
+            => coords.Where(kvp => kvp.Value >= 1).Select(kvp => kvp.Key);
     }
 }

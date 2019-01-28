@@ -45,5 +45,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
 
             return covariance / stdX / stdY;
         }
+
+        public IEnumerable<int> SignficantCoordinates(Dictionary<int, double> coords) => coords.Keys;
     }
 }

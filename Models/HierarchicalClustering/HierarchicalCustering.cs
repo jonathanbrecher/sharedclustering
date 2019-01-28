@@ -210,27 +210,35 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             {
                 while (nodes.Count > 1)
                 {
-                    var nodesToCluster = nodes
-                        .SelectMany(node => node.FirstLeaf == node.SecondLeaf ? new[] { node.FirstLeaf } : new[] { node.FirstLeaf, node.SecondLeaf })
-                        .Select(leafNode => leafNode.NeighborsByDistance.FirstOrDefault())
-                        .Where(neighbor => neighbor != null)
-                        .OrderBy(neighbor => neighbor.DistanceSquared)
-                        .ToList();
+                    // This is a little verbose, but optimized for performance -- O(N) overall.
+                    Node secondNode = null;
+                    Neighbor neighborToCluster = new Neighbor() { DistanceSquared = float.MaxValue };
+                    foreach (var node in nodes)
+                    {
+                        if (node.FirstLeaf.NeighborsByDistance.Count > 0 && node.FirstLeaf.NeighborsByDistance.First().DistanceSquared < neighborToCluster.DistanceSquared)
+                        {
+                            secondNode = node;
+                            neighborToCluster = node.FirstLeaf.NeighborsByDistance.First();
+                        }
+                        if (node.FirstLeaf != node.SecondLeaf && node.SecondLeaf.NeighborsByDistance.Count > 0 && node.SecondLeaf.NeighborsByDistance.First().DistanceSquared < neighborToCluster.DistanceSquared)
+                        {
+                            secondNode = node;
+                            neighborToCluster = node.SecondLeaf.NeighborsByDistance.First();
+                        }
+                    }
 
                     ClusterNode clusterNode;
-                    if (nodesToCluster.Count == 0)
+                    if (secondNode == null)
                     {
                         var nodesLargestFirst = nodes.OrderByDescending(node => node.GetOrderedLeafNodes().Count()).Take(2).ToList();
                         clusterNode = new ClusterNode(nodesLargestFirst[0], nodesLargestFirst[1], double.PositiveInfinity, distanceMetric);
                     }
                     else
                     {
-                        var nodeToCluster = nodesToCluster.First();
-                        var firstNode = nodeToCluster.Node;
-                        var secondNode = nodeToCluster.Parent;
+                        var firstNode = neighborToCluster.Node;
                         var first = firstNode.GetHighestParent();
                         var second = secondNode.GetHighestParent();
-                        clusterNode = new ClusterNode(first, second, nodeToCluster.DistanceSquared, distanceMetric);
+                        clusterNode = new ClusterNode(first, second, neighborToCluster.DistanceSquared, distanceMetric);
                     }
 
                     if (clusterNode.First.FirstLeaf != clusterNode.First.SecondLeaf)
@@ -286,35 +294,40 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             {
                 return clusterableMatches
                     .Select(match => new LeafNode(match.Index, matrix[match.Index], distanceMetric))
-                    .ToList<Node>();
+                    .ToList();
             });
 
             progressData.Reset($"Finding closest pairwise distances for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
 
-            var buckets = await Task.Run(() => Enumerable.Range(0, maxIndex + 1)
-                .ToDictionary(i => i, i => leafNodes.Where(leafNode => leafNode.Coords.ContainsKey(i)).ToList<Node>()));
+            var buckets = leafNodes
+                .SelectMany(leafNode => distanceMetric.SignficantCoordinates(leafNode.Coords).Select(coord => new { Coord = coord, LeafNode = leafNode }))
+                .GroupBy(pair => pair.Coord, pair => pair.LeafNode)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
             var calculateNeighborsByDistanceTasks = leafNodes.Select(async leafNode =>
             {
-                leafNode.NeighborsByDistance = await Task.Run(() => GetNeighborsByDistance(leafNode, buckets));
+                leafNode.NeighborsByDistance = await Task.Run(() => GetNeighborsByDistance(leafNode, buckets, distanceMetric));
                 progressData.Increment();
             });
 
             await Task.WhenAll(calculateNeighborsByDistanceTasks);
 
-            var result =  leafNodes.Where(leafNode => leafNode.NeighborsByDistance.Count > 0).ToList();
+            var result =  leafNodes.Where(leafNode => leafNode.NeighborsByDistance.Count > 0).ToList<Node>();
 
             progressData.Reset();
             return result;
         }
 
-        private List<Neighbor> GetNeighborsByDistance(Node node, IDictionary<int, List<Node>> buckets)
+        private List<Neighbor> GetNeighborsByDistance(LeafNode leafNode, IDictionary<int, List<LeafNode>> buckets, IDistanceMetric distanceMetric)
         {
-            var neighbors = node.Coords
-                .SelectMany(coord => buckets.TryGetValue(coord.Key, out var bucket) ? bucket : Enumerable.Empty<Node>())
-                .Where(otherNode => otherNode != node)
-                .GroupBy(otherNode => otherNode)
-                .Select(g => new Neighbor(g.Key, node))
+            var neighbors = distanceMetric.SignficantCoordinates(leafNode.Coords)
+                // Get every node with at least one shared match in common
+                .SelectMany(coord => buckets.TryGetValue(coord, out var bucket) ? bucket : Enumerable.Empty<LeafNode>())
+                // We only need one direction A -> B (not also B -> A) since we're ultimately going to look at the smallest distances.
+                .Where(neighborNode => neighborNode.Index > leafNode.Index)
+                // Make sure that each node is considered only once (might have been in more than one bucket if more than one shared match in common.
+                .Distinct()
+                .Select(neighborNode => new Neighbor(neighborNode, leafNode))
                 .OrderBy(neighbor => neighbor.DistanceSquared)
                 .ToList();
             return neighbors;

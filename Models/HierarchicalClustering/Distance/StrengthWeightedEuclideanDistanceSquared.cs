@@ -63,5 +63,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
             }
             return distSquaredStrong + distSquaredMedium + distSquaredWeak;
         }
+
+        public IEnumerable<int> SignficantCoordinates(Dictionary<int, double> coords) => coords.Keys;
     }
 }
