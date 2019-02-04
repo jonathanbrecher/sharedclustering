@@ -49,9 +49,16 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             // The distant matches will be included as rows in the Excel file, but not as columns.
             // That means that correlation diagrams that include distant matches will be rectangular (tall and narrow)
             // rather than square.
-            var nonDistantMatches = leafNodes
+            var matches = leafNodes
+                .Where(leafNode => matchesByIndex.ContainsKey(leafNode.Index))
                 .Select(leafNode => matchesByIndex[leafNode.Index])
-                .Where(match => match.Match.SharedCentimorgans >= 20)
+                .ToList();
+            var lowestClusterableCentimorgans = matches
+                .SelectMany(match => match.Coords.Where(coord => coord != match.Index && matchesByIndex.ContainsKey(coord)))
+                .Distinct()
+                .Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
+            var nonDistantMatches = matches
+                .Where(match => match.Match.SharedCentimorgans >= lowestClusterableCentimorgans)
                 .ToList();
 
             var orderedIndexes = nonDistantMatches
@@ -80,6 +87,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         namedStyle.Style.Font.UnderLine = true;
                         namedStyle.Style.Font.Color.SetColor(Color.Blue);
                     }
+
+                    var hasSharedSegments = matches.Any(match => match.Match.SharedSegments > 0);
+                    var hasTreeType = matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined);
 
                     // Keep track of columns that will be auto-fit.
                     // The auto-fit cannot be calculated until the rows are fully populated.
@@ -116,11 +126,17 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                     ws.Column(col).Style.Numberformat.Format = "0.0";
                     ws.Cells[row, col++].Value = "Shared Centimorgans";
 
-                    autofitColumns.Add(col);
-                    ws.Cells[row, col++].Value = "Shared Segments";
+                    if (hasSharedSegments)
+                    {
+                        autofitColumns.Add(col);
+                        ws.Cells[row, col++].Value = "Shared Segments";
+                    }
 
-                    autofitColumns.Add(col);
-                    ws.Cells[row, col++].Value = "Tree Type";
+                    if (hasTreeType)
+                    {
+                        autofitColumns.Add(col);
+                        ws.Cells[row, col++].Value = "Tree Type";
+                    }
 
                     autofitColumns.Add(col);
                     ws.Cells[row, col++].Value = "Tree Size";
@@ -165,8 +181,14 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             ws.Cells[row, col++].Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestGuid}/match/{match.Match.TestGuid}", UriKind.Absolute) { Display = "Link" };
                         }
                         ws.Cells[row, col++].Value = match.Match.SharedCentimorgans;
-                        ws.Cells[row, col++].Value = match.Match.SharedSegments;
-                        ws.Cells[row, col++].Value = match.Match.TreeType;
+                        if (hasSharedSegments)
+                        {
+                            ws.Cells[row, col++].Value = match.Match.SharedSegments;
+                        }
+                        if (hasTreeType)
+                        {
+                            ws.Cells[row, col++].Value = match.Match.TreeType;
+                        }
                         ws.Cells[row, col++].Value = match.Match.TreeSize;
 
                         // Correlated clusters

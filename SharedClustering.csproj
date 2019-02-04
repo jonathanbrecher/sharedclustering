@@ -35,7 +35,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>14</ApplicationRevision>
+    <ApplicationRevision>18</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -134,7 +134,8 @@
     <Compile Include="Models\HierarchicalClustering\IClusterableMatch.cs" />
     <Compile Include="Models\HierarchicalClustering\Distance\IDistanceMetric.cs" />
     <Compile Include="Models\MatchCounts.cs" />
-    <Compile Include="Models\SavedData\DnaGedcomMatchesReader.cs" />
+    <Compile Include="Models\SavedData\DnaGedcomAncestryMatchesReader.cs" />
+    <Compile Include="Models\SavedData\DnaGedcomFtdnaMatchesReader.cs" />
     <Compile Include="Models\SavedData\ISerializedMatchesReader.cs" />
     <Compile Include="Models\SavedData\Match.cs" />
     <Compile Include="Models\SavedData\Serialized.cs" />

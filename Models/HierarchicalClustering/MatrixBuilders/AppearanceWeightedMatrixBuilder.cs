@@ -23,9 +23,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
     public class AppearanceWeightedMatrixBuilder : IMatrixBuilder
     {
         private readonly ProgressData _progressData;
+        private readonly double _lowestClusterableCentimorgans;
 
-        public AppearanceWeightedMatrixBuilder(ProgressData progressData)
+        public AppearanceWeightedMatrixBuilder(double lowestClusterableCentimorgans, ProgressData progressData)
         {
+            _lowestClusterableCentimorgans = lowestClusterableCentimorgans;
             _progressData = progressData;
         }
 
@@ -57,7 +59,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 // Matches below 20 cM never appear in a shared match list on Ancestry,
                 // so only the stronger matches can be clustered.
                 var maxIndex = clusterableMatches
-                    .Where(match => match.Match.SharedCentimorgans >= 20)
+                    .Where(match => match.Match.SharedCentimorgans >= _lowestClusterableCentimorgans)
                     .Max(match => Math.Max(match.Index, match.Coords.Max()));
 
                 var matrix = new ConcurrentDictionary<int, double[]>();

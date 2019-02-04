@@ -32,7 +32,8 @@ namespace AncestryDnaClustering.ViewModels
         {
             _serializedMatchesReaders = new List<ISerializedMatchesReader>
             {
-                new DnaGedcomMatchesReader(),
+                new DnaGedcomAncestryMatchesReader(),
+                new DnaGedcomFtdnaMatchesReader(),
                 new SharedClusteringMatchesReader(),
             };
 
@@ -281,14 +282,21 @@ namespace AncestryDnaClustering.ViewModels
 
             var testGuidsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)));
 
+            var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
+            var lowestClusterableCentimorgans = clusterableMatches
+                .SelectMany(match => match.Coords.Where(coord => coord != match.Index))
+                .Distinct()
+                .Where(coord => matchesByIndex.ContainsKey(coord))
+                .Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
+
             var hierachicalClustering = new HierarchicalCustering(
                 MinClusterSize,
                 _ => new OverlapWeightedEuclideanDistanceSquared(),
-                new AppearanceWeightedMatrixBuilder(ProgressData),
+                new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, ProgressData),
                 new HalfMatchPrimaryClusterFinder(),
                 new ExcelCorrelationWriter(CorrelationFilename, testTakerTestGuid, ProgressData),
                 ProgressData);
-            await hierachicalClustering.ClusterAsync(clusterableMatches, testGuidsToFilter, MinCentimorgansToCluster);
+            await hierachicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testGuidsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 
             ProgressData.Reset(DateTime.Now - startTime, "Done");
         }
@@ -297,14 +305,29 @@ namespace AncestryDnaClustering.ViewModels
         {
             ProgressData.Description = "Loading data...";
 
-            var serializedMatchesReader = _serializedMatchesReaders.FirstOrDefault(reader => reader.IsSupportedFileType(savedData));
-            if (serializedMatchesReader == null)
+            var serializedMatchesReaders = _serializedMatchesReaders.Where(reader => reader.IsSupportedFileType(savedData)).ToList();
+            if (serializedMatchesReaders.Count == 0)
             {
                 MessageBox.Show("Unsupported file type.");
                 return (null, null);
             }
 
-            var (input, errorMessage) = await serializedMatchesReader.ReadFileAsync(savedData);
+            Serialized input = null;
+            string errorMessage = null;
+            foreach (var serializedMatchesReader in serializedMatchesReaders)
+            {
+                string thisErrorMessage;
+                (input, thisErrorMessage) = await serializedMatchesReader.ReadFileAsync(savedData);
+                if (input != null)
+                {
+                    break;
+                }
+                if (errorMessage == null)
+                {
+                    errorMessage = thisErrorMessage;
+                }
+            }
+
             if (input == null)
             {
                 MessageBox.Show(errorMessage);
@@ -316,6 +339,7 @@ namespace AncestryDnaClustering.ViewModels
                 var strongMatches = input.Matches.Where(match => match.SharedCentimorgans >= minCentimorgansToCluster).ToList();
                 int maxMatchIndex = strongMatches.Count + 1;
                 var maxIcwIndex = Math.Min(maxMatchIndex, input.Matches.Where(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches).Count() + 1);
+                maxIcwIndex = Math.Min(maxIcwIndex, input.Matches.Count - 1);
                 var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestGuid));
                 var icw = input.Icw
                     .Where(kvp => strongMatchesGuids.Contains(kvp.Key))

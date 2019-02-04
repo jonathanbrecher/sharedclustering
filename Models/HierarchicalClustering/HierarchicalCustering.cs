@@ -37,10 +37,10 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             _progressData = progressData;
         }
 
-        public async Task ClusterAsync(List<IClusterableMatch> clusterableMatches, HashSet<string> testGuidsToFilter, double minCentimorgansToCluster)
+        public async Task ClusterAsync(List<IClusterableMatch> clusterableMatches, Dictionary<int, IClusterableMatch> matchesByIndex, HashSet<string> testGuidsToFilter, double lowestClusterableCentimorgans, double minCentimorgansToCluster)
         {
-            var minCentimorgansToClusterOver20 = Math.Max(minCentimorgansToCluster, 20);
-            var maxIndex = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= minCentimorgansToClusterOver20).Max(match => match.Index);
+            var minCentimorgansToClusterTruncated = Math.Max(lowestClusterableCentimorgans, minCentimorgansToCluster);
+            var maxIndex = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= minCentimorgansToClusterTruncated).Max(match => match.Index);
             var clusterableMatchesToCorrelate = clusterableMatches.Where(match => match.Index <= maxIndex);
             if (testGuidsToFilter.Any())
             {
@@ -52,8 +52,6 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             {
                 return;
             }
-
-            var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
 
             var immediateFamily = clusterableMatchesToCorrelateList.Where(match => match.Match.SharedCentimorgans > 200).ToList();
             if (immediateFamily.Count > clusterableMatchesToCorrelateList.Count / 2)
@@ -73,10 +71,10 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
                 .SelectMany((cluster, clusterNum) => cluster.GetOrderedLeafNodes().Select(leafNode => new { LeafNode = leafNode, ClusterNum = clusterNum + 1}))
                 .ToDictionary(pair => pair.LeafNode.Index, pair => pair.ClusterNum);
 
-            if (minCentimorgansToCluster < minCentimorgansToClusterOver20)
+            if (maxIndex < clusterableMatches.Max(match => match.Index))
             {
                 var leafNodes = nodes.First().GetOrderedLeafNodes().ToList();
-
+                
                 var primaryClustersSet = new HashSet<ClusterNode>(primaryClusters);
 
                 var extendedClusters = await ExtendClustersAsync(clusterableMatches, primaryClustersSet, leafNodes, minCentimorgansToCluster);

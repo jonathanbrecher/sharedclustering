@@ -23,12 +23,14 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
     {
         private readonly double _directCorrelationValue;
         private readonly double _indirectCorrelationValue;
+        private readonly double _lowestClusterableCentimorgans;
         private readonly ProgressData _progressData;
 
-        public CountBasedMatrixBuilder(double directCorrelationValue, double indirectCorrelationValue, ProgressData progressData)
+        public CountBasedMatrixBuilder(double directCorrelationValue, double indirectCorrelationValue, double _lowestClusterableCentimorgans, ProgressData progressData)
         {
             _directCorrelationValue = directCorrelationValue;
             _indirectCorrelationValue = indirectCorrelationValue;
+            _lowestClusterableCentimorgans = _lowestClusterableCentimorgans;
             _progressData = progressData;
         }
 
@@ -46,7 +48,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 // indirect matches (gray cells in the final), obscuring the useful clusters. 
                 // The immediate family matches will still be included in the cluster diagram
                 // by virtue of the other matches that are shared directly with them.
-                var maxIndex = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= 20).Max(match => Math.Max(match.Index, match.Coords.Max()));
+                var maxIndex = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= _lowestClusterableCentimorgans).Max(match => Math.Max(match.Index, match.Coords.Max()));
                 var matrix = new ConcurrentDictionary<int, double[]>();
 
                 // For the immediate family, populate the matrix based only on direct shared matches.
