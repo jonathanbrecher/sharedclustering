@@ -119,11 +119,7 @@ namespace AncestryDnaClustering.Models.SavedData
                         TestGuid = match.MatchId,
                         SharedCentimorgans = GetDouble(match.SharedCm),
                         SharedSegments = int.TryParse(match.SharedSegments, out var sharedSegmentsInt) ? sharedSegmentsInt : 0,
-
-                        // DNAGedcom does not include information about unlinked trees
-                        TreeType = int.TryParse(match.People, out var peopleInt) && peopleInt > 0 ? TreeType.Public : TreeType.Undetermined,
-
-                        TreeSize = peopleInt,
+                        TreeSize = int.TryParse(match.People, out var peopleInt) ? peopleInt : 0,
                         Note = match.Note,
                     })
                     // Do not assume that the DNAGedcom data is free of duplicates.
