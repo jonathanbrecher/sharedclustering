@@ -90,6 +90,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 
                     var hasSharedSegments = matches.Any(match => match.Match.SharedSegments > 0);
                     var hasTreeType = matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined);
+                    var hasStarredMatches = matches.Any(match => match.Match.Starred);
+                    var hasHintsForMatches = matches.Any(match => match.Match.HasHint);
 
                     // Keep track of columns that will be auto-fit.
                     // The auto-fit cannot be calculated until the rows are fully populated.
@@ -141,6 +143,18 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                     autofitColumns.Add(col);
                     ws.Cells[row, col++].Value = "Tree Size";
 
+                    if (hasStarredMatches)
+                    {
+                        autofitColumns.Add(col);
+                        ws.Cells[row, col++].Value = "Starred";
+                    }
+
+                    if (hasHintsForMatches)
+                    {
+                        autofitColumns.Add(col);
+                        ws.Cells[row, col++].Value = "Shared Ancestor Hint";
+                    }
+
                     ws.Column(col).Width = 15;
                     ws.Cells[row, col++].Value = "Correlated Clusters";
 
@@ -190,6 +204,16 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             ws.Cells[row, col++].Value = match.Match.TreeType;
                         }
                         ws.Cells[row, col++].Value = match.Match.TreeSize;
+
+                        if (hasStarredMatches)
+                        {
+                            ws.Cells[row, col++].Value = match.Match.Starred ? "*" : null;
+                        }
+
+                        if (hasHintsForMatches)
+                        {
+                            ws.Cells[row, col++].Value = match.Match.HasHint ? "*" : null;
+                        }
 
                         // Correlated clusters
                         var correlatedClusterNumbers = leafNodes

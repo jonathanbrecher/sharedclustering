@@ -120,6 +120,8 @@ namespace AncestryDnaClustering.Models.SavedData
                         SharedCentimorgans = GetDouble(match.SharedCm),
                         SharedSegments = int.TryParse(match.SharedSegments, out var sharedSegmentsInt) ? sharedSegmentsInt : 0,
                         TreeSize = int.TryParse(match.People, out var peopleInt) ? peopleInt : 0,
+                        Starred = bool.TryParse(match.Starred, out var isStarred) && isStarred,
+                        HasHint = bool.TryParse(match.Hint, out var hasHint) && hasHint,
                         Note = match.Note,
                     })
                     // Do not assume that the DNAGedcom data is free of duplicates.
@@ -205,10 +207,10 @@ namespace AncestryDnaClustering.Models.SavedData
             public string SharedCm { get; set; }
             public string SharedSegments { get; set; }
             //lastlogin { get; set; }
-            //starred { get; set; }
+            public string Starred { get; set; }
             //viewed { get; set; }
             //private { get; set; }
-            //hint { get; set; }
+            public string Hint { get; set; }
             //archived { get; set; }
             public string Note { get; set; }
             //imageurl { get; set; }
@@ -232,6 +234,8 @@ namespace AncestryDnaClustering.Models.SavedData
                 Map(m => m.People).Name("people");
                 Map(m => m.SharedCm).Name("sharedCM");
                 Map(m => m.SharedSegments).Name("sharedSegments");
+                Map(m => m.Starred).Name("starred");
+                Map(m => m.Hint).Name("hint");
                 Map(m => m.Note).Name("note");
             }
         }

@@ -9,6 +9,8 @@
         public int SharedSegments { get; set; }
         public TreeType TreeType { get; set; }
         public int TreeSize { get; set; }
+        public bool Starred { get; set; }
+        public bool HasHint { get; set; }
         public string Note { get; set; }
 
         public string Name => MatchTestAdminDisplayName == MatchTestDisplayName ? MatchTestAdminDisplayName : $"{MatchTestDisplayName} (managed by {MatchTestAdminDisplayName})";
