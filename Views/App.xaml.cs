@@ -55,9 +55,17 @@ namespace AncestryDnaClustering
         {
             var logfile = Path.Combine(Path.GetTempPath(), "SharedClusteringLog.txt");
             FileUtils.WriteAllLines(logfile, ex?.ToString(), false);
+            if (ex is OutOfMemoryException)
+            {
+                MessageBox.Show($"Out of memory!" +
+                    $"{Environment.NewLine}{Environment.NewLine}" +
+                    "Try closing other applications to free up more memory" +
+                    "or increase the value of the lowest centimorgans to cluster", "Out of memory", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             MessageBox.Show($"An unexpected error has occurred: {ex?.Message}" +
                 $"{Environment.NewLine}{Environment.NewLine}" +
-                $"A log file has been written to {logfile}", "Sign in failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                $"A log file has been written to {logfile}", "Unexpected failure", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

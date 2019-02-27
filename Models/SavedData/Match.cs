@@ -13,6 +13,11 @@
         public bool HasHint { get; set; }
         public string Note { get; set; }
 
-        public string Name => MatchTestAdminDisplayName == MatchTestDisplayName ? MatchTestAdminDisplayName : $"{MatchTestDisplayName} (managed by {MatchTestAdminDisplayName})";
+        public string Name 
+            => string.IsNullOrWhiteSpace(MatchTestAdminDisplayName)
+            ? MatchTestDisplayName
+            : MatchTestDisplayName == MatchTestAdminDisplayName
+                ? MatchTestAdminDisplayName 
+                : $"{MatchTestDisplayName} (managed by {MatchTestAdminDisplayName})";
     }
 }
