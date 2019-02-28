@@ -291,6 +291,7 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             var leafNodes = await Task.Run(() =>
             {
                 return clusterableMatches
+                    .Where(match => matrix.ContainsKey(match.Index))
                     .Select(match => new LeafNode(match.Index, matrix[match.Index], distanceMetric))
                     .ToList();
             });
