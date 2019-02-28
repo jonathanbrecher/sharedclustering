@@ -80,6 +80,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="10"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="220"/>
@@ -94,9 +96,11 @@
                     <TextBox Width="50" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Left" Text="{Binding MinCentimorgansToCluster}"/>
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Lowest centimorgans in shared matches: "/>
                     <TextBox Grid.Row="6" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="50" Text="{Binding MinCentimorgansInSharedMatches}"/>
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Maximum gray percentage: "/>
+                    <TextBox Grid.Row="8" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="50" Text="{Binding MaxGrayPercentage}"/>
 
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Filter Test GUIDs to: "/>
-                    <TextBox Grid.Row="8" Grid.Column="2" HorizontalAlignment="Stretch" Height="80"
+                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Filter Test GUIDs to: "/>
+                    <TextBox Grid.Row="10" Grid.Column="2" HorizontalAlignment="Stretch" Height="80"
                      TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
                      Text="{Binding FilterToGuids, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </Grid>

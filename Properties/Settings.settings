@@ -68,5 +68,8 @@
     <Setting Name="MinCentimorgansInSharedMatches" Type="System.Double" Scope="User">
       <Value Profile="(Default)">20</Value>
     </Setting>
+    <Setting Name="MaxGrayPercentage" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">100</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

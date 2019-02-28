@@ -24,10 +24,12 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
     {
         private readonly ProgressData _progressData;
         private readonly double _lowestClusterableCentimorgans;
+        private readonly double _maxIndirectPercentage;
 
-        public AppearanceWeightedMatrixBuilder(double lowestClusterableCentimorgans, ProgressData progressData)
+        public AppearanceWeightedMatrixBuilder(double lowestClusterableCentimorgans, double maxIndirectPercentage, ProgressData progressData)
         {
             _lowestClusterableCentimorgans = lowestClusterableCentimorgans;
+            _maxIndirectPercentage = maxIndirectPercentage;
             _progressData = progressData;
         }
 
@@ -81,10 +83,40 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 }));
                 await Task.WhenAll(clusterableMatchesTasks);
 
+                ReduceIndirectCoords(matrix);
+
                 _progressData.Reset("Done");
 
                 return matrix;
             });
+        }
+
+        private void ReduceIndirectCoords(ConcurrentDictionary<int, double[]> matrix)
+        {
+            if (_maxIndirectPercentage >= 100)
+            {
+                return;
+            }
+
+            var totalCoords = matrix.Count * matrix.Count;
+            var numDirectCoords = matrix.Values.Sum(row => row.Count(coord => coord >= 1));
+            var indirectCoords = matrix.SelectMany(row => row.Value.Where(coord => coord > 0 && coord < 1)).ToList();
+            var maxAllowedIndirectCoords = (int)((totalCoords - numDirectCoords) * _maxIndirectPercentage);
+            
+            if (indirectCoords.Count > maxAllowedIndirectCoords)
+            {
+                var minAllowedIndirectCoord = indirectCoords.OrderByDescending(coord => coord).Take(maxAllowedIndirectCoords + 1).Last();
+                foreach (var row in matrix.Values)
+                {
+                    for (int i = 0; i < row.Length; ++i)
+                    {
+                        if (row[i] < minAllowedIndirectCoord)
+                        {
+                            row[i] = 0;
+                        }
+                    }
+                }
+            }
         }
 
         // An indirect match is when two matches A and B appear together on the shared match list of some other match C.
@@ -143,6 +175,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
             {
                 ExtendMatrixDirect(matrix, match, maxIndex, 1.0);
             }
+
+            ReduceIndirectCoords(matrix);
         }
     }
 }

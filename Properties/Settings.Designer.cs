@@ -286,5 +286,17 @@ namespace AncestryDnaClustering.Properties {
                 this["MinCentimorgansInSharedMatches"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public double MaxGrayPercentage {
+            get {
+                return ((double)(this["MaxGrayPercentage"]));
+            }
+            set {
+                this["MaxGrayPercentage"] = value;
+            }
+        }
     }
 }

@@ -47,6 +47,7 @@ namespace AncestryDnaClustering.ViewModels
             Filename = Settings.Default.Filename;
             MinCentimorgansToCluster = Settings.Default.MinCentimorgansToCluster;
             MinCentimorgansInSharedMatches = Settings.Default.MinCentimorgansInSharedMatches;
+            MaxGrayPercentage = Settings.Default.MaxGrayPercentage;
             FilterToGuids = Settings.Default.FilterToGuids;
             CorrelationFilename = Settings.Default.CorrelationFilename;
             ShowAdvancedClusteringOptions = Settings.Default.ShowAdvancedClusteringOptions;
@@ -155,6 +156,24 @@ namespace AncestryDnaClustering.ViewModels
                     ClusterTypeVeryClose = (MinCentimorgansToCluster == 90 && MinCentimorgansInSharedMatches == 90);
                     ClusterTypeOver20 = (MinCentimorgansToCluster == 20 && MinCentimorgansInSharedMatches == 20);
                     ClusterTypeComplete = (MinCentimorgansToCluster <= 6 && MinCentimorgansInSharedMatches <= 6);
+                }
+            }
+        }
+
+        // The highest percentage of non-red cells that are allowed to be gray (0...100).
+        // A value of 100 allows a solid gray background; a value of zero shows red cells only (no gray).
+        // If the number of naturally calculated gray cells occupies a greater percentage of the
+        // non-red cells than indicated here, then the lowest value gray cells will be suppressed
+        // and will dispaly as white. This can reduce the "sea of gray" seen in output that exhibits much pedigree collapse.
+        private double _maxGrayPercentage;
+        public double MaxGrayPercentage
+        {
+            get => _maxGrayPercentage;
+            set
+            {
+                if (SetFieldValue(ref _maxGrayPercentage, value, nameof(MaxGrayPercentage)))
+                {
+                    Settings.Default.MaxGrayPercentage = MaxGrayPercentage;
                 }
             }
         }
@@ -292,7 +311,7 @@ namespace AncestryDnaClustering.ViewModels
             var hierachicalClustering = new HierarchicalCustering(
                 MinClusterSize,
                 _ => new OverlapWeightedEuclideanDistanceSquared(),
-                new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, ProgressData),
+                new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
                 new HalfMatchPrimaryClusterFinder(),
                 new ExcelCorrelationWriter(CorrelationFilename, testTakerTestGuid, ProgressData),
                 ProgressData);
