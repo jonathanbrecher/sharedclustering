@@ -37,14 +37,14 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             _progressData = progressData;
         }
 
-        public async Task ClusterAsync(List<IClusterableMatch> clusterableMatches, Dictionary<int, IClusterableMatch> matchesByIndex, HashSet<string> testGuidsToFilter, double lowestClusterableCentimorgans, double minCentimorgansToCluster)
+        public async Task ClusterAsync(List<IClusterableMatch> clusterableMatches, Dictionary<int, IClusterableMatch> matchesByIndex, HashSet<string> testIdsToFilter, double lowestClusterableCentimorgans, double minCentimorgansToCluster)
         {
             var minCentimorgansToClusterTruncated = Math.Max(lowestClusterableCentimorgans, minCentimorgansToCluster);
             var maxIndex = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= minCentimorgansToClusterTruncated).Max(match => match.Index);
             var clusterableMatchesToCorrelate = clusterableMatches.Where(match => match.Index <= maxIndex);
-            if (testGuidsToFilter.Any())
+            if (testIdsToFilter.Any())
             {
-                clusterableMatchesToCorrelate = clusterableMatchesToCorrelate.Where(match => testGuidsToFilter.Contains(match.Match.TestGuid));
+                clusterableMatchesToCorrelate = clusterableMatchesToCorrelate.Where(match => testIdsToFilter.Contains(match.Match.TestId));
             }
 
             var clusterableMatchesToCorrelateList = clusterableMatchesToCorrelate.ToList();

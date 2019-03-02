@@ -293,13 +293,13 @@ namespace AncestryDnaClustering.ViewModels
 
             var startTime = DateTime.Now;
 
-            var (testTakerTestGuid, clusterableMatches) = await LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches);
+            var (testTakerTestId, clusterableMatches) = await LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches);
             if (clusterableMatches == null)
             {
                 return;
             }
 
-            var testGuidsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)));
+            var testIdsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)));
 
             var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
             var lowestClusterableCentimorgans = clusterableMatches
@@ -313,9 +313,9 @@ namespace AncestryDnaClustering.ViewModels
                 _ => new OverlapWeightedEuclideanDistanceSquared(),
                 new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
                 new HalfMatchPrimaryClusterFinder(),
-                new ExcelCorrelationWriter(CorrelationFilename, testTakerTestGuid, ProgressData),
+                new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, ProgressData),
                 ProgressData);
-            await hierachicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testGuidsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
+            await hierachicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 
             ProgressData.Reset(DateTime.Now - startTime, "Done");
         }
@@ -359,7 +359,7 @@ namespace AncestryDnaClustering.ViewModels
                 int maxMatchIndex = strongMatches.Count + 1;
                 var maxIcwIndex = Math.Min(maxMatchIndex, input.Matches.Where(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches).Count() + 1);
                 maxIcwIndex = Math.Min(maxIcwIndex, input.Matches.Count - 1);
-                var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestGuid));
+                var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestId));
                 var icw = input.Icw
                     .Where(kvp => strongMatchesGuids.Contains(kvp.Key))
                     .OrderBy(kvp => input.MatchIndexes.TryGetValue(kvp.Key, out var index) ? index : input.MatchIndexes.Count)
@@ -368,7 +368,7 @@ namespace AncestryDnaClustering.ViewModels
                     kvp => kvp.Value.Where(index => index <= maxIcwIndex).ToList()
                     );
                 var matchCentimorgans = strongMatches.Select(match => match.SharedCentimorgans).ToList();
-                var matchesDictionary = strongMatches.ToDictionary(match => match.TestGuid);
+                var matchesDictionary = strongMatches.ToDictionary(match => match.TestId);
                 var clusterableMatches = icw
                     .AsParallel().AsOrdered()
                     .Select((kvp, index) =>
@@ -378,7 +378,7 @@ namespace AncestryDnaClustering.ViewModels
                     }
                     )
                     .ToList();
-                return (input.TestTakerTestGuid, clusterableMatches);
+                return (input.TestTakerTestId, clusterableMatches);
             });
         }
     }

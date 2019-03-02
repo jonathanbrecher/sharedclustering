@@ -38,12 +38,12 @@ namespace AncestryDnaClustering.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SelectedTestGuid {
+        public string SelectedTestId {
             get {
-                return ((string)(this["SelectedTestGuid"]));
+                return ((string)(this["SelectedTestId"]));
             }
             set {
-                this["SelectedTestGuid"] = value;
+                this["SelectedTestId"] = value;
             }
         }
         

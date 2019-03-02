@@ -76,7 +76,7 @@ namespace AncestryDnaClustering.ViewModels
             set => SetFieldValue(ref _canSignIn, value, nameof(CanSignIn));
         }
 
-        // All of the tests (test GUID and test taker name) available to the signed-in account.
+        // All of the tests (test ID and test taker name) available to the signed-in account.
         private Dictionary<string, string> _tests;
         public Dictionary<string, string> Tests
         {
@@ -87,8 +87,8 @@ namespace AncestryDnaClustering.ViewModels
                 {
                     // The selected test is the first one that matches the last-used value, otherwise the first one.
                     // The tests are ordered in the same order as in the Ancestry web site, with test taker's own test listed first.
-                    SelectedTest = Tests.Any(test => test.Key == Settings.Default.SelectedTestGuid)
-                           ? Tests.FirstOrDefault(test => test.Key == Settings.Default.SelectedTestGuid)
+                    SelectedTest = Tests.Any(test => test.Key == Settings.Default.SelectedTestId)
+                           ? Tests.FirstOrDefault(test => test.Key == Settings.Default.SelectedTestId)
                            : Tests.First();
                 }
             }
@@ -103,7 +103,7 @@ namespace AncestryDnaClustering.ViewModels
             {
                 if (SetFieldValue(ref _selectedTest, value, nameof(SelectedTest)))
                 {
-                    Settings.Default.SelectedTestGuid = SelectedTest.Key;
+                    Settings.Default.SelectedTestId = SelectedTest.Key;
                     CanGetDnaMatches = Tests?.Count > 0 && NumMatchesToRetrieve > 0;
 
                     // When the selected test is changed, for convenience report the number of matches in that test.
@@ -308,13 +308,13 @@ namespace AncestryDnaClustering.ViewModels
 
             // Make sure there are no duplicates among the matches
             matches = matches
-                .GroupBy(match => match.TestGuid)
+                .GroupBy(match => match.TestId)
                 .Select(g => g.First())
                 .ToList();
 
             var matchIndexes = matches
-                .Select((match, index) => new { match.TestGuid, Index = index })
-                .ToDictionary(pair => pair.TestGuid, pair => pair.Index);
+                .Select((match, index) => new { match.TestId, Index = index })
+                .ToDictionary(pair => pair.TestId, pair => pair.Index);
 
             var minSharedCentimorgans = matches.Take(HighestSharedMatchToRetrieve).Last().SharedCentimorgans;
 
@@ -327,7 +327,7 @@ namespace AncestryDnaClustering.ViewModels
             int counter = 0;
 
             var icwDictionary = matches.ToDictionary(
-                match => match.TestGuid,
+                match => match.TestId,
                 match =>
                 {
                     var index = Interlocked.Increment(ref counter);
@@ -349,7 +349,7 @@ namespace AncestryDnaClustering.ViewModels
                             .ToList()
                         );
 
-            var output = new Serialized { TestTakerTestGuid = guid, Matches = matches, MatchIndexes = matchIndexes, Icw = icw };
+            var output = new Serialized { TestTakerTestId = guid, Matches = matches, MatchIndexes = matchIndexes, Icw = icw };
             FileUtils.WriteAsJson(fileName, output, false);
 
             var matchesWithSharedMatches = output.Icw.Where(match => match.Value.Count > 1).ToList();

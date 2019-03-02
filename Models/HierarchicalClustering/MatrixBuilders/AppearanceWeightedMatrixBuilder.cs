@@ -40,7 +40,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
             return Task.Run(async () =>
             {
                 var matchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
-                var matchesDictionary = clusterableMatches.ToDictionary(match => match.Match.TestGuid);
+                var matchesDictionary = clusterableMatches.ToDictionary(match => match.Match.TestId);
 
                 // Skip over any immediate family matches. Immediate family matches tend to have huge numbers of shared matches.
                 // If the immediate family are included, the entire cluster diagram will get swamped with low-level

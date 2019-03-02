@@ -117,11 +117,12 @@ namespace AncestryDnaClustering.Models.SavedData
                     .Select(match => new Match
                     {
                         MatchTestDisplayName = match.Name,
-                        TestGuid = match.MatchId,
+                        TestId = match.MatchId,
                         SharedCentimorgans = GetDouble(match.SharedCm),
+                        LongestBlock = GetDouble(match.LongestBlock),
                     })
                     // Do not assume that the DNAGedcom data is free of duplicates.
-                    .GroupBy(match => match.TestGuid)
+                    .GroupBy(match => match.TestId)
                     .Select(g => g.First())
                     // Do not assume that the DNAGedcom data is already ordered by descending Shared Centimorgans.
                     .OrderByDescending(match => match.SharedCentimorgans)
@@ -130,7 +131,7 @@ namespace AncestryDnaClustering.Models.SavedData
 
             // Assign zero-based indexes to the matches sorted by shared centimorgans descending.
             serialized.MatchIndexes = serialized.Matches
-                .Select(match => match.TestGuid)
+                .Select(match => match.TestId)
                 .Distinct()
                 .Select((id, index) => new { Id = id, Index = index })
                 .ToDictionary(pair => pair.Id, pair => pair.Index);
@@ -212,7 +213,7 @@ namespace AncestryDnaClustering.Models.SavedData
 
                 foreach (var match in serialized.Matches)
                 {
-                    match.TreeSize = trees[match.TestGuid].Count();
+                    match.TreeSize = trees[match.TestId].Count();
                 }
             }
         }
@@ -226,7 +227,7 @@ namespace AncestryDnaClustering.Models.SavedData
             //public string MatchDate { get; set; }
             //public string RelationshipRange { get; set; }
             //public string SuggestedRelationship { get; set; }
-            //public string LongestBlock { get; set; }
+            public string LongestBlock { get; set; }
             //public string KnownRelationship { get; set; }
             //public string Email { get; set; }
             //public string Ancestral { get; set; }
@@ -247,6 +248,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 //Map(m => m.People).Name("people");
                 Map(m => m.SharedCm).Name("Shared cM");
                 //Map(m => m.SharedSegments).Name("sharedSegments");
+                Map(m => m.LongestBlock).Name("Longest Block");
                 //Map(m => m.Note).Name("note");
             }
         }

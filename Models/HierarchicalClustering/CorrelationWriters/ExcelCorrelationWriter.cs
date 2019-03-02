@@ -18,13 +18,13 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
     public class ExcelCorrelationWriter : ICorrelationWriter
     {
         private readonly string _correlationFilename;
-        private readonly string _testTakerTestGuid;
+        private readonly string _testTakerTestId;
         private readonly ProgressData _progressData;
 
-        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestGuid, ProgressData progressData)
+        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, ProgressData progressData)
         {
             _correlationFilename = correlationFilename;
-            _testTakerTestGuid = testTakerTestGuid;
+            _testTakerTestId = testTakerTestId;
             _progressData = progressData;
         }
 
@@ -79,23 +79,29 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                 {
                     var ws = p.Workbook.Worksheets.Add("heatmap");
 
-                    if (!string.IsNullOrEmpty(_testTakerTestGuid))
+                    if (!string.IsNullOrEmpty(_testTakerTestId))
                     {
                         // Google Sheets does not support HyperlinkBase
-                        // p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestGuid}/match/");
+                        // p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/");
                         var namedStyle = p.Workbook.Styles.CreateNamedStyle("HyperLink");   // Language-dependent
                         namedStyle.Style.Font.UnderLine = true;
                         namedStyle.Style.Font.Color.SetColor(Color.Blue);
                     }
 
                     var hasSharedSegments = matches.Any(match => match.Match.SharedSegments > 0);
+                    var hasLongestBlock = matches.Any(match => match.Match.LongestBlock > 0);
                     var hasTreeType = matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined);
+                    var hasTreeSize = matches.Any(match => match.Match.TreeSize > 0);
                     var hasStarredMatches = matches.Any(match => match.Match.Starred);
                     var hasHintsForMatches = matches.Any(match => match.Match.HasHint);
 
                     // Keep track of columns that will be auto-fit.
                     // The auto-fit cannot be calculated until the rows are fully populated.
                     var autofitColumns = new List<int>();
+
+                    // Keep track of columns that contain decimals.
+                    // The number format cannot be applied until the rows are fully populated.
+                    var decimalColumns = new List<int>();
 
                     // Start at the top left of the sheet
                     var row = 1;
@@ -115,9 +121,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 
                     ws.Column(col).Width = 10;
                     ws.Cells[row, col].Style.TextRotation = 0;
-                    ws.Cells[row, col++].Value = "Test Guid";
+                    ws.Cells[row, col++].Value = "Test ID";
 
-                    if (!string.IsNullOrEmpty(_testTakerTestGuid))
+                    if (!string.IsNullOrEmpty(_testTakerTestId))
                     {
                         autofitColumns.Add(col);
                         ws.Cells[row, col].Style.TextRotation = 0;
@@ -125,7 +131,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                     }
 
                     autofitColumns.Add(col);
-                    ws.Column(col).Style.Numberformat.Format = "0.0";
+                    decimalColumns.Add(col);
                     ws.Cells[row, col++].Value = "Shared Centimorgans";
 
                     if (hasSharedSegments)
@@ -134,14 +140,24 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         ws.Cells[row, col++].Value = "Shared Segments";
                     }
 
+                    if (hasLongestBlock)
+                    {
+                        autofitColumns.Add(col);
+                        decimalColumns.Add(col);
+                        ws.Cells[row, col++].Value = "Longest Block";
+                    }
+
                     if (hasTreeType)
                     {
                         autofitColumns.Add(col);
                         ws.Cells[row, col++].Value = "Tree Type";
                     }
 
-                    autofitColumns.Add(col);
-                    ws.Cells[row, col++].Value = "Tree Size";
+                    if (hasTreeSize)
+                    {
+                        autofitColumns.Add(col);
+                        ws.Cells[row, col++].Value = "Tree Size";
+                    }
 
                     if (hasStarredMatches)
                     {
@@ -188,22 +204,29 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             col++;
                         }
                         ws.Cells[row, col++].Value = match.Match.Name;
-                        ws.Cells[row, col++].Value = match.Match.TestGuid;
-                        if (!string.IsNullOrEmpty(_testTakerTestGuid))
+                        ws.Cells[row, col++].Value = match.Match.TestId;
+                        if (!string.IsNullOrEmpty(_testTakerTestId))
                         {
                             ws.Cells[row, col].StyleName = "HyperLink";
-                            ws.Cells[row, col++].Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestGuid}/match/{match.Match.TestGuid}", UriKind.Absolute) { Display = "Link" };
+                            ws.Cells[row, col++].Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/{match.Match.TestId}", UriKind.Absolute) { Display = "Link" };
                         }
                         ws.Cells[row, col++].Value = match.Match.SharedCentimorgans;
                         if (hasSharedSegments)
                         {
                             ws.Cells[row, col++].Value = match.Match.SharedSegments;
                         }
+                        if (hasLongestBlock)
+                        {
+                            ws.Cells[row, col++].Value = match.Match.LongestBlock;
+                        }
                         if (hasTreeType)
                         {
                             ws.Cells[row, col++].Value = match.Match.TreeType;
                         }
-                        ws.Cells[row, col++].Value = match.Match.TreeSize;
+                        if (hasTreeSize)
+                        {
+                            ws.Cells[row, col++].Value = match.Match.TreeSize;
+                        }
 
                         if (hasStarredMatches)
                         {
@@ -271,6 +294,12 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 
                     // Heapmap number format
                     ws.Cells[$"1:{leafNodes.Count}"].Style.Numberformat.Format = "General";
+
+                    // Decimal number formats
+                    foreach (var column in decimalColumns)
+                    {
+                        ws.Column(column).Style.Numberformat.Format = "0.0";
+                    }
 
                     // Column widths
                     ws.DefaultColWidth = 19.0 / 7; // 2

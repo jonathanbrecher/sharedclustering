@@ -99,7 +99,7 @@
                     <TextBlock Grid.Row="8" Grid.Column="0" Text="Maximum gray percentage: "/>
                     <TextBox Grid.Row="8" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="50" Text="{Binding MaxGrayPercentage}"/>
 
-                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Filter Test GUIDs to: "/>
+                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Filter Test IDs to: "/>
                     <TextBox Grid.Row="10" Grid.Column="2" HorizontalAlignment="Stretch" Height="80"
                      TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
                      Text="{Binding FilterToGuids, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>

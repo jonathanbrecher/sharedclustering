@@ -5,7 +5,7 @@
     <Setting Name="AncestryUserName" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="SelectedTestGuid" Type="System.String" Scope="User">
+    <Setting Name="SelectedTestId" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="NumTestsToRetrieve" Type="System.Int32" Scope="User">

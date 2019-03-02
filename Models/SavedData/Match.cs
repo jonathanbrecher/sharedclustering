@@ -4,9 +4,10 @@
     {
         public string MatchTestAdminDisplayName { get; set; }
         public string MatchTestDisplayName { get; set; }
-        public string TestGuid { get; set; }
+        public string TestId { get; set; }
         public double SharedCentimorgans { get; set; }
         public int SharedSegments { get; set; }
+        public double LongestBlock { get; set; }
         public TreeType TreeType { get; set; }
         public int TreeSize { get; set; }
         public bool Starred { get; set; }
