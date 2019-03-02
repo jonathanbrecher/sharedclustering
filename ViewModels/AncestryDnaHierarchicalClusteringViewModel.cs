@@ -35,6 +35,7 @@ namespace AncestryDnaClustering.ViewModels
                 new DnaGedcomAncestryMatchesReader(),
                 new DnaGedcomFtdnaMatchesReader(),
                 new SharedClusteringMatchesReader(),
+                new AutoClusterMyHeritageMatchesReader(),
             };
 
             SelectFileCommand = new RelayCommand(() => SelectFile());
@@ -84,7 +85,7 @@ namespace AncestryDnaClustering.ViewModels
             {
                 InitialDirectory = string.IsNullOrEmpty(Filename) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(Filename),
                 FileName = Filename,
-                Filter = "DNAGedcom icw_ files (*.csv)|*.csv|Shared Clustering downloaded data (*.txt)|*.txt;*.json|All files (*.*)|*.*",
+                Filter = "DNAGedcom icw_ or AutoCluster files (*.csv)|*.csv|Shared Clustering downloaded data (*.txt)|*.txt;*.json|All files (*.*)|*.*",
             };
             if (openFileDialog.ShowDialog() == true)
             {

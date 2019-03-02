@@ -202,7 +202,11 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
 
         private async Task<List<ClusterNode>> BuildClustersAsync(List<Node> nodes, IDistanceMetric distanceMetric, ProgressData progressData)
         {
-            progressData.Reset($"Building clusters for {nodes.Count} matches...", nodes.Count - 1);
+            var nodeCount = nodes
+                .SelectMany(node => node.NeighborsByDistance.Select(neighbor => neighbor.Node.FirstLeaf.Index))
+                .Concat(nodes.Select(node => node.FirstLeaf.Index))
+                .Distinct().Count();
+            progressData.Reset($"Building clusters for {nodeCount} matches...", nodes.Count - 1);
 
             await Task.Run(async () =>
             {
@@ -311,7 +315,7 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
 
             await Task.WhenAll(calculateNeighborsByDistanceTasks);
 
-            var result =  leafNodes.Where(leafNode => leafNode.NeighborsByDistance.Count > 0).ToList<Node>();
+            var result = leafNodes.Where(leafNode => leafNode.NeighborsByDistance.Count > 0).ToList<Node>();
 
             progressData.Reset();
             return result;
