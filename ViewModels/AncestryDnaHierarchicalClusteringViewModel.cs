@@ -360,7 +360,7 @@ namespace AncestryDnaClustering.ViewModels
                 int maxMatchIndex = strongMatches.Count + 1;
                 var maxIcwIndex = Math.Min(maxMatchIndex, input.Matches.Where(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches).Count() + 1);
                 maxIcwIndex = Math.Min(maxIcwIndex, input.Matches.Count - 1);
-                var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestId));
+                var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestGuid));
                 var icw = input.Icw
                     .Where(kvp => strongMatchesGuids.Contains(kvp.Key))
                     .OrderBy(kvp => input.MatchIndexes.TryGetValue(kvp.Key, out var index) ? index : input.MatchIndexes.Count)
@@ -369,7 +369,7 @@ namespace AncestryDnaClustering.ViewModels
                     kvp => kvp.Value.Where(index => index <= maxIcwIndex).ToList()
                     );
                 var matchCentimorgans = strongMatches.Select(match => match.SharedCentimorgans).ToList();
-                var matchesDictionary = strongMatches.ToDictionary(match => match.TestId);
+                var matchesDictionary = strongMatches.ToDictionary(match => match.TestGuid);
                 var clusterableMatches = icw
                     .AsParallel().AsOrdered()
                     .Select((kvp, index) =>

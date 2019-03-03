@@ -20,7 +20,9 @@ namespace AncestryDnaClustering.Models.SavedData
             }
 
             var serialized = await Task.Run(() => FileUtils.ReadAsJson<Serialized>(fileName, false, false));
-            return (serialized, null);
+            return serialized != null 
+                ? (serialized, (string)null)
+                : (null, $"Unable to read file {fileName}");
         }
     }
 }

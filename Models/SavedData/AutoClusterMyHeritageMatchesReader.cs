@@ -83,7 +83,7 @@ namespace AncestryDnaClustering.Models.SavedData
                     serialized.Matches.Add(new Match
                     {
                         MatchTestDisplayName = match.Name,
-                        TestId = match.Identifier,
+                        TestGuid = match.Identifier,
                         SharedCentimorgans = GetDouble(match.SharedCm),
                         TreeSize = GetInt(match.TreeCount),
                         Note = match.Notes,

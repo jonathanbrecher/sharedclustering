@@ -117,12 +117,12 @@ namespace AncestryDnaClustering.Models.SavedData
                     .Select(match => new Match
                     {
                         MatchTestDisplayName = match.Name,
-                        TestId = match.MatchId,
+                        TestGuid = match.MatchId,
                         SharedCentimorgans = GetDouble(match.SharedCm),
                         LongestBlock = GetDouble(match.LongestBlock),
                     })
                     // Do not assume that the DNAGedcom data is free of duplicates.
-                    .GroupBy(match => match.TestId)
+                    .GroupBy(match => match.TestGuid)
                     .Select(g => g.First())
                     // Do not assume that the DNAGedcom data is already ordered by descending Shared Centimorgans.
                     .OrderByDescending(match => match.SharedCentimorgans)
@@ -131,7 +131,7 @@ namespace AncestryDnaClustering.Models.SavedData
 
             // Assign zero-based indexes to the matches sorted by shared centimorgans descending.
             serialized.MatchIndexes = serialized.Matches
-                .Select(match => match.TestId)
+                .Select(match => match.TestGuid)
                 .Distinct()
                 .Select((id, index) => new { Id = id, Index = index })
                 .ToDictionary(pair => pair.Id, pair => pair.Index);
@@ -213,7 +213,7 @@ namespace AncestryDnaClustering.Models.SavedData
 
                 foreach (var match in serialized.Matches)
                 {
-                    match.TreeSize = trees[match.TestId].Count();
+                    match.TreeSize = trees[match.TestGuid].Count();
                 }
             }
         }

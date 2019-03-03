@@ -4,7 +4,7 @@
     {
         public string MatchTestAdminDisplayName { get; set; }
         public string MatchTestDisplayName { get; set; }
-        public string TestId { get; set; }
+        public string TestGuid { get; set; }
         public double SharedCentimorgans { get; set; }
         public int SharedSegments { get; set; }
         public double LongestBlock { get; set; }

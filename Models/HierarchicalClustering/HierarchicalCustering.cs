@@ -44,7 +44,7 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             var clusterableMatchesToCorrelate = clusterableMatches.Where(match => match.Index <= maxIndex);
             if (testIdsToFilter.Any())
             {
-                clusterableMatchesToCorrelate = clusterableMatchesToCorrelate.Where(match => testIdsToFilter.Contains(match.Match.TestId));
+                clusterableMatchesToCorrelate = clusterableMatchesToCorrelate.Where(match => testIdsToFilter.Contains(match.Match.TestGuid));
             }
 
             var clusterableMatchesToCorrelateList = clusterableMatchesToCorrelate.ToList();

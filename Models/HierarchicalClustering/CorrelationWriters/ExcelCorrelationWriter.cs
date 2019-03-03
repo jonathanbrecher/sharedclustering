@@ -204,11 +204,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             col++;
                         }
                         ws.Cells[row, col++].Value = match.Match.Name;
-                        ws.Cells[row, col++].Value = match.Match.TestId;
+                        ws.Cells[row, col++].Value = match.Match.TestGuid;
                         if (!string.IsNullOrEmpty(_testTakerTestId))
                         {
                             ws.Cells[row, col].StyleName = "HyperLink";
-                            ws.Cells[row, col++].Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/{match.Match.TestId}", UriKind.Absolute) { Display = "Link" };
+                            ws.Cells[row, col++].Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/{match.Match.TestGuid}", UriKind.Absolute) { Display = "Link" };
                         }
                         ws.Cells[row, col++].Value = match.Match.SharedCentimorgans;
                         if (hasSharedSegments)

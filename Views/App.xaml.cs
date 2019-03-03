@@ -17,11 +17,11 @@ namespace AncestryDnaClustering
     {
         public App()
         {
-            Startup += new StartupEventHandler(App_Startup); // Can be called from XAML 
-
-            DispatcherUnhandledException += App_DispatcherUnhandledException;
-
-            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+            //Startup += new StartupEventHandler(App_Startup); // Can be called from XAML 
+            //
+            //DispatcherUnhandledException += App_DispatcherUnhandledException;
+            //
+            //TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
         }
 
         private void App_Startup(object sender, StartupEventArgs e)

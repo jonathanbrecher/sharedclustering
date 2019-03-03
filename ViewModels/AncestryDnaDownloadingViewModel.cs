@@ -308,13 +308,13 @@ namespace AncestryDnaClustering.ViewModels
 
             // Make sure there are no duplicates among the matches
             matches = matches
-                .GroupBy(match => match.TestId)
+                .GroupBy(match => match.TestGuid)
                 .Select(g => g.First())
                 .ToList();
 
             var matchIndexes = matches
-                .Select((match, index) => new { match.TestId, Index = index })
-                .ToDictionary(pair => pair.TestId, pair => pair.Index);
+                .Select((match, index) => new { match.TestGuid, Index = index })
+                .ToDictionary(pair => pair.TestGuid, pair => pair.Index);
 
             var minSharedCentimorgans = matches.Take(HighestSharedMatchToRetrieve).Last().SharedCentimorgans;
 
@@ -327,7 +327,7 @@ namespace AncestryDnaClustering.ViewModels
             int counter = 0;
 
             var icwDictionary = matches.ToDictionary(
-                match => match.TestId,
+                match => match.TestGuid,
                 match =>
                 {
                     var index = Interlocked.Increment(ref counter);
