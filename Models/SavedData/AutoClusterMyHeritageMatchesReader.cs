@@ -80,23 +80,33 @@ namespace AncestryDnaClustering.Models.SavedData
                         continue;
                     }
 
-                    serialized.Matches.Add(new Match
+                    var resultMatch = new Match
                     {
                         MatchTestDisplayName = match.Name,
                         TestGuid = match.Identifier,
                         SharedCentimorgans = GetDouble(match.SharedCm),
                         TreeSize = GetInt(match.TreeCount),
                         Note = match.Notes,
-                    });
+                    };
 
-                    serialized.MatchIndexes[match.Identifier] = serialized.MatchIndexes.Count;
-                    serialized.Icw[match.Identifier] = csv.Context.Record
+                    var icw = csv.Context.Record
                         .Skip(firstMatchFieldIndex)
                         .Where(value => !string.IsNullOrEmpty(value))
                         .Select(value => int.TryParse(value, out var intValue) ? intValue : (int?)null)
                         .Where(value => value != null)
                         .Select(value => value.Value - 1) // AutoCluster indexes are 1-based
                         .ToList();
+
+                    // AutoCluster sometimes writes invalid CSV files, not properly quoting a linebreak in the notes field.
+                    // When that happens the ICW data cannot be read
+                    if (icw.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    serialized.Matches.Add(resultMatch);
+                    serialized.MatchIndexes[match.Identifier] = serialized.MatchIndexes.Count;
+                    serialized.Icw[match.Identifier] = icw;
                 }
             }
 
