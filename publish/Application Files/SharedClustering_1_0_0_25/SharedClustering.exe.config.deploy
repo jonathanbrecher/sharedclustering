@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <configSections>
+        <sectionGroup name="userSettings" type="System.Configuration.UserSettingsGroup, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+            <section name="AncestryDnaClustering.Properties.Settings" type="System.Configuration.ClientSettingsSection, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" allowExeDefinition="MachineToLocalUser" requirePermission="false" />
+        </sectionGroup>
+    </configSections>
+    <startup> 
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.6.1" />
+    </startup>
+    <userSettings>
+        <AncestryDnaClustering.Properties.Settings>
+            <setting name="AncestryUserName" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="SelectedTestId" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="NumTestsToRetrieve" serializeAs="String">
+                <value>0</value>
+            </setting>
+            <setting name="HighestSharedMatchToRetrieve" serializeAs="String">
+                <value>0</value>
+            </setting>
+            <setting name="SelectedTabIndex" serializeAs="String">
+                <value>0</value>
+            </setting>
+            <setting name="MinClusterSize" serializeAs="String">
+                <value>3</value>
+            </setting>
+            <setting name="Filename" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="NumMatchesToCluster" serializeAs="String">
+                <value>0</value>
+            </setting>
+            <setting name="HighestSharedMatchToConsider" serializeAs="String">
+                <value>0</value>
+            </setting>
+            <setting name="DistanceFilename" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="FlattenedFilename" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="CorrelationFilename" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="FilterToGuids" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="ShowAdvancedDownloadOptions" serializeAs="String">
+                <value>False</value>
+            </setting>
+            <setting name="DownloadTypeFast" serializeAs="String">
+                <value>True</value>
+            </setting>
+            <setting name="DownloadTypeComplete" serializeAs="String">
+                <value>False</value>
+            </setting>
+            <setting name="ShowAdvancedClusteringOptions" serializeAs="String">
+                <value>False</value>
+            </setting>
+            <setting name="ClusterTypeVeryClose" serializeAs="String">
+                <value>False</value>
+            </setting>
+            <setting name="ClusterTypeOver20" serializeAs="String">
+                <value>True</value>
+            </setting>
+            <setting name="ClusterTypeComplete" serializeAs="String">
+                <value>False</value>
+            </setting>
+            <setting name="MinCentimorgansToCluster" serializeAs="String">
+                <value>20</value>
+            </setting>
+            <setting name="MinCentimorgansInSharedMatches" serializeAs="String">
+                <value>20</value>
+            </setting>
+            <setting name="MaxGrayPercentage" serializeAs="String">
+                <value>5</value>
+            </setting>
+        </AncestryDnaClustering.Properties.Settings>
+    </userSettings> 
+    <system.net> 
+        <settings> 
+            <httpWebRequest useUnsafeHeaderParsing="true" /> 
+        </settings> 
+    </system.net> 
+  <runtime> 
+      <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1"> 
+          <dependentAssembly> 
+              <assemblyIdentity name="Newtonsoft.Json" publicKeyToken="30ad4fe6b2a6aeed" culture="neutral" /> 
+              <bindingRedirect oldVersion="0.0.0.0-11.0.0.0" newVersion="11.0.0.0" /> 
+          </dependentAssembly> 
+      </assemblyBinding> 
+  </runtime>
+</configuration>

@@ -120,7 +120,21 @@ namespace AncestryDnaClustering.Models.SavedData
             }
 
             // Do not assume that the AutoCluster data is already ordered by descending Shared Centimorgans.
+            var unsortedIndexes = serialized.MatchIndexes;
+
             serialized.Matches = serialized.Matches.OrderByDescending(match => match.SharedCentimorgans).ToList();
+
+            serialized.MatchIndexes = serialized.Matches
+                .Select((match, index) => new { match.TestGuid, index })
+                .ToDictionary(pair => pair.TestGuid, pair => pair.index);
+
+            var indexUpdates = unsortedIndexes.ToDictionary(
+                kvp => kvp.Value,
+                kvp => serialized.MatchIndexes[kvp.Key]);
+
+            serialized.Icw = serialized.Icw.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.Select(index => indexUpdates[index]).ToList());
         }
 
         private static IFormatProvider[] _cultures = new[] { CultureInfo.CurrentCulture, CultureInfo.GetCultureInfo("en-US"), CultureInfo.InvariantCulture };
