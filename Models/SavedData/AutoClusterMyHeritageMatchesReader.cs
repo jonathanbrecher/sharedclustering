@@ -89,8 +89,17 @@ namespace AncestryDnaClustering.Models.SavedData
                         Note = match.Notes,
                     };
 
+                    // AutoCluster sometimes writes invalid CSV files, not properly quoting a linebreak in the notes field.
+                    // When that happens the ICW data cannot be read
+                    var numHeaderFields = firstMatchFieldIndex;
+                    while (csv.Context.Record.Length <= numHeaderFields)
+                    {
+                        csv.Read();
+                        numHeaderFields = 0;
+                    }
+
                     var icw = csv.Context.Record
-                        .Skip(firstMatchFieldIndex)
+                        .Skip(numHeaderFields)
                         .Where(value => !string.IsNullOrEmpty(value))
                         .Select(value => int.TryParse(value, out var intValue) ? intValue : (int?)null)
                         .Where(value => value != null)
