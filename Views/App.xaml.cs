@@ -59,7 +59,7 @@ namespace AncestryDnaClustering
             {
                 MessageBox.Show($"Out of memory!" +
                     $"{Environment.NewLine}{Environment.NewLine}" +
-                    "Try closing other applications to free up more memory" +
+                    "Try closing other applications to free up more memory " +
                     "or increase the value of the lowest centimorgans to cluster", "Out of memory", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
