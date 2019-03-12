@@ -28,6 +28,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             _progressData = progressData;
         }
 
+        public int MaxColumns => 16000;
+        public int MaxColumnsPerSplit => 10000;
+
         public async Task OutputCorrelationAsync(List<ClusterNode> nodes, Dictionary<int, IClusterableMatch> matchesByIndex, Dictionary<int, int> indexClusterNumbers)
         {
             if (string.IsNullOrEmpty(_correlationFilename))
@@ -43,7 +46,15 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             // All nodes, in order. These will become rows/columns in the Excel file.
             var leafNodes = nodes.First().GetOrderedLeafNodes().ToList();
 
-            _progressData.Reset($"Saving clusters", leafNodes.Count);
+            // Excel has a limit of 16,384 columns.
+            // If there are more than 16,000 matches, split into files containing at most 10,000 columns.
+            var numOutputFiles = 1;
+            if (leafNodes.Count > MaxColumns)
+            {
+                numOutputFiles = leafNodes.Count / MaxColumnsPerSplit + 1;
+            }
+
+            _progressData.Reset($"Saving clusters", leafNodes.Count * numOutputFiles);
 
             // Ancestry never shows matches lower than 20 cM as shared matches.
             // The distant matches will be included as rows in the Excel file, but not as columns.
@@ -73,261 +84,274 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                 .Select(match => match.Index)
                 );
 
-            using (var p = new ExcelPackage())
-            {
-                await Task.Run(() =>
+            for (var fileNum = 0; fileNum < numOutputFiles; ++fileNum)
+            { 
+                using (var p = new ExcelPackage())
                 {
-                    var ws = p.Workbook.Worksheets.Add("heatmap");
-
-                    if (!string.IsNullOrEmpty(_testTakerTestId))
+                    await Task.Run(() =>
                     {
-                        // Google Sheets does not support HyperlinkBase
-                        // p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/");
-                        var namedStyle = p.Workbook.Styles.CreateNamedStyle("HyperLink");   // Language-dependent
-                        namedStyle.Style.Font.UnderLine = true;
-                        namedStyle.Style.Font.Color.SetColor(Color.Blue);
-                    }
+                        var ws = p.Workbook.Worksheets.Add("heatmap");
 
-                    var hasSharedSegments = matches.Any(match => match.Match.SharedSegments > 0);
-                    var hasLongestBlock = matches.Any(match => match.Match.LongestBlock > 0);
-                    var hasTreeType = matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined);
-                    var hasTreeSize = matches.Any(match => match.Match.TreeSize > 0);
-                    var hasStarredMatches = matches.Any(match => match.Match.Starred);
-                    var hasHintsForMatches = matches.Any(match => match.Match.HasHint);
-
-                    // Keep track of columns that will be auto-fit.
-                    // The auto-fit cannot be calculated until the rows are fully populated.
-                    var autofitColumns = new List<int>();
-
-                    // Keep track of columns that contain decimals.
-                    // The number format cannot be applied until the rows are fully populated.
-                    var decimalColumns = new List<int>();
-
-                    // Start at the top left of the sheet
-                    var row = 1;
-                    var col = 1;
-
-                    // Rotate the entire top row by 90 degrees
-                    ws.Row(row).Style.TextRotation = 90;
-
-                    // Column headers for the fixed columns
-
-                    ws.Column(col).Width = 26.0 / 7;
-                    ws.Cells[row, col++].Value = "Cluster Number";
-
-                    ws.Column(col).Width = 15;
-                    ws.Cells[row, col].Style.TextRotation = 0;
-                    ws.Cells[row, col++].Value = "Name";
-
-                    ws.Column(col).Width = 10;
-                    ws.Cells[row, col].Style.TextRotation = 0;
-                    ws.Cells[row, col++].Value = "Test ID";
-
-                    if (!string.IsNullOrEmpty(_testTakerTestId))
-                    {
-                        autofitColumns.Add(col);
-                        ws.Cells[row, col].Style.TextRotation = 0;
-                        ws.Cells[row, col++].Value = "Link";
-                    }
-
-                    autofitColumns.Add(col);
-                    decimalColumns.Add(col);
-                    ws.Cells[row, col++].Value = "Shared Centimorgans";
-
-                    if (hasSharedSegments)
-                    {
-                        autofitColumns.Add(col);
-                        ws.Cells[row, col++].Value = "Shared Segments";
-                    }
-
-                    if (hasLongestBlock)
-                    {
-                        autofitColumns.Add(col);
-                        decimalColumns.Add(col);
-                        ws.Cells[row, col++].Value = "Longest Block";
-                    }
-
-                    if (hasTreeType)
-                    {
-                        autofitColumns.Add(col);
-                        ws.Cells[row, col++].Value = "Tree Type";
-                    }
-
-                    if (hasTreeSize)
-                    {
-                        autofitColumns.Add(col);
-                        ws.Cells[row, col++].Value = "Tree Size";
-                    }
-
-                    if (hasStarredMatches)
-                    {
-                        autofitColumns.Add(col);
-                        ws.Cells[row, col++].Value = "Starred";
-                    }
-
-                    if (hasHintsForMatches)
-                    {
-                        autofitColumns.Add(col);
-                        ws.Cells[row, col++].Value = "Shared Ancestor Hint";
-                    }
-
-                    ws.Column(col).Width = 15;
-                    ws.Cells[row, col++].Value = "Correlated Clusters";
-
-                    ws.Column(col).Width = 15;
-                    ws.Cells[row, col].Style.TextRotation = 0;
-                    ws.Cells[row, col++].Value = "Note";
-
-                    var firstMatrixDataRow = row + 1;
-                    var firstMatrixDataColumn = col;
-
-                    // Column headers for each match
-                    foreach (var nonDistantMatch in nonDistantMatches)
-                    {
-                        ws.Cells[row, col++].Value = nonDistantMatch.Match.Name;
-                    }
-
-                    // One row for each match
-                    foreach (var leafNode in leafNodes)
-                    {
-                        var match = matchesByIndex[leafNode.Index];
-                        row++;
-
-                        // Row headers
-                        col = 1;
-                        if (indexClusterNumbers.TryGetValue(leafNode.Index, out var clusterNumber))
-                        {
-                            ws.Cells[row, col++].Value = clusterNumber;
-                        }
-                        else
-                        {
-                            col++;
-                        }
-                        ws.Cells[row, col++].Value = match.Match.Name;
-                        ws.Cells[row, col++].Value = match.Match.TestGuid;
                         if (!string.IsNullOrEmpty(_testTakerTestId))
                         {
-                            ws.Cells[row, col].StyleName = "HyperLink";
-                            ws.Cells[row, col++].Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/{match.Match.TestGuid}", UriKind.Absolute) { Display = "Link" };
+                            // Google Sheets does not support HyperlinkBase
+                            // p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/");
+                            var namedStyle = p.Workbook.Styles.CreateNamedStyle("HyperLink");   // Language-dependent
+                            namedStyle.Style.Font.UnderLine = true;
+                            namedStyle.Style.Font.Color.SetColor(Color.Blue);
                         }
-                        ws.Cells[row, col++].Value = match.Match.SharedCentimorgans;
+
+                        var hasSharedSegments = matches.Any(match => match.Match.SharedSegments > 0);
+                        var hasLongestBlock = matches.Any(match => match.Match.LongestBlock > 0);
+                        var hasTreeType = matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined);
+                        var hasTreeSize = matches.Any(match => match.Match.TreeSize > 0);
+                        var hasStarredMatches = matches.Any(match => match.Match.Starred);
+                        var hasHintsForMatches = matches.Any(match => match.Match.HasHint);
+
+                        // Keep track of columns that will be auto-fit.
+                        // The auto-fit cannot be calculated until the rows are fully populated.
+                        var autofitColumns = new List<int>();
+
+                        // Keep track of columns that contain decimals.
+                        // The number format cannot be applied until the rows are fully populated.
+                        var decimalColumns = new List<int>();
+
+                        // Start at the top left of the sheet
+                        var row = 1;
+                        var col = 1;
+
+                        // Rotate the entire top row by 90 degrees
+                        ws.Row(row).Style.TextRotation = 90;
+
+                        // Column headers for the fixed columns
+
+                        ws.Column(col).Width = 26.0 / 7;
+                        ws.Cells[row, col++].Value = "Cluster Number";
+
+                        ws.Column(col).Width = 15;
+                        ws.Cells[row, col].Style.TextRotation = 0;
+                        ws.Cells[row, col++].Value = "Name";
+
+                        ws.Column(col).Width = 10;
+                        ws.Cells[row, col].Style.TextRotation = 0;
+                        ws.Cells[row, col++].Value = "Test ID";
+
+                        if (!string.IsNullOrEmpty(_testTakerTestId))
+                        {
+                            autofitColumns.Add(col);
+                            ws.Cells[row, col].Style.TextRotation = 0;
+                            ws.Cells[row, col++].Value = "Link";
+                        }
+
+                        autofitColumns.Add(col);
+                        decimalColumns.Add(col);
+                        ws.Cells[row, col++].Value = "Shared Centimorgans";
+
                         if (hasSharedSegments)
                         {
-                            ws.Cells[row, col++].Value = match.Match.SharedSegments;
+                            autofitColumns.Add(col);
+                            ws.Cells[row, col++].Value = "Shared Segments";
                         }
+
                         if (hasLongestBlock)
                         {
-                            ws.Cells[row, col++].Value = match.Match.LongestBlock;
+                            autofitColumns.Add(col);
+                            decimalColumns.Add(col);
+                            ws.Cells[row, col++].Value = "Longest Block";
                         }
+
                         if (hasTreeType)
                         {
-                            ws.Cells[row, col++].Value = match.Match.TreeType;
+                            autofitColumns.Add(col);
+                            ws.Cells[row, col++].Value = "Tree Type";
                         }
+
                         if (hasTreeSize)
                         {
-                            ws.Cells[row, col++].Value = match.Match.TreeSize;
+                            autofitColumns.Add(col);
+                            ws.Cells[row, col++].Value = "Tree Size";
                         }
 
                         if (hasStarredMatches)
                         {
-                            ws.Cells[row, col++].Value = match.Match.Starred ? "*" : null;
+                            autofitColumns.Add(col);
+                            ws.Cells[row, col++].Value = "Starred";
                         }
 
                         if (hasHintsForMatches)
                         {
-                            ws.Cells[row, col++].Value = match.Match.HasHint ? "*" : null;
+                            autofitColumns.Add(col);
+                            ws.Cells[row, col++].Value = "Shared Ancestor Hint";
                         }
 
-                        // Correlated clusters
-                        var correlatedClusterNumbers = leafNodes
-                            .Where(leafNode2 => !immediateFamilyIndexes.Contains(leafNode2.Index)
-                                                && leafNode.Coords.TryGetValue(leafNode2.Index, out var correlationValue) ? correlationValue >= 1 : false)
-                            .Select(leafNode2 => indexClusterNumbers.TryGetValue(leafNode2.Index, out var correlatedClusterNumber) ? correlatedClusterNumber : 0)
-                            .Where(correlatedClusterNumber => correlatedClusterNumber != 0 && correlatedClusterNumber != clusterNumber)
-                            .Distinct()
-                            .OrderBy(n => n)
-                            .ToList();
-                        if (correlatedClusterNumbers.Count > 0)
+                        ws.Column(col).Width = 15;
+                        ws.Cells[row, col++].Value = "Correlated Clusters";
+
+                        ws.Column(col).Width = 15;
+                        ws.Cells[row, col].Style.TextRotation = 0;
+                        ws.Cells[row, col++].Value = "Note";
+
+                        var firstMatrixDataRow = row + 1;
+                        var firstMatrixDataColumn = col;
+
+                        // Column headers for each match
+                        foreach (var nonDistantMatch in nonDistantMatches.Skip(fileNum * MaxColumnsPerSplit).Take(MaxColumnsPerSplit))
                         {
-                            ws.Cells[row, col++].Value = string.Join(", ", correlatedClusterNumbers);
-                        }
-                        else
-                        {
-                            col++;
+                            ws.Cells[row, col++].Value = nonDistantMatch.Match.Name;
                         }
 
-                        // Note
-                        if (!string.IsNullOrEmpty(match.Match.Note))
+                        // One row for each match
+                        foreach (var leafNode in leafNodes)
                         {
-                            ws.Cells[row, col++].Value = match.Match.Note;
-                        }
-                        else
-                        {
-                            col++;
-                        }
+                            var match = matchesByIndex[leafNode.Index];
+                            row++;
 
-                        // Correlation data
-                        foreach (var coordAndIndex in leafNode.GetCoordsArray(orderedIndexes).Zip(orderedIndexes, (c, i) => new { Coord = c, Index = i }))
-                        {
-                            if (coordAndIndex.Coord != 0)
+                            // Row headers
+                            col = 1;
+                            if (indexClusterNumbers.TryGetValue(leafNode.Index, out var clusterNumber))
                             {
-                                ws.Cells[row, col].Value = coordAndIndex.Coord;
+                                ws.Cells[row, col++].Value = clusterNumber;
                             }
-                            col++;
+                            else
+                            {
+                                col++;
+                            }
+                            ws.Cells[row, col++].Value = match.Match.Name;
+                            ws.Cells[row, col++].Value = match.Match.TestGuid;
+                            if (!string.IsNullOrEmpty(_testTakerTestId))
+                            {
+                                ws.Cells[row, col].StyleName = "HyperLink";
+                                ws.Cells[row, col++].Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/{match.Match.TestGuid}", UriKind.Absolute) { Display = "Link" };
+                            }
+                            ws.Cells[row, col++].Value = match.Match.SharedCentimorgans;
+                            if (hasSharedSegments)
+                            {
+                                ws.Cells[row, col++].Value = match.Match.SharedSegments;
+                            }
+                            if (hasLongestBlock)
+                            {
+                                ws.Cells[row, col++].Value = match.Match.LongestBlock;
+                            }
+                            if (hasTreeType)
+                            {
+                                ws.Cells[row, col++].Value = match.Match.TreeType;
+                            }
+                            if (hasTreeSize)
+                            {
+                                ws.Cells[row, col++].Value = match.Match.TreeSize;
+                            }
+
+                            if (hasStarredMatches)
+                            {
+                                ws.Cells[row, col++].Value = match.Match.Starred ? "*" : null;
+                            }
+
+                            if (hasHintsForMatches)
+                            {
+                                ws.Cells[row, col++].Value = match.Match.HasHint ? "*" : null;
+                            }
+
+                            // Correlated clusters
+                            var correlatedClusterNumbers = leafNodes
+                                .Where(leafNode2 => !immediateFamilyIndexes.Contains(leafNode2.Index)
+                                                    && leafNode.Coords.TryGetValue(leafNode2.Index, out var correlationValue) ? correlationValue >= 1 : false)
+                                .Select(leafNode2 => indexClusterNumbers.TryGetValue(leafNode2.Index, out var correlatedClusterNumber) ? correlatedClusterNumber : 0)
+                                .Where(correlatedClusterNumber => correlatedClusterNumber != 0 && correlatedClusterNumber != clusterNumber)
+                                .Distinct()
+                                .OrderBy(n => n)
+                                .ToList();
+                            if (correlatedClusterNumbers.Count > 0)
+                            {
+                                ws.Cells[row, col++].Value = string.Join(", ", correlatedClusterNumbers);
+                            }
+                            else
+                            {
+                                col++;
+                            }
+
+                            // Note
+                            if (!string.IsNullOrEmpty(match.Match.Note))
+                            {
+                                ws.Cells[row, col++].Value = match.Match.Note;
+                            }
+                            else
+                            {
+                                col++;
+                            }
+
+                            // Correlation data
+                            foreach (var coordAndIndex in leafNode.GetCoordsArray(orderedIndexes)
+                                .Zip(orderedIndexes, (c, i) => new { Coord = c, Index = i })
+                                .Skip(fileNum * MaxColumnsPerSplit).Take(MaxColumnsPerSplit))
+                            {
+                                if (coordAndIndex.Coord != 0)
+                                {
+                                    ws.Cells[row, col].Value = coordAndIndex.Coord;
+                                }
+                                col++;
+                            }
+
+                            _progressData.Increment();
                         }
 
-                        _progressData.Increment();
-                    }
+                        // Heatmap color scale
+                        var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + leafNodes.Count, firstMatrixDataColumn - 1 + leafNodes.Count);
+                        var threeColorScale = ws.ConditionalFormatting.AddThreeColorScale(correlationData);
+                        threeColorScale.LowValue.Type = eExcelConditionalFormattingValueObjectType.Num;
+                        threeColorScale.LowValue.Value = 0;
+                        threeColorScale.LowValue.Color = Color.Gainsboro;
+                        threeColorScale.MiddleValue.Type = eExcelConditionalFormattingValueObjectType.Num;
+                        threeColorScale.MiddleValue.Value = 1;
+                        threeColorScale.MiddleValue.Color = Color.Cornsilk;
+                        threeColorScale.HighValue.Type = eExcelConditionalFormattingValueObjectType.Num;
+                        threeColorScale.HighValue.Value = 2;
+                        threeColorScale.HighValue.Color = Color.DarkRed;
 
-                    // Heatmap color scale
-                    var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + leafNodes.Count, firstMatrixDataColumn - 1 + leafNodes.Count);
-                    var threeColorScale = ws.ConditionalFormatting.AddThreeColorScale(correlationData);
-                    threeColorScale.LowValue.Type = eExcelConditionalFormattingValueObjectType.Num;
-                    threeColorScale.LowValue.Value = 0;
-                    threeColorScale.LowValue.Color = Color.Gainsboro;
-                    threeColorScale.MiddleValue.Type = eExcelConditionalFormattingValueObjectType.Num;
-                    threeColorScale.MiddleValue.Value = 1;
-                    threeColorScale.MiddleValue.Color = Color.Cornsilk;
-                    threeColorScale.HighValue.Type = eExcelConditionalFormattingValueObjectType.Num;
-                    threeColorScale.HighValue.Value = 2;
-                    threeColorScale.HighValue.Color = Color.DarkRed;
+                        // Heapmap number format
+                        ws.Cells[$"1:{leafNodes.Count}"].Style.Numberformat.Format = "General";
 
-                    // Heapmap number format
-                    ws.Cells[$"1:{leafNodes.Count}"].Style.Numberformat.Format = "General";
-
-                    // Decimal number formats
-                    foreach (var column in decimalColumns)
-                    {
-                        ws.Column(column).Style.Numberformat.Format = "0.0";
-                    }
-
-                    // Column widths
-                    ws.DefaultColWidth = 19.0 / 7; // 2
-                    foreach (var column in autofitColumns)
-                    {
-                        ws.Column(column).AutoFit();
-                    }
-
-                    // Freeze the column and row headers
-                    ws.View.FreezePanes(firstMatrixDataRow, firstMatrixDataColumn);
-                });
-
-                while (true)
-                {
-                    try
-                    {
-                        p.SaveAs(new FileInfo(_correlationFilename));
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (MessageBox.Show(
-                            $"An error occurred while saving {_correlationFilename}:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}Try again?",
-                            "File error",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                        // Decimal number formats
+                        foreach (var column in decimalColumns)
                         {
-                            throw;
+                            ws.Column(column).Style.Numberformat.Format = "0.0";
+                        }
+
+                        // Column widths
+                        ws.DefaultColWidth = 19.0 / 7; // 2
+                        foreach (var column in autofitColumns)
+                        {
+                            ws.Column(column).AutoFit();
+                        }
+
+                        // Freeze the column and row headers
+                        ws.View.FreezePanes(firstMatrixDataRow, firstMatrixDataColumn);
+                    });
+
+                    var fileName = _correlationFilename;
+                    if (fileNum > 0)
+                    {
+                        fileName = Path.Combine(
+                            Path.GetDirectoryName(fileName),
+                            Path.GetFileNameWithoutExtension(fileName) + $"-{fileNum + 1}" + Path.GetExtension(fileName));
+                    }
+
+                    while (true)
+                    {
+                        try
+                        {
+                            p.SaveAs(new FileInfo(fileName));
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            if (MessageBox.Show(
+                                $"An error occurred while saving {fileName}:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}Try again?",
+                                "File error",
+                                MessageBoxButton.YesNo,
+                                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                            {
+                                throw;
+                            }
                         }
                     }
                 }

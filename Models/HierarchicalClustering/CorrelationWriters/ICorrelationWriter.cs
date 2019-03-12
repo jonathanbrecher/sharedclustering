@@ -9,6 +9,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
     /// </summary>
     public interface ICorrelationWriter
     {
+        int MaxColumns { get; }
+        int MaxColumnsPerSplit { get; }
         Task OutputCorrelationAsync(List<ClusterNode> nodes, Dictionary<int, IClusterableMatch> matchesByIndex, Dictionary<int, int> indexClusterNumbers);
     }
 }

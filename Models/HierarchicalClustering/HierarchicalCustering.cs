@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters;
 using AncestryDnaClustering.Models.HierarchicalClustering.Distance;
@@ -51,6 +52,20 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             if (clusterableMatchesToCorrelateList.Count == 0)
             {
                 return;
+            }
+
+            if (clusterableMatchesToCorrelateList.Count > _correlationWriter.MaxColumns)
+            {
+                if (MessageBox.Show(
+                    $"At most {_correlationWriter.MaxColumns} matches can be written to one file.{Environment.NewLine}{Environment.NewLine}" +
+                    $"{clusterableMatchesToCorrelateList.Count} matches will be split into several output files.{Environment.NewLine}{Environment.NewLine}" +
+                    "Continue anyway?",
+                    "Too many matches",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                {
+                    return;
+                }
             }
 
             var immediateFamily = clusterableMatchesToCorrelateList.Where(match => match.Match.SharedCentimorgans > 200).ToList();
