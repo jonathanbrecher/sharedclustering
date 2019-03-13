@@ -195,7 +195,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         var firstMatrixDataColumn = col;
 
                         // Column headers for each match
-                        foreach (var nonDistantMatch in nonDistantMatches.Skip(fileNum * MaxColumnsPerSplit).Take(MaxColumnsPerSplit))
+                        var matchColumns = nonDistantMatches.Skip(fileNum * MaxColumnsPerSplit).Take(MaxColumnsPerSplit).ToList();
+                        foreach (var nonDistantMatch in matchColumns)
                         {
                             ws.Cells[row, col++].Value = nonDistantMatch.Match.Name;
                         }
@@ -295,7 +296,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         }
 
                         // Heatmap color scale
-                        var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + leafNodes.Count, firstMatrixDataColumn - 1 + leafNodes.Count);
+                        var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + matchColumns.Count, firstMatrixDataColumn - 1 + matchColumns.Count);
                         var threeColorScale = ws.ConditionalFormatting.AddThreeColorScale(correlationData);
                         threeColorScale.LowValue.Type = eExcelConditionalFormattingValueObjectType.Num;
                         threeColorScale.LowValue.Value = 0;
@@ -308,7 +309,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         threeColorScale.HighValue.Color = Color.DarkRed;
 
                         // Heapmap number format
-                        ws.Cells[$"1:{leafNodes.Count}"].Style.Numberformat.Format = "General";
+                        ws.Cells[$"1:{matchColumns.Count}"].Style.Numberformat.Format = "General";
 
                         // Decimal number formats
                         foreach (var column in decimalColumns)
