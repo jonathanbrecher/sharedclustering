@@ -26,11 +26,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
         private readonly double _lowestClusterableCentimorgans;
         private readonly ProgressData _progressData;
 
-        public CountBasedMatrixBuilder(double directCorrelationValue, double indirectCorrelationValue, double _lowestClusterableCentimorgans, ProgressData progressData)
+        public CountBasedMatrixBuilder(double directCorrelationValue, double indirectCorrelationValue, double lowestClusterableCentimorgans, ProgressData progressData)
         {
             _directCorrelationValue = directCorrelationValue;
             _indirectCorrelationValue = indirectCorrelationValue;
-            _lowestClusterableCentimorgans = _lowestClusterableCentimorgans;
+            _lowestClusterableCentimorgans = lowestClusterableCentimorgans;
             _progressData = progressData;
         }
 

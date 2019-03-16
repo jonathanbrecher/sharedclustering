@@ -29,7 +29,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
         public AppearanceWeightedMatrixBuilder(double lowestClusterableCentimorgans, double maxIndirectPercentage, ProgressData progressData)
         {
             _lowestClusterableCentimorgans = lowestClusterableCentimorgans;
-            _maxIndirectPercentage = maxIndirectPercentage;
+            _maxIndirectPercentage = Math.Min(100, Math.Max(0, maxIndirectPercentage));
             _progressData = progressData;
         }
 
@@ -100,12 +100,14 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
 
             var totalCoords = matrix.Count * matrix.Count;
             var numDirectCoords = matrix.Values.Sum(row => row.Count(coord => coord >= 1));
-            var indirectCoords = matrix.SelectMany(row => row.Value.Where(coord => coord > 0 && coord < 1)).ToList();
+            var numIndirectCoords = matrix.AsParallel().Sum(row => row.Value.Count(coord => coord > 0 && coord < 1));
             var maxAllowedIndirectCoords = (int)((totalCoords - numDirectCoords) * _maxIndirectPercentage);
             
-            if (indirectCoords.Count > maxAllowedIndirectCoords)
+            if (numIndirectCoords > maxAllowedIndirectCoords)
             {
-                var minAllowedIndirectCoord = indirectCoords.OrderByDescending(coord => coord).Take(maxAllowedIndirectCoords + 1).Last();
+                var minAllowedIndirectCoord = matrix
+                    .SelectMany(row => row.Value.Where(coord => coord > 0 && coord < 1))
+                    .NthLargest(maxAllowedIndirectCoords);
                 foreach (var row in matrix.Values)
                 {
                     for (int i = 0; i < row.Length; ++i)
