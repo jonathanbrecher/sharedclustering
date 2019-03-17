@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using AncestryDnaClustering.Models.SavedData;
 
-namespace AncestryDnaClustering.Models.HierarchicalCustering
+namespace AncestryDnaClustering.Models.HierarchicalClustering
 {
     public class ClusterableMatch : IClusterableMatch
     {
@@ -12,7 +10,7 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
         public HashSet<int> Coords { get; }
         public int Count { get; }
 
-        public ClusterableMatch(int index, Match match, IList<int> matchIndexes)
+        public ClusterableMatch(int index, Match match, ICollection<int> matchIndexes)
         {
             Index = index;
             Match = match;
@@ -20,14 +18,8 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             Count = matchIndexes.Count;
         }
 
-        public int CompareTo(object other)
-        {
-            return Index.CompareTo(((IClusterableMatch)other).Index);
-        }
+        public int CompareTo(object other) => Index.CompareTo(((IClusterableMatch)other).Index);
 
-        public override string ToString()
-        {
-            return Match.Name;
-        }
+        public override string ToString() => Match.Name;
     }
 }

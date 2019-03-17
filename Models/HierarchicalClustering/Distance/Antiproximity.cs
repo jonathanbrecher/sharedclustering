@@ -17,6 +17,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
             return coords1.Sum(coord => coords2.TryGetValue(coord.Key, out var otherCoord) ? -coord.Value * otherCoord : 0);
         }
 
-        public IEnumerable<int> SignficantCoordinates(Dictionary<int, double> coords) => coords.Keys;
+        public IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords) => coords.Keys;
     }
 }

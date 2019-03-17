@@ -4,8 +4,8 @@ using System.Linq;
 namespace AncestryDnaClustering.Models.HierarchicalClustering.PrimaryClusterFinders
 {
     /// <summary>
-    // Identify clusters where each primary cluster is the largest subcluster where the first and last leaf nodes
-    // have some correlation (direct or indirect) with more than half of all leaf nodes in the cluster.
+    /// Identify clusters where each primary cluster is the largest subcluster where the first and last leaf nodes
+    /// have some correlation (direct or indirect) with more than half of all leaf nodes in the cluster.
     /// </summary>
     public class HalfMatchPrimaryClusterFinder : IPrimaryClusterFinder
     {

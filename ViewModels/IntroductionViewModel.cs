@@ -12,12 +12,12 @@ namespace AncestryDnaClustering.ViewModels
 
         public IntroductionViewModel()
         {
-            ShowDocumentationCommand = new RelayCommand(() => ShowDocumentation());
+            ShowDocumentationCommand = new RelayCommand(ShowDocumentation);
         }
 
         public ICommand ShowDocumentationCommand { get; }
 
-        private void ShowDocumentation()
+        private static void ShowDocumentation()
         {
             try
             {

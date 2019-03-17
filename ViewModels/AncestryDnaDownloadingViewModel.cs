@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -16,11 +15,11 @@ using Microsoft.Win32;
 
 namespace AncestryDnaClustering.ViewModels
 {
-    class AncestryDnaDownloadingViewModel : ObservableObject
+    internal class AncestryDnaDownloadingViewModel : ObservableObject
     {
-        private AncestryLoginHelper _loginHelper;
-        private AncestryTestsRetriever _testsRetriever;
-        private AncestryMatchesRetriever _matchesRetriever;
+        private readonly AncestryLoginHelper _loginHelper;
+        private readonly AncestryTestsRetriever _testsRetriever;
+        private readonly AncestryMatchesRetriever _matchesRetriever;
 
         public string Header { get; } = "Download";
 
@@ -31,7 +30,7 @@ namespace AncestryDnaClustering.ViewModels
             // Ancestry's security works by setting some cookies in the browser when someone signs in.
             // The CookieContainer captures those cookies when they are set, and adds them to subsequent requests.
             var cookies = new CookieContainer();
-            HttpClientHandler handler = new HttpClientHandler { CookieContainer = cookies };
+            var handler = new HttpClientHandler { CookieContainer = cookies };
             var ancestryClient = new HttpClient(handler) { BaseAddress = new Uri("https://www.ancestry.com"), Timeout = TimeSpan.FromMinutes(5) };
 
             _loginHelper = new AncestryLoginHelper(ancestryClient, cookies);
@@ -224,7 +223,7 @@ namespace AncestryDnaClustering.ViewModels
         }
 
         // The total number of matches to retrieve.
-        // Typical values are the number of matches with 20 or heigher (the lowest values shown on the Ancestry website)
+        // Typical values are the number of matches with 20 or higher (the lowest values shown on the Ancestry website)
         // and the total count of all matches.
         private int _numMatchesToRetrieve;
         public int NumMatchesToRetrieve
@@ -250,7 +249,7 @@ namespace AncestryDnaClustering.ViewModels
         }
 
         // The index of the highest shared match to retrieve.
-        // Typical values are the number of matches with 20 or heigher (the lowest values shown on the Ancestry website)
+        // Typical values are the number of matches with 20 or higher (the lowest values shown on the Ancestry website)
         // and the total count of all matches.
         // This might need to be set to an artificially low number in the presence of endogamy,
         // to avoid ridiculously long download times when each match might have thousands of shared matches.
@@ -324,7 +323,7 @@ namespace AncestryDnaClustering.ViewModels
 
             // Make sure there are no more than 100 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
             var semaphore = new SemaphoreSlim(100);
-            int counter = 0;
+            var counter = 0;
 
             var icwDictionary = matches.ToDictionary(
                 match => match.TestGuid,

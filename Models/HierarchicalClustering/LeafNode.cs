@@ -12,7 +12,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
         // The index of the match.
         public int Index { get; set; }
 
-        public LeafNode(int index, HashSet<int> coords, IDistanceMetric distanceMetric) : base(1, distanceMetric)
+        public LeafNode(int index, IEnumerable<int> coords, IDistanceMetric distanceMetric) : base(1, distanceMetric)
         {
             Index = index;
             Coords = coords.ToDictionary(coord => coord, _ => 1.0);
@@ -20,10 +20,10 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             SecondLeaf = this;
         }
 
-        public LeafNode(int index, double[] coords, IDistanceMetric distanceMetric) : base(1, distanceMetric)
+        public LeafNode(int index, IEnumerable<double> coords, IDistanceMetric distanceMetric) : base(1, distanceMetric)
         {
             Index = index;
-            Coords = coords.Select((coord, i) => new { i, coord }).Where(pair => pair.coord != 0).ToDictionary(pair => pair.i, pair => pair.coord);
+            Coords = coords.Select((coord, i) => new { i, coord }).Where(pair => pair.coord > 0).ToDictionary(pair => pair.i, pair => (double)pair.coord);
             FirstLeaf = this;
             SecondLeaf = this;
         }

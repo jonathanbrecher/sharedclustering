@@ -6,11 +6,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters;
 using AncestryDnaClustering.Models.HierarchicalClustering.Distance;
 using AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders;
 using AncestryDnaClustering.Models.HierarchicalClustering.PrimaryClusterFinders;
-using AncestryDnaClustering.Models.HierarchicalCustering;
 using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
 using Microsoft.Win32;
@@ -20,13 +20,13 @@ namespace AncestryDnaClustering.ViewModels
     /// <summary>
     /// A ViewModel that manages configuration for generating clusters from already-downloaded DNA data.
     /// </summary>
-    class AncestryDnaHierarchicalClusteringViewModel : ObservableObject
+    internal class AncestryDnaHierarchicalClusteringViewModel : ObservableObject
     {
         public string Header { get; } = "Cluster";
 
         public ProgressData ProgressData { get; } = new ProgressData();
 
-        private List<ISerializedMatchesReader> _serializedMatchesReaders;
+        private readonly List<ISerializedMatchesReader> _serializedMatchesReaders;
 
         public AncestryDnaHierarchicalClusteringViewModel()
         {
@@ -38,9 +38,9 @@ namespace AncestryDnaClustering.ViewModels
                 new AutoClusterMyHeritageMatchesReader(),
             };
 
-            SelectFileCommand = new RelayCommand(() => SelectFile());
+            SelectFileCommand = new RelayCommand(SelectFile);
 
-            SelectCorrelationFileCommand = new RelayCommand(() => SelectCorrelationFile());
+            SelectCorrelationFileCommand = new RelayCommand(SelectCorrelationFile);
 
             ProcessSavedDataCommand = new RelayCommand(async () => await ProcessSavedDataAsync());
 
@@ -134,9 +134,9 @@ namespace AncestryDnaClustering.ViewModels
                 {
                     Settings.Default.MinCentimorgansToCluster = MinCentimorgansToCluster;
                     CanProcessSavedData = File.Exists(Filename) && MinCentimorgansToCluster > 0;
-                    ClusterTypeVeryClose = (MinCentimorgansToCluster == 90 && MinCentimorgansInSharedMatches == 90);
-                    ClusterTypeOver20 = (MinCentimorgansToCluster == 20 && MinCentimorgansInSharedMatches == 20);
-                    ClusterTypeComplete = (MinCentimorgansToCluster <= 6 && MinCentimorgansInSharedMatches <= 6);
+                    ClusterTypeVeryClose = MinCentimorgansToCluster == 90 && MinCentimorgansInSharedMatches == 90;
+                    ClusterTypeOver20 = MinCentimorgansToCluster == 20 && MinCentimorgansInSharedMatches == 20;
+                    ClusterTypeComplete = MinCentimorgansToCluster <= 6 && MinCentimorgansInSharedMatches <= 6;
                 }
             }
         }
@@ -165,7 +165,7 @@ namespace AncestryDnaClustering.ViewModels
         // A value of 100 allows a solid gray background; a value of zero shows red cells only (no gray).
         // If the number of naturally calculated gray cells occupies a greater percentage of the
         // non-red cells than indicated here, then the lowest value gray cells will be suppressed
-        // and will dispaly as white. This can reduce the "sea of gray" seen in output that exhibits much pedigree collapse.
+        // and will display as white. This can reduce the "sea of gray" seen in output that exhibits much pedigree collapse.
         private double _maxGrayPercentage;
         public double MaxGrayPercentage
         {
@@ -193,7 +193,7 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
-        // The file name (full path name) where the final cluster diagram shold be saved.
+        // The file name (full path name) where the final cluster diagram should be saved.
         private string _correlationFilename;
         public string CorrelationFilename
         {
@@ -309,14 +309,14 @@ namespace AncestryDnaClustering.ViewModels
                 .Where(coord => matchesByIndex.ContainsKey(coord))
                 .Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
 
-            var hierachicalClustering = new HierarchicalCustering(
+            var hierarchicalClustering = new HierarchicalClustering(
                 MinClusterSize,
                 _ => new OverlapWeightedEuclideanDistanceSquared(),
                 new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
                 new HalfMatchPrimaryClusterFinder(),
                 new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, ProgressData),
                 ProgressData);
-            await hierachicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
+            await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 
             ProgressData.Reset(DateTime.Now - startTime, "Done");
         }
@@ -357,8 +357,8 @@ namespace AncestryDnaClustering.ViewModels
             return await Task.Run(() =>
             {
                 var strongMatches = input.Matches.Where(match => match.SharedCentimorgans >= minCentimorgansToCluster).ToList();
-                int maxMatchIndex = strongMatches.Count + 1;
-                var maxIcwIndex = Math.Min(maxMatchIndex, input.Matches.Where(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches).Count() + 1);
+                var maxMatchIndex = strongMatches.Count + 1;
+                var maxIcwIndex = Math.Min(maxMatchIndex, input.Matches.Count(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches) + 1);
                 maxIcwIndex = Math.Min(maxIcwIndex, input.Matches.Count - 1);
                 var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestGuid));
                 var icw = input.Icw
@@ -368,7 +368,6 @@ namespace AncestryDnaClustering.ViewModels
                     kvp => kvp.Key,
                     kvp => kvp.Value.Where(index => index <= maxIcwIndex).ToList()
                     );
-                var matchCentimorgans = strongMatches.Select(match => match.SharedCentimorgans).ToList();
                 var matchesDictionary = strongMatches.ToDictionary(match => match.TestGuid);
                 var clusterableMatches = icw
                     .AsParallel().AsOrdered()

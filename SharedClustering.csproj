@@ -131,7 +131,7 @@
     <Compile Include="Models\HierarchicalClustering\Node.cs" />
     <Compile Include="Models\HierarchicalClustering\PrimaryClusterFinders\HalfMatchPrimaryClusterFinder.cs" />
     <Compile Include="Models\HierarchicalClustering\PrimaryClusterFinders\IPrimaryClusterFinder.cs" />
-    <Compile Include="Models\HierarchicalClustering\HierarchicalCustering.cs" />
+    <Compile Include="Models\HierarchicalClustering\HierarchicalClustering.cs" />
     <Compile Include="Models\HierarchicalClustering\IClusterableMatch.cs" />
     <Compile Include="Models\HierarchicalClustering\Distance\IDistanceMetric.cs" />
     <Compile Include="Models\MatchCounts.cs" />

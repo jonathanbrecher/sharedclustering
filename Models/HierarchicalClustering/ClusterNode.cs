@@ -15,7 +15,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
         public Node First { get; private set; }
         public Node Second { get; private set; }
 
-        // The distance between the First andn Second nodes
+        // The distance between the First and Second nodes
         public double Distance { get; }
 
         public ClusterNode(Node first, Node second, double distance, IDistanceMetric distanceMetric) : base(first.NumChildren + second.NumChildren, distanceMetric)

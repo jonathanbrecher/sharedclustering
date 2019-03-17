@@ -41,11 +41,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
 
             var stdX = Math.Sqrt(sumX2 / n - sumX * sumX / n / n);
             var stdY = Math.Sqrt(sumY2 / n - sumY * sumY / n / n);
-            var covariance = (sumXY / n - sumX * sumY / n / n);
+            var covariance = sumXY / n - sumX * sumY / n / n;
 
             return covariance / stdX / stdY;
         }
 
-        public IEnumerable<int> SignficantCoordinates(Dictionary<int, double> coords) => coords.Keys;
+        public IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords) => coords.Keys;
     }
 }

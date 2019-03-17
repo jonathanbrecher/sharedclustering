@@ -18,9 +18,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
         public LeafNode FirstLeaf { get; protected set; }
         public LeafNode SecondLeaf { get; protected set; }
 
-        private IDistanceMetric _distanceMetric;
+        private readonly IDistanceMetric _distanceMetric;
 
-        public Node(int numChildren, IDistanceMetric distanceMetric)
+        protected Node(int numChildren, IDistanceMetric distanceMetric)
         {
             NumChildren = numChildren;
             _distanceMetric = distanceMetric;

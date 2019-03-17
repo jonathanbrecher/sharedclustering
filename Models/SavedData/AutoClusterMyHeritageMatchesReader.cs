@@ -28,7 +28,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return fileNameWithoutExtension;
         }
 
-        public async Task<(Serialized, string)> ReadFileAsync(string fileName)
+        public async Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName)
         {
             if (!IsSupportedFileType(fileName))
             {
@@ -49,7 +49,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return (serialized, null);
         }
 
-        private void ReadMatchFile(Serialized serialized, string matchFile)
+        private static void ReadMatchFile(Serialized serialized, string matchFile)
         {
             using (var matchReader = new StreamReader(matchFile))
             using (var csv = new CsvReader(matchReader))
@@ -89,7 +89,7 @@ namespace AncestryDnaClustering.Models.SavedData
                         Note = match.Notes,
                     };
 
-                    // AutoCluster sometimes writes invalid CSV files, not properly quoting a linebreak in the notes field.
+                    // AutoCluster sometimes writes invalid CSV files, not properly quoting a line break in the notes field.
                     // When that happens the ICW data cannot be read
                     var numHeaderFields = firstMatchFieldIndex;
                     while (csv.Context.Record.Length <= numHeaderFields)
@@ -106,7 +106,7 @@ namespace AncestryDnaClustering.Models.SavedData
                         .Select(value => value.Value - 1) // AutoCluster indexes are 1-based
                         .ToList();
 
-                    // AutoCluster sometimes writes invalid CSV files, not properly quoting a linebreak in the notes field.
+                    // AutoCluster sometimes writes invalid CSV files, not properly quoting a line break in the notes field.
                     // When that happens the ICW data cannot be read
                     if (icw.Count == 0)
                     {
@@ -137,7 +137,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 kvp => kvp.Value.Select(index => indexUpdates[index]).ToList());
         }
 
-        private static IFormatProvider[] _cultures = new[] { CultureInfo.CurrentCulture, CultureInfo.GetCultureInfo("en-US"), CultureInfo.InvariantCulture };
+        private static readonly IFormatProvider[] _cultures = { CultureInfo.CurrentCulture, CultureInfo.GetCultureInfo("en-US"), CultureInfo.InvariantCulture };
 
         public static double GetDouble(string value)
         {

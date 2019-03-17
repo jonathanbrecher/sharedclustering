@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.ViewModels;
@@ -11,8 +8,8 @@ namespace AncestryDnaClustering.Models
 {
     public class AncestryMatchesRetriever
     {
-        HttpClient _dnaHomeClient;
-        const int _matchesPerPage = 50;
+        private HttpClient _dnaHomeClient;
+        private const int _matchesPerPage = 50;
 
         public AncestryMatchesRetriever(HttpClient dnaHomeClient)
         {

@@ -13,12 +13,16 @@ namespace AncestryDnaClustering.Models
             foreach (var item in source)
             {
                 if (bucket == null)
+                {
                     bucket = new T[size];
+                }
 
                 bucket[count++] = item;
 
                 if (count != size)
+                {
                     continue;
+                }
 
                 yield return bucket.Select(x => x);
 
@@ -28,7 +32,9 @@ namespace AncestryDnaClustering.Models
 
             // Return the last bucket with all remaining elements
             if (bucket != null && count > 0)
+            {
                 yield return bucket.Take(count);
+            }
         }
 
         // Much faster than sorting the list, especially for large lists

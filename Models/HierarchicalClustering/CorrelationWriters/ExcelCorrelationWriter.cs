@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using AncestryDnaClustering.Models.HierarchicalCustering;
 using AncestryDnaClustering.ViewModels;
 using OfficeOpenXml;
 using OfficeOpenXml.ConditionalFormatting;
@@ -54,7 +53,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                 numOutputFiles = leafNodes.Count / MaxColumnsPerSplit + 1;
             }
 
-            _progressData.Reset($"Saving clusters", leafNodes.Count * numOutputFiles);
+            _progressData.Reset("Saving clusters", leafNodes.Count * numOutputFiles);
 
             // Ancestry never shows matches lower than 20 cM as shared matches.
             // The distant matches will be included as rows in the Excel file, but not as columns.
@@ -255,7 +254,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             // Correlated clusters
                             var correlatedClusterNumbers = leafNodes
                                 .Where(leafNode2 => !immediateFamilyIndexes.Contains(leafNode2.Index)
-                                                    && leafNode.Coords.TryGetValue(leafNode2.Index, out var correlationValue) ? correlationValue >= 1 : false)
+                                                    && leafNode.Coords.TryGetValue(leafNode2.Index, out var correlationValue) && correlationValue >= 1)
                                 .Select(leafNode2 => indexClusterNumbers.TryGetValue(leafNode2.Index, out var correlatedClusterNumber) ? correlatedClusterNumber : 0)
                                 .Where(correlatedClusterNumber => correlatedClusterNumber != 0 && correlatedClusterNumber != clusterNumber)
                                 .Distinct()
@@ -308,7 +307,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         threeColorScale.HighValue.Value = 2;
                         threeColorScale.HighValue.Color = Color.DarkRed;
 
-                        // Heapmap number format
+                        // Heatmap number format
                         ws.Cells[$"1:{matchColumns.Count}"].Style.Numberformat.Format = "General";
 
                         // Decimal number formats

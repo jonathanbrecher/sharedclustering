@@ -102,10 +102,8 @@ namespace AncestryDnaClustering.Models
                         {
                             throw;
                         }
-                        else
-                        {
-                            return;
-                        }
+
+                        return;
                     }
                 }
             }
@@ -134,10 +132,8 @@ namespace AncestryDnaClustering.Models
                         {
                             throw;
                         }
-                        else
-                        {
-                            return false;
-                        }
+
+                        return false;
                     }
                 }
             }
@@ -190,10 +186,8 @@ namespace AncestryDnaClustering.Models
                         {
                             throw;
                         }
-                        else
-                        {
-                            return false;
-                        }
+
+                        return false;
                     }
                 }
             }

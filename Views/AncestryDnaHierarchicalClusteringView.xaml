@@ -121,14 +121,14 @@
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="1" Text="{Binding ProgressData.Description}"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding ProgressData.Description}"/>
                 <ProgressBar Grid.Row="2" Grid.Column="0"
                              HorizontalAlignment="Stretch"
                              Maximum="{Binding ProgressData.Maximum}"
                              Value="{Binding ProgressData.Value}"/>
                 <TextBlock  Grid.Row="2" Grid.Column="2" Text="{Binding ProgressData.Percent, StringFormat=P2}"/>
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding ProgressData.TimeLeftString}"/>
-                <Button Grid.Row="6" Grid.Column="0" Grid.RowSpan="3"
+                <Button Grid.Row="6" Grid.Column="0"
                         Height="23" Width="120"
                         Content="Process Saved Data" 
                         Command="{Binding ProcessSavedDataCommand}"

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AncestryDnaClustering.Models.HierarchicalCustering;
 using AncestryDnaClustering.ViewModels;
 
 namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
@@ -40,7 +39,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
 
             return Task.Run(async () =>
             {
-                var matchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
                 clusterableMatches = clusterableMatches.Skip(immediateFamily.Count).ToList();
 
                 // Skip over any immediate family matches. Immediate family matches tend to have huge numbers of shared matches.
@@ -52,7 +50,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 var matrix = new ConcurrentDictionary<int, double[]>();
 
                 // For the immediate family, populate the matrix based only on direct shared matches.
-                var immediateFamilyTasks = immediateFamily.Select(async match => Task.Run(() =>
+                var immediateFamilyTasks = immediateFamily.Select(match => Task.Run(() =>
                 {
                     ExtendMatrixDirect(matrix, match, maxIndex);
                     _progressData.Increment();
@@ -96,7 +94,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
         // An indirect match is when two matches A and B appear together on the shared match list of some other match C.
         // Matches are rated with a value of (n * indirectCorrelationValue),
         // where n is the number of shared match lists that contain both match A and match B.
-        private void ExtendMatrixIndirect(ConcurrentDictionary<int, double[]> matrix, IClusterableMatch match, int maxIndex, double indirectCorrelationValue)
+        private static void ExtendMatrixIndirect(ConcurrentDictionary<int, double[]> matrix, IClusterableMatch match, int maxIndex, double indirectCorrelationValue)
         {
             foreach (var coord1 in match.Coords)
             {

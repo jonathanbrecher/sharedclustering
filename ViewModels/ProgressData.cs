@@ -73,7 +73,7 @@ namespace AncestryDnaClustering.ViewModels
                         // Estimate of the time left is based on the most recent 20 reference times.
                         // This smooths out short-term fluctuations while still adjusting for long-term rate changes.
                         var increments = Math.Min(20, _referenceTimes.Count);
-                        var referenceTime = _referenceTimes[_referenceTimes.Count() - increments];
+                        var referenceTime = _referenceTimes[_referenceTimes.Count - increments];
                         var elapsedTime = DateTime.Now - referenceTime;
                         var remainingTime = TimeSpan.FromTicks((long)(elapsedTime.Ticks * (double)(Maximum - Value) / _referenceTimeValueIncrement / increments));
 
@@ -87,7 +87,7 @@ namespace AncestryDnaClustering.ViewModels
         }
 
         // Build a textual representation of the time remaining.
-        private string GetTimeString(TimeSpan timeSpan, bool complete)
+        private static string GetTimeString(TimeSpan timeSpan, bool complete)
         {
             // Don't bother trying to update the description if there's basically no time remaining.
             if (timeSpan < TimeSpan.FromSeconds(1))
@@ -107,11 +107,11 @@ namespace AncestryDnaClustering.ViewModels
             return string.Join(" ", segments.Where(s => s != null));
         }
 
-        List<DateTime> _referenceTimes = new List<DateTime>();
+        private List<DateTime> _referenceTimes = new List<DateTime>();
         private int _referenceTimeValueIncrement = 1;
 
         // A textual representation of the time remaining.
-        public string _timeLeftString;
+        private string _timeLeftString;
         public string TimeLeftString
         {
             get => _timeLeftString;
@@ -133,7 +133,7 @@ namespace AncestryDnaClustering.ViewModels
             Reset(elapsed, description);
         }
 
-        // Set the progress back to zero and also set the description of the nest chunkn of work.
+        // Set the progress back to zero and also set the description of the nest chunk of work.
         public void Reset(TimeSpan elapsed, string description = null)
         {
             if (!_updateProgress)
@@ -143,7 +143,7 @@ namespace AncestryDnaClustering.ViewModels
 
             // Update the bound properties explicitly on the Dispatcher thread so that this method can be called from a background task.
             // Application.Current might be null when the application is in the process of quitting.
-            Application.Current?.Dispatcher.Invoke(new Action(() =>
+            Application.Current?.Dispatcher.Invoke(() =>
             {
                 Description = description;
                 Value = 0;
@@ -151,7 +151,7 @@ namespace AncestryDnaClustering.ViewModels
                 {
                     TimeLeftString = GetTimeString(elapsed, true);
                 }
-            }));
+            });
         }
 
         public void Reset(string description, int maximum)
@@ -163,12 +163,12 @@ namespace AncestryDnaClustering.ViewModels
 
             // Update the bound properties explicitly on the Dispatcher thread so that this method can be called from a background task.
             // Application.Current might be null when the application is in the process of quitting.
-            Application.Current?.Dispatcher.Invoke(new Action(() =>
+            Application.Current?.Dispatcher.Invoke(() =>
             {
                 Description = description;
                 Maximum = maximum;
                 Value = 0;
-            }));
+            });
         }
 
         public void Increment()
@@ -180,10 +180,10 @@ namespace AncestryDnaClustering.ViewModels
 
             // Update the bound properties explicitly on the Dispatcher thread so that this method can be called from a background task.
             // Application.Current might be null when the application is in the process of quitting.
-            Application.Current?.Dispatcher.Invoke(new Action(() =>
+            Application.Current?.Dispatcher.Invoke(() =>
             {
                 Value = Value + 1;
-            }));
+            });
         }
     }
 }

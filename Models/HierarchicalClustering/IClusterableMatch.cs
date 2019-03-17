@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using AncestryDnaClustering.Models.SavedData;
 
-namespace AncestryDnaClustering.Models.HierarchicalCustering
+namespace AncestryDnaClustering.Models.HierarchicalClustering
 {
     public interface IClusterableMatch : IComparable
     {

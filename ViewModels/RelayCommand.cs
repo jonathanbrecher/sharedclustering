@@ -14,9 +14,9 @@ namespace AncestryDnaClustering.ViewModels
 
     public class RelayCommand<T> : ICommand
     {
-        private Action<T> execute;
+        private Action<T> _execute;
 
-        private Predicate<T> canExecute;
+        private Predicate<T> _canExecute;
 
         private event EventHandler CanExecuteChangedInternal;
 
@@ -27,8 +27,8 @@ namespace AncestryDnaClustering.ViewModels
 
         public RelayCommand(Action<T> execute, Predicate<T> canExecute)
         {
-            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            this.canExecute = canExecute ?? throw new ArgumentNullException(nameof(canExecute));
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            _canExecute = canExecute ?? throw new ArgumentNullException(nameof(canExecute));
         }
 
         public event EventHandler CanExecuteChanged
@@ -48,33 +48,27 @@ namespace AncestryDnaClustering.ViewModels
 
         public bool CanExecute(object parameter)
         {
-            var result = canExecute != null && canExecute((T)parameter);
+            var result = _canExecute?.Invoke((T)parameter) == true;
             return result;
         }
 
         public void Execute(object parameter)
         {
-            execute((T)parameter);
+            _execute((T)parameter);
         }
 
         public void OnCanExecuteChanged()
         {
-            EventHandler handler = CanExecuteChangedInternal;
-            if (handler != null)
-            {
-                handler.Invoke(this, EventArgs.Empty);
-            }
+            var handler = CanExecuteChangedInternal;
+            handler?.Invoke(this, EventArgs.Empty);
         }
 
         public void Destroy()
         {
-            canExecute = _ => false;
-            execute = _ => { return; };
+            _canExecute = _ => false;
+            _execute = _ => { };
         }
 
-        private static bool DefaultCanExecute(T parameter)
-        {
-            return true;
-        }
+        private static bool DefaultCanExecute(T parameter) => true;
     }
 }

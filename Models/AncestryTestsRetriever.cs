@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace AncestryDnaClustering.Models
 {
-    class AncestryTestsRetriever
+    internal class AncestryTestsRetriever
     {
-        HttpClient _ancestryClient;
+        private HttpClient _ancestryClient;
 
         public AncestryTestsRetriever(HttpClient ancestryClient)
         {

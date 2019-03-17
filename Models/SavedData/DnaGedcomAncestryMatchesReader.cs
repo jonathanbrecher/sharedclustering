@@ -35,7 +35,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return null;
         }
 
-        public async Task<(Serialized, string)> ReadFileAsync(string fileName)
+        public async Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName)
         {
             if (!IsSupportedFileType(fileName))
             {
@@ -82,7 +82,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return (serialized, null);
         }
 
-        private void ReadMatchFile(Serialized serialized, string matchFile)
+        private static void ReadMatchFile(Serialized serialized, string matchFile)
         {
             using (var matchReader = new StreamReader(matchFile))
             using (var csv = new CsvReader(matchReader))
@@ -140,7 +140,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 .ToDictionary(pair => pair.Id, pair => pair.Index);
         }
 
-        private static IFormatProvider[] _cultures = new[] { CultureInfo.CurrentCulture, CultureInfo.GetCultureInfo("en-US"), CultureInfo.InvariantCulture };
+        private static readonly IFormatProvider[] _cultures = { CultureInfo.CurrentCulture, CultureInfo.GetCultureInfo("en-US"), CultureInfo.InvariantCulture };
 
         public static double GetDouble(string value)
         {
@@ -155,7 +155,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return 0.0;
         }
 
-        private void ReadIcwFile(Serialized serialized, string icwFile)
+        private static void ReadIcwFile(Serialized serialized, string icwFile)
         {
             using (var icwReader = new StreamReader(icwFile))
             using (var csv = new CsvReader(icwReader))

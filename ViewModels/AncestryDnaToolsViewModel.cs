@@ -8,7 +8,7 @@ namespace AncestryDnaClustering.ViewModels
     /// <summary>
     /// Main ViewModel for the application.
     /// </summary>
-    class AncestryDnaToolsViewModel : ObservableObject
+    internal class AncestryDnaToolsViewModel : ObservableObject
     {
         public AncestryDnaToolsViewModel()
         {

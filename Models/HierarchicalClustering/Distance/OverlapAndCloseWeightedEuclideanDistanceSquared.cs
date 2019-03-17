@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using AncestryDnaClustering.Models.HierarchicalCustering;
 
 namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
 {
@@ -19,21 +18,21 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
     {
         private readonly List<int> _immediateFamilyIndexes;
 
-        public OverlapAndCloseWeightedEuclideanDistanceSquared(List<IClusterableMatch> immediateFamily)
+        public OverlapAndCloseWeightedEuclideanDistanceSquared(IEnumerable<IClusterableMatch> immediateFamily)
         {
             _immediateFamilyIndexes = immediateFamily.Select(match => match.Index).ToList();
         }
 
         public double Calculate(Dictionary<int, double> coords1, Dictionary<int, double> coords2)
         {
-            var fewerCoords = coords1.Count() < coords2.Count() ? coords1 : coords2;
+            var fewerCoords = coords1.Count < coords2.Count ? coords1 : coords2;
             var moreCoords = fewerCoords == coords1 ? coords2 : coords1;
 
             var overlap = 0.0;
             var distSquared = 0.0;
             foreach (var coord in fewerCoords)
             {
-                var coordValue = (coord.Value >= 1 ? coord.Value : 0);
+                var coordValue = coord.Value >= 1 ? coord.Value : 0;
                 if (moreCoords.TryGetValue(coord.Key, out var otherCoordValue))
                 {
                     overlap += Math.Min(coordValue, otherCoordValue);
@@ -45,7 +44,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
                     distSquared += coordValue * coordValue;
                 }
             }
-            if (overlap == 0.0)
+            if (overlap <= 0.0)
             {
                 return double.PositiveInfinity;
             }
@@ -69,6 +68,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
             return distSquared / overlap;
         }
 
-        public IEnumerable<int> SignficantCoordinates(Dictionary<int, double> coords) => coords.Keys;
+        public IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords) => coords.Keys;
     }
 }

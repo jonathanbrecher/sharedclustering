@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using AncestryDnaClustering.Models.HierarchicalCustering;
 
 namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 {
@@ -10,7 +9,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
     public interface ICorrelationWriter
     {
         int MaxColumns { get; }
-        int MaxColumnsPerSplit { get; }
         Task OutputCorrelationAsync(List<ClusterNode> nodes, Dictionary<int, IClusterableMatch> matchesByIndex, Dictionary<int, int> indexClusterNumbers);
     }
 }

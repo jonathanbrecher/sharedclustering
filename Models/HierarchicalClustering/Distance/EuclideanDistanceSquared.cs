@@ -13,7 +13,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
     {
         public double Calculate(Dictionary<int, double> coords1, Dictionary<int, double> coords2)
         {
-            var fewerCoords = coords1.Count() < coords2.Count() ? coords1 : coords2;
+            var fewerCoords = coords1.Count < coords2.Count ? coords1 : coords2;
             var moreCoords = fewerCoords == coords1 ? coords2 : coords1;
 
             var hasIntersection = false;
@@ -35,14 +35,14 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
             {
                 return double.PositiveInfinity;
             }
-            foreach (var otherCoord in moreCoords.Where(otherCoord => !fewerCoords.ContainsKey(otherCoord.Key)))
-            {
-                var diff = otherCoord.Value;
-                distSquared += diff * diff;
-            }
+
+            distSquared += moreCoords.Where(otherCoord => !fewerCoords.ContainsKey(otherCoord.Key))
+                .Select(otherCoord => otherCoord.Value)
+                .Select(diff => diff * diff)
+                .Sum();
             return distSquared;
         }
 
-        public IEnumerable<int> SignficantCoordinates(Dictionary<int, double> coords) => coords.Keys;
+        public IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords) => coords.Keys;
     }
 }

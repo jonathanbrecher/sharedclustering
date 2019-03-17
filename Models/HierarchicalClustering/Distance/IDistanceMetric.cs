@@ -12,6 +12,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.Distance
         /// <summary>
         /// Some distance metrics may ignore some coordinates that it considers insignificant.
         /// </summary>
-        IEnumerable<int> SignficantCoordinates(Dictionary<int, double> coords);
+        IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords);
     }
 }

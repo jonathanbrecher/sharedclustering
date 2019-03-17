@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AncestryDnaClustering.Models.HierarchicalCustering;
 using AncestryDnaClustering.ViewModels;
 
 namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
@@ -40,14 +39,12 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
             return Task.Run(async () =>
             {
                 var matchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
-                var matchesDictionary = clusterableMatches.ToDictionary(match => match.Match.TestGuid);
 
                 // Skip over any immediate family matches. Immediate family matches tend to have huge numbers of shared matches.
                 // If the immediate family are included, the entire cluster diagram will get swamped with low-level
                 // indirect matches (gray cells in the final), obscuring the useful clusters. 
                 // The immediate family matches will still be included in the cluster diagram
                 // by virtue of the other matches that are shared directly with them.
-                var immediateFamilyIndexes = new HashSet<int>(immediateFamily.Select(match => match.Index));
                 clusterableMatches = clusterableMatches.Skip(immediateFamily.Count).ToList();
 
                 // Count how often each match appears in any match's match list.
@@ -67,7 +64,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 var matrix = new ConcurrentDictionary<int, double[]>();
 
                 // For the immediate family, populate the matrix based only on direct shared matches.
-                var immediateFamilyTasks = immediateFamily.Select(async match => Task.Run(() =>
+                var immediateFamilyTasks = immediateFamily.Select(match => Task.Run(() =>
                 {
                     ExtendMatrixDirect(matrix, match, maxIndex, 1.0);
                     _progressData.Increment();
@@ -78,7 +75,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 var clusterableMatchesTasks = clusterableMatches.Select(match => Task.Run(() =>
                 {
                     ExtendMatrixDirect(matrix, match, maxIndex, 1.0);
-                    ExtendMatrixIndirect(matrix, match, appearances, immediateFamilyIndexes, maxIndex);
+                    ExtendMatrixIndirect(matrix, match, appearances, maxIndex);
                     _progressData.Increment();
                 }));
                 await Task.WhenAll(clusterableMatchesTasks);
@@ -91,7 +88,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
             });
         }
 
-        private void ReduceIndirectCoords(ConcurrentDictionary<int, double[]> matrix)
+        private void ReduceIndirectCoords(IDictionary<int, double[]> matrix)
         {
             if (_maxIndirectPercentage >= 100)
             {
@@ -110,7 +107,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                     .NthLargest(maxAllowedIndirectCoords);
                 foreach (var row in matrix.Values)
                 {
-                    for (int i = 0; i < row.Length; ++i)
+                    for (var i = 0; i < row.Length; ++i)
                     {
                         if (row[i] < minAllowedIndirectCoord)
                         {
@@ -126,7 +123,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
         // If two matches A and B never appear on the same match list, then matrix[A][B] has a value of 0.
         // If match A appears in 4 shared match lists, and match B appears in 3 of those lists, then matrix[A][B] has a value of 0.75
         // If every shared match list that contains match A also contains match B, then matrix[A][B] has a value of 1.
-        private void ExtendMatrixIndirect(ConcurrentDictionary<int, double[]> matrix, IClusterableMatch match, Dictionary<int, int> appearances, HashSet<int> strongMatchesIndexes, int maxIndex)
+        private static void ExtendMatrixIndirect(ConcurrentDictionary<int, double[]> matrix, IClusterableMatch match, IReadOnlyDictionary<int, int> appearances, int maxIndex)
         {
             foreach (var coord1 in match.Coords)
             {
@@ -156,7 +153,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
 
         // A direct match is when match B appears on the shared match list of match A.
         // When the shared match list of match A contains match B, then matrix[A][B] is incremented by a given amount.
-        private void ExtendMatrixDirect(ConcurrentDictionary<int, double[]> matrix, IClusterableMatch match, int maxIndex, double increment)
+        private static void ExtendMatrixDirect(ConcurrentDictionary<int, double[]> matrix, IClusterableMatch match, int maxIndex, double increment)
         {
             if (match.Index <= maxIndex)
             {

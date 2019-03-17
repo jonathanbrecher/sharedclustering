@@ -6,17 +6,14 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
     public struct Neighbor : IComparable<Neighbor>
     {
         public Node Node { get; set; }
-        public float DistanceSquared { get; set; }
+        public double DistanceSquared { get; set; }
 
         public Neighbor(Node node, Node parent)
         {
             Node = node;
-            DistanceSquared = (float)node.DistanceTo(parent);
+            DistanceSquared = node.DistanceTo(parent);
         }
 
-        public int CompareTo(Neighbor other)
-        {
-            return DistanceSquared.CompareTo(other.DistanceSquared);
-        }
+        public int CompareTo(Neighbor other) => DistanceSquared.CompareTo(other.DistanceSquared);
     }
 }
