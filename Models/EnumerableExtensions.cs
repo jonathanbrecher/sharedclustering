@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AncestryDnaClustering.Models
@@ -71,6 +72,43 @@ namespace AncestryDnaClustering.Models
                 }
             }
             return set.First().Key;
+        }
+
+        // Much faster than sorting the list, especially for large lists
+        public static IEnumerable<T> LowestN<T,TKey>(this IEnumerable<T> items, Func<T, TKey> keyFunc, int count)
+        {
+            var comparer = Comparer<TKey>.Default;
+            var set = new SortedDictionary<TKey, List<T>> { { default(TKey), new List<T>() } };
+            var resultCount = 0;
+            var last = set.Last();
+            foreach (var item in items)
+            {
+                // If the key is already larger than the largest
+                // item in the set, we can ignore this item
+                var key = keyFunc(item);
+                if (resultCount < count || comparer.Compare(key, last.Key) <= 0)
+                {
+                    // Add next item to set
+                    if (!set.ContainsKey(key))
+                    {
+                        set[key] = new List<T> { item };
+                    }
+                    else
+                    {
+                        set[key].Add(item);
+                    }
+
+                    // Remove largest item from set
+                    ++resultCount;
+                    if (resultCount - last.Value.Count >= count)
+                    {
+                        set.Remove(last.Key);
+                        resultCount -= last.Value.Count;
+                        last = set.Last();
+                    }
+                }
+            }
+            return set.SelectMany(kvp => kvp.Value);
         }
     }
 }

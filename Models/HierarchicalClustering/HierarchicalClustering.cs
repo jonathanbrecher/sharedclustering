@@ -82,13 +82,13 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 .ToList();
 
             var indexClusterNumbers = primaryClusters
-                .SelectMany((cluster, clusterNum) => cluster.GetOrderedLeafNodes().Select(leafNode => new { LeafNode = leafNode, ClusterNum = clusterNum + 1}))
+                .SelectMany((cluster, clusterNum) => cluster.GetOrderedLeafNodes().Select(leafNode => new { LeafNode = leafNode, ClusterNum = clusterNum + 1 }))
                 .ToDictionary(pair => pair.LeafNode.Index, pair => pair.ClusterNum);
 
             if (maxIndex < clusterableMatches.Max(match => match.Index))
             {
                 var leafNodes = nodes.First().GetOrderedLeafNodes().ToList();
-                
+
                 var primaryClustersSet = new HashSet<ClusterNode>(primaryClusters);
 
                 var extendedClusters = await ExtendClustersAsync(clusterableMatches, primaryClustersSet, leafNodes, minCentimorgansToCluster);
@@ -99,7 +99,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             await _correlationWriter.OutputCorrelationAsync(nodes, matchesByIndex, indexClusterNumbers);
         }
 
-        private async Task<List<ClusterNode>> ClusterAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, List<IClusterableMatch> immediateFamily, IReadOnlyDictionary<int, double[]> matrix, ProgressData progressData)
+        private async Task<List<ClusterNode>> ClusterAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, List<IClusterableMatch> immediateFamily, IReadOnlyDictionary<int, float[]> matrix, ProgressData progressData)
         {
             var distanceMetric = _distanceMetricFactory(immediateFamily);
 
@@ -110,49 +110,49 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             return nodes;
         }
 
-        private async Task Recluster(ICollection<ClusterNode> nodes, Dictionary<ClusterNode, List<IClusterableMatch>> extendedClusters, List<IClusterableMatch> immediateFamily, IReadOnlyDictionary<int, IClusterableMatch> matchesByIndex, ConcurrentDictionary<int, double[]> matrix)
+        private async Task Recluster(ICollection<ClusterNode> nodes, Dictionary<ClusterNode, List<IClusterableMatch>> extendedClusters, List<IClusterableMatch> immediateFamily, IReadOnlyDictionary<int, IClusterableMatch> matchesByIndex, ConcurrentDictionary<int, float[]> matrix)
         {
             _progressData.Reset($"Reclustering {extendedClusters.Count} primary clusters", extendedClusters.Count);
 
             var primaryClustersTasks = extendedClusters
                 .Where(kvp => kvp.Value.Count > 0)
                 .Select(async kvp =>
-            {
-                var nodeToRecluster = kvp.Key;
-                var additionalMatches = kvp.Value;
-                var leafNodesByIndex = nodeToRecluster.GetOrderedLeafNodes().ToDictionary(leafNode => leafNode.Index);
-                var clusterableMatches = leafNodesByIndex.Keys.Select(index => matchesByIndex[index]).Concat(additionalMatches).ToList();
-
-                var maxIndex = additionalMatches.Max(match => match.Coords.Max());
-                _matrixBuilder.ExtendMatrix(matrix, additionalMatches, maxIndex);
-
-                var reclusteredNodes = await ClusterAsync(clusterableMatches, immediateFamily, matrix, ProgressData.SuppressProgress).ConfigureAwait(false);
-
-                if (reclusteredNodes.Count == 0)
                 {
-                    _progressData.Increment();
-                    return nodeToRecluster;
-                }
-                var reclusteredNode = reclusteredNodes.First();
-                foreach (var reclusteredLeafNode in reclusteredNode.GetOrderedLeafNodes())
-                {
-                    if (leafNodesByIndex.TryGetValue(reclusteredLeafNode.Index, out var originalLeafNode))
+                    var nodeToRecluster = kvp.Key;
+                    var additionalMatches = kvp.Value;
+                    var leafNodesByIndex = nodeToRecluster.GetOrderedLeafNodes().ToDictionary(leafNode => leafNode.Index);
+                    var clusterableMatches = leafNodesByIndex.Keys.Select(index => matchesByIndex[index]).Concat(additionalMatches).ToList();
+
+                    var maxIndex = additionalMatches.Max(match => match.Coords.Max());
+                    _matrixBuilder.ExtendMatrix(matrix, additionalMatches, maxIndex);
+
+                    var reclusteredNodes = await ClusterAsync(clusterableMatches, immediateFamily, matrix, ProgressData.SuppressProgress).ConfigureAwait(false);
+
+                    if (reclusteredNodes.Count == 0)
                     {
-                        reclusteredLeafNode.Parent.ReplaceChild(reclusteredLeafNode, originalLeafNode);
+                        _progressData.Increment();
+                        return nodeToRecluster;
                     }
-                }
-                if (nodeToRecluster.Parent != null)
-                {
-                    nodeToRecluster.Parent.ReplaceChild(nodeToRecluster, reclusteredNode);
-                }
-                else
-                {
-                    nodes.Remove(nodeToRecluster);
-                    nodes.Add(reclusteredNode);
-                }
-                _progressData.Increment();
-                return reclusteredNode;
-            });
+                    var reclusteredNode = reclusteredNodes.First();
+                    foreach (var reclusteredLeafNode in reclusteredNode.GetOrderedLeafNodes())
+                    {
+                        if (leafNodesByIndex.TryGetValue(reclusteredLeafNode.Index, out var originalLeafNode))
+                        {
+                            reclusteredLeafNode.Parent.ReplaceChild(reclusteredLeafNode, originalLeafNode);
+                        }
+                    }
+                    if (nodeToRecluster.Parent != null)
+                    {
+                        nodeToRecluster.Parent.ReplaceChild(nodeToRecluster, reclusteredNode);
+                    }
+                    else
+                    {
+                        nodes.Remove(nodeToRecluster);
+                        nodes.Add(reclusteredNode);
+                    }
+                    _progressData.Increment();
+                    return reclusteredNode;
+                });
             await Task.WhenAll(primaryClustersTasks);
 
             _progressData.Reset();
@@ -240,37 +240,65 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                         clusterNode = new ClusterNode(first, second, neighborToCluster.DistanceSquared, distanceMetric);
                     }
 
+                    var nodesWithRemovedNeighbors = new HashSet<LeafNode>();
+                    var nodesToRemove = new List<LeafNode>();
+
+                    // If joining clusters with more than one node, then the interior nodes are no longer available for further clustering.
                     if (clusterNode.First.FirstLeaf != clusterNode.First.SecondLeaf)
                     {
-                        var removeNeighborsTasks = nodes.Select(node => Task.Run(() => 
-                        {
-                            node.FirstLeaf.NeighborsByDistance?.RemoveAll(neighbor => neighbor.Node == clusterNode.First.SecondLeaf);
-                            if (node.FirstLeaf != node.SecondLeaf)
-                            {
-                                node.SecondLeaf.NeighborsByDistance?.RemoveAll(neighbor => neighbor.Node == clusterNode.First.SecondLeaf);
-                            }
-                        }));
-                        await Task.WhenAll(removeNeighborsTasks);
+                        nodesToRemove.Add(clusterNode.First.SecondLeaf);
                     }
                     if (clusterNode.Second.FirstLeaf != clusterNode.Second.SecondLeaf)
                     {
-                        var removeNeighborsTasks = nodes.Select(node => Task.Run(() =>
-                        {
-                            node.FirstLeaf.NeighborsByDistance?.RemoveAll(neighbor => neighbor.Node == clusterNode.Second.FirstLeaf);
-                            if (node.FirstLeaf != node.SecondLeaf)
+                        nodesToRemove.Add(clusterNode.Second.FirstLeaf);
+                    }
+
+                    // If at least one node is unavailable for further clustering, then remove those nodes from the lists of neighbors.
+                    if (nodesToRemove.Count > 0)
+                    {
+                        // Find the exposed leaf nodes that might have the the unavailable nodes as potential neighbors.
+                        var leafNodesWithNeighbors = nodes.Select(node => node.FirstLeaf)
+                            .Concat(nodes.Where(node => node.SecondLeaf != node.FirstLeaf).Select(node => node.SecondLeaf))
+                            .Where(leafNode => leafNode.NeighborsByDistance?.Count > 0);
+
+                        var removeNeighborsTasks = leafNodesWithNeighbors
+                        .Where(node => nodesToRemove.Any(nodeToRemove => nodeToRemove.Index > node.Index))    
+                        .Select(node => Task.Run(() =>
                             {
-                                node.SecondLeaf.NeighborsByDistance?.RemoveAll(neighbor => neighbor.Node == clusterNode.Second.FirstLeaf);
-                            }
-                        }));
-                        await Task.WhenAll(removeNeighborsTasks);
+                                var numNeighborsRemoved = node.NeighborsByDistance.RemoveAll(neighbor => nodesToRemove.Contains(neighbor.Node));
+                                return numNeighborsRemoved > 0 ? node : null;
+                            }));
+
+                        var affectedNodes = await Task.WhenAll(removeNeighborsTasks);
+                        nodesWithRemovedNeighbors.UnionWith(affectedNodes.Where(node => node != null));
                     }
 
                     nodes.Remove(clusterNode.First);
                     nodes.Remove(clusterNode.Second);
 
-                    var leafNodes = new HashSet<LeafNode>(clusterNode.GetOrderedLeafNodes());
-                    clusterNode.FirstLeaf.NeighborsByDistance.RemoveAll(neighbor => leafNodes.Contains(neighbor.Node));
-                    clusterNode.SecondLeaf.NeighborsByDistance.RemoveAll(neighbor => leafNodes.Contains(neighbor.Node));
+                    // The first and last leaf nodes in the new cluster cannot have each other as neighbors.
+                    if (clusterNode.FirstLeaf.NeighborsByDistance.RemoveAll(neighbor => clusterNode.SecondLeaf == neighbor.Node) > 0)
+                    {
+                        nodesWithRemovedNeighbors.Add(clusterNode.FirstLeaf);
+                    }
+                    if (clusterNode.SecondLeaf.NeighborsByDistance.RemoveAll(neighbor => clusterNode.FirstLeaf == neighbor.Node) > 0)
+                    {
+                        nodesWithRemovedNeighbors.Add(clusterNode.SecondLeaf);
+                    }
+
+                    var nodesWithLastNeighborRemoved = nodesWithRemovedNeighbors.Where(node => node.NeighborsByDistance.Count == 0).ToList();
+                    if (nodesWithLastNeighborRemoved.Count > 0)
+                    {
+                        var recalculateTasks = nodesWithLastNeighborRemoved.Select(leafNode => Task.Run(() =>
+                        {
+                            var highestParent = leafNode.GetHighestParent();
+                            var leafNodes = nodes.Select(node => node.FirstLeaf)
+                               .Concat(nodes.Where(node => node.SecondLeaf != node.FirstLeaf).Select(node => node.SecondLeaf))
+                               .Where(node => node != highestParent.FirstLeaf && node != highestParent.SecondLeaf);
+                            leafNode.NeighborsByDistance = GetNeighborsByDistance(leafNodes, leafNode, distanceMetric);
+                        }));
+                        await Task.WhenAll(recalculateTasks);
+                    }
 
                     nodes.Add(clusterNode);
 
@@ -283,7 +311,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             return nodes.OfType<ClusterNode>().ToList();
         }
 
-        private static async Task<List<Node>> GetLeafNodesAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, IReadOnlyDictionary<int, double[]> matrix, IDistanceMetric distanceMetric, ProgressData progressData)
+        private static async Task<List<Node>> GetLeafNodesAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, IReadOnlyDictionary<int, float[]> matrix, IDistanceMetric distanceMetric, ProgressData progressData)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count);
 
@@ -299,24 +327,40 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
 
             progressData.Reset($"Finding closest pairwise distances for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
 
-            var buckets = leafNodes
-                .SelectMany(leafNode => distanceMetric.SignificantCoordinates(leafNode.Coords).Select(coord => new { Coord = coord, LeafNode = leafNode }))
-                .GroupBy(pair => pair.Coord, pair => pair.LeafNode)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            var calculateNeighborsByDistanceTasks = leafNodes.Select(async leafNode =>
-            {
-                leafNode.NeighborsByDistance = await Task.Run(() => GetNeighborsByDistance(leafNode, buckets, distanceMetric));
-                progressData.Increment();
-            });
-
-            await Task.WhenAll(calculateNeighborsByDistanceTasks);
+            await CalculateNeighborsAsync(leafNodes, leafNodes, distanceMetric, progressData);
 
             var result = leafNodes.Where(leafNode => leafNode.NeighborsByDistance.Count > 0).ToList<Node>();
 
             progressData.Reset();
             return result;
         }
+
+        private static async Task CalculateNeighborsAsync(List<LeafNode> leafNodesAll, List<LeafNode> leafNodesToRecalculate, IDistanceMetric distanceMetric, ProgressData progressData)
+        {
+            var buckets = leafNodesAll
+               .SelectMany(leafNode => distanceMetric.SignificantCoordinates(leafNode.Coords).Select(coord => new { Coord = coord, LeafNode = leafNode }))
+               .GroupBy(pair => pair.Coord, pair => pair.LeafNode)
+               .ToDictionary(g => g.Key, g => g.ToList());
+
+            var calculateNeighborsByDistanceTasks = leafNodesToRecalculate.Select(async leafNode =>
+            {
+                leafNode.NeighborsByDistance = await Task.Run(() => GetNeighborsByDistance(leafNode, buckets, distanceMetric));
+                progressData?.Increment();
+            });
+
+            await Task.WhenAll(calculateNeighborsByDistanceTasks);
+        }
+
+        // Most nodes end up clustered with one of their closest neighbors.
+        // We still need to calculate all neighbors to determine which are the closest ones,
+        // but after that we save only the closest few.
+        //
+        // This changes the memory usage from O(N^2) to O(N)
+        // and also greatly speeds the cluster creation because there are fewer that need to be removed as clusters are formed.
+        //
+        // The drawback is that a small fraction of the nodes won't end up clustering with one of their closest neighbors.
+        // For those, the neighbors will need to be "refilled" when the last neighbor has been removed before the cluster is formed.
+        const int _maxNeighbors = 25;
 
         private static List<Neighbor> GetNeighborsByDistance(LeafNode leafNode, IDictionary<int, List<LeafNode>> buckets, IDistanceMetric distanceMetric)
         {
@@ -328,7 +372,18 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 // Make sure that each node is considered only once (might have been in more than one bucket if more than one shared match in common.
                 .Distinct()
                 .Select(neighborNode => new Neighbor(neighborNode, leafNode))
-                .OrderBy(neighbor => neighbor.DistanceSquared)
+                .LowestN(neighbor => neighbor.DistanceSquared, _maxNeighbors)
+                .ToList();
+            return neighbors;
+        }
+
+        private static List<Neighbor> GetNeighborsByDistance(IEnumerable<LeafNode> leafNodesAll, LeafNode leafNode, IDistanceMetric distanceMetric)
+        {
+            var neighbors = leafNodesAll
+                .Where(neighborNode => neighborNode.Index > leafNode.Index)
+                .Select(neighborNode => new Neighbor(neighborNode, leafNode))
+                .Where(neighbor => neighbor.DistanceSquared != double.PositiveInfinity)
+                .LowestN(neighbor => neighbor.DistanceSquared, _maxNeighbors)
                 .ToList();
             return neighbors;
         }

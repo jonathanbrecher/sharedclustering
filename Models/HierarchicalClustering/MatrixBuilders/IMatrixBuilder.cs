@@ -9,7 +9,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
         /// <summary>
         /// Generate a correlation matrix.
         /// </summary>
-        Task<ConcurrentDictionary<int, double[]>> CorrelateAsync(
+        Task<ConcurrentDictionary<int, float[]>> CorrelateAsync(
             List<IClusterableMatch> clusterableMatches,
             List<IClusterableMatch> immediateFamily
         );
@@ -18,7 +18,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
         /// Add further matches to an existing correlation matrix.
         /// </summary>
         void ExtendMatrix(
-            ConcurrentDictionary<int, double[]> matrix,
+            ConcurrentDictionary<int, float[]> matrix,
             List<IClusterableMatch> clusterableMatches,
             int maxIndex
         );

@@ -100,7 +100,7 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             await _correlationWriter.OutputCorrelationAsync(nodes, matchesByIndex, indexClusterNumbers);
         }
 
-        private async Task<List<ClusterNode>> ClusterAsync(List<IClusterableMatch> clusterableMatches, List<IClusterableMatch> immediateFamily, int maxIndex, ConcurrentDictionary<int, double[]> matrix, ProgressData progressData)
+        private async Task<List<ClusterNode>> ClusterAsync(List<IClusterableMatch> clusterableMatches, List<IClusterableMatch> immediateFamily, int maxIndex, ConcurrentDictionary<int, float[]> matrix, ProgressData progressData)
         {
             var distanceMetric = _distanceMetricFactory(immediateFamily);
 
@@ -111,7 +111,7 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             return nodes;
         }
 
-        private async Task Recluster(List<ClusterNode> nodes, Dictionary<ClusterNode, List<IClusterableMatch>> extendedClusters, List<IClusterableMatch> immediateFamily, Dictionary<int, IClusterableMatch> matchesByIndex, ConcurrentDictionary<int, double[]> matrix)
+        private async Task Recluster(List<ClusterNode> nodes, Dictionary<ClusterNode, List<IClusterableMatch>> extendedClusters, List<IClusterableMatch> immediateFamily, Dictionary<int, IClusterableMatch> matchesByIndex, ConcurrentDictionary<int, float[]> matrix)
         {
             _progressData.Reset($"Reclustering {extendedClusters.Count} primary clusters", extendedClusters.Count);
 
@@ -301,7 +301,7 @@ namespace AncestryDnaClustering.Models.HierarchicalCustering
             return nodes.OfType<ClusterNode>().ToList();
         }
 
-        private async Task<List<Node>> GetLeafNodesAsync(List<IClusterableMatch> clusterableMatches, ConcurrentDictionary<int, double[]> matrix, int maxIndex, IDistanceMetric distanceMetric, ProgressData progressData)
+        private async Task<List<Node>> GetLeafNodesAsync(List<IClusterableMatch> clusterableMatches, ConcurrentDictionary<int, float[]> matrix, int maxIndex, IDistanceMetric distanceMetric, ProgressData progressData)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count());
 

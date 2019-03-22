@@ -20,7 +20,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             SecondLeaf = this;
         }
 
-        public LeafNode(int index, IEnumerable<double> coords, IDistanceMetric distanceMetric) : base(1, distanceMetric)
+        public LeafNode(int index, IEnumerable<float> coords, IDistanceMetric distanceMetric) : base(1, distanceMetric)
         {
             Index = index;
             Coords = coords.Select((coord, i) => new { i, coord }).Where(pair => pair.coord > 0).ToDictionary(pair => pair.i, pair => (double)pair.coord);
