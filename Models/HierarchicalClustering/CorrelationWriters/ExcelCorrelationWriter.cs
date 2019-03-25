@@ -102,6 +102,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 
                         var hasSharedSegments = matches.Any(match => match.Match.SharedSegments > 0);
                         var hasLongestBlock = matches.Any(match => match.Match.LongestBlock > 0);
+                        var hasTreeUrl = matches.Any(match => !string.IsNullOrEmpty(match.Match.TreeUrl));
                         var hasTreeType = matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined);
                         var hasTreeSize = matches.Any(match => match.Match.TreeSize > 0);
                         var hasStarredMatches = matches.Any(match => match.Match.Starred);
@@ -157,6 +158,12 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             autofitColumns.Add(col);
                             decimalColumns.Add(col);
                             ws.Cells[row, col++].Value = "Longest Block";
+                        }
+
+                        if (hasTreeUrl)
+                        {
+                            autofitColumns.Add(col);
+                            ws.Cells[row, col++].Value = "Tree";
                         }
 
                         if (hasTreeType)
@@ -232,6 +239,14 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             {
                                 ws.Cells[row, col++].Value = match.Match.LongestBlock;
                             }
+                            if (hasTreeUrl)
+                            {
+                                if (!string.IsNullOrEmpty(_testTakerTestId))
+                                {
+                                    ws.Cells[row, col].StyleName = "HyperLink";
+                                    ws.Cells[row, col++].Hyperlink = new ExcelHyperLink(match.Match.TreeUrl, UriKind.Absolute) { Display = "Tree" };
+                                }
+                            }
                             if (hasTreeType)
                             {
                                 ws.Cells[row, col++].Value = match.Match.TreeType;
@@ -295,7 +310,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         }
 
                         // Heatmap color scale
-                        var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + matchColumns.Count, firstMatrixDataColumn - 1 + matchColumns.Count);
+                        var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + leafNodes.Count, firstMatrixDataColumn - 1 + matchColumns.Count);
                         var threeColorScale = ws.ConditionalFormatting.AddThreeColorScale(correlationData);
                         threeColorScale.LowValue.Type = eExcelConditionalFormattingValueObjectType.Num;
                         threeColorScale.LowValue.Value = 0;

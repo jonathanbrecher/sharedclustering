@@ -69,6 +69,10 @@ namespace AncestryDnaClustering.Models.SavedData
                 csv.ReadHeader();
 
                 var firstMatchFieldIndex = csv.GetFieldIndex("Cluster") + 1;
+                if (firstMatchFieldIndex <= 0)
+                {
+                    firstMatchFieldIndex = csv.GetFieldIndex("cluster") + 1;
+                }
 
                 while (csv.Read())
                 {
@@ -85,6 +89,7 @@ namespace AncestryDnaClustering.Models.SavedData
                         MatchTestDisplayName = match.Name,
                         TestGuid = match.Identifier,
                         SharedCentimorgans = GetDouble(match.SharedCm),
+                        TreeUrl = match.Tree,
                         TreeSize = GetInt(match.TreeCount),
                         Note = match.Notes,
                     };
@@ -171,6 +176,7 @@ namespace AncestryDnaClustering.Models.SavedData
             public string Identifier { get; set; }
             public string Name { get; set; }
             public string SharedCm { get; set; }
+            public string Tree { get; set; }
             public string TreeCount { get; set; }
             public string Notes { get; set; }
         }
@@ -182,6 +188,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 Map(m => m.Identifier).Name("Identifier");
                 Map(m => m.Name).Name("Name");
                 Map(m => m.SharedCm).Name("total shared cM");
+                Map(m => m.Tree).Name("Tree");
                 Map(m => m.TreeCount).Name("Tree Person Count");
                 Map(m => m.Notes).Name("Notes");
             }

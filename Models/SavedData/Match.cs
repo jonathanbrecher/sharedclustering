@@ -9,6 +9,7 @@
         public int SharedSegments { get; set; }
         public double LongestBlock { get; set; }
         public TreeType TreeType { get; set; }
+        public string TreeUrl { get; set; }
         public int TreeSize { get; set; }
         public bool Starred { get; set; }
         public bool HasHint { get; set; }
