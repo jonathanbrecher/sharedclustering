@@ -135,7 +135,8 @@
     <Compile Include="Models\HierarchicalClustering\IClusterableMatch.cs" />
     <Compile Include="Models\HierarchicalClustering\Distance\IDistanceMetric.cs" />
     <Compile Include="Models\MatchCounts.cs" />
-    <Compile Include="Models\SavedData\AutoClusterMyHeritageMatchesReader.cs" />
+    <Compile Include="Models\SavedData\AutoClusterExcelMatchesReader.cs" />
+    <Compile Include="Models\SavedData\AutoClusterCsvMatchesReader.cs" />
     <Compile Include="Models\SavedData\DnaGedcomAncestryMatchesReader.cs" />
     <Compile Include="Models\SavedData\DnaGedcomFtdnaMatchesReader.cs" />
     <Compile Include="Models\SavedData\ISerializedMatchesReader.cs" />

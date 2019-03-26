@@ -12,7 +12,7 @@ namespace AncestryDnaClustering.Models.SavedData
     /// <summary>
     /// Read files saved by AutoCluster.
     /// </summary>
-    public class AutoClusterMyHeritageMatchesReader : ISerializedMatchesReader
+    public class AutoClusterCsvMatchesReader : ISerializedMatchesReader
     {
         public bool IsSupportedFileType(string fileName) => fileName != null && Path.GetExtension(fileName).ToLower() == ".csv";
 
@@ -51,7 +51,8 @@ namespace AncestryDnaClustering.Models.SavedData
 
         private static void ReadMatchFile(Serialized serialized, string matchFile)
         {
-            using (var matchReader = new StreamReader(matchFile))
+            using (var fileStream = new FileStream(matchFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var matchReader = new StreamReader(fileStream))
             using (var csv = new CsvReader(matchReader))
             {
                 csv.Configuration.Delimiter = ",";

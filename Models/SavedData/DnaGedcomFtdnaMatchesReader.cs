@@ -95,7 +95,8 @@ namespace AncestryDnaClustering.Models.SavedData
 
         private static void ReadMatchFile(Serialized serialized, string matchFile)
         {
-            using (var matchReader = new StreamReader(matchFile))
+            using (var fileStream = new FileStream(matchFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var matchReader = new StreamReader(fileStream))
             using (var csv = new CsvReader(matchReader))
             {
                 csv.Configuration.Delimiter = ",";
@@ -154,7 +155,8 @@ namespace AncestryDnaClustering.Models.SavedData
 
         private static void ReadIcwFile(Serialized serialized, string icwFile)
         {
-            using (var icwReader = new StreamReader(icwFile))
+            using (var fileStream = new FileStream(icwFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var icwReader = new StreamReader(fileStream))
             using (var csv = new CsvReader(icwReader))
             {
                 csv.Configuration.Delimiter = ",";
@@ -193,7 +195,8 @@ namespace AncestryDnaClustering.Models.SavedData
 
         private static void ReadTreeFile(Serialized serialized, string treeFile)
         {
-            using (var treeReader = new StreamReader(treeFile))
+            using (var fileStream = new FileStream(treeFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var treeReader = new StreamReader(fileStream))
             using (var csv = new CsvReader(treeReader))
             {
                 csv.Configuration.Delimiter = ",";
