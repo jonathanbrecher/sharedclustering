@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters.ColumnWriters;
 using AncestryDnaClustering.ViewModels;
 using OfficeOpenXml;
 using OfficeOpenXml.ConditionalFormatting;
@@ -100,22 +101,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             namedStyle.Style.Font.Color.SetColor(Color.Blue);
                         }
 
-                        var hasSharedSegments = matches.Any(match => match.Match.SharedSegments > 0);
-                        var hasLongestBlock = matches.Any(match => match.Match.LongestBlock > 0);
-                        var hasTreeUrl = matches.Any(match => !string.IsNullOrEmpty(match.Match.TreeUrl));
-                        var hasTreeType = matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined);
-                        var hasTreeSize = matches.Any(match => match.Match.TreeSize > 0);
-                        var hasStarredMatches = matches.Any(match => match.Match.Starred);
-                        var hasHintsForMatches = matches.Any(match => match.Match.HasHint);
-
-                        // Keep track of columns that will be auto-fit.
-                        // The auto-fit cannot be calculated until the rows are fully populated.
-                        var autofitColumns = new List<int>();
-
-                        // Keep track of columns that contain decimals.
-                        // The number format cannot be applied until the rows are fully populated.
-                        var decimalColumns = new List<int>();
-
                         // Start at the top left of the sheet
                         var row = 1;
                         var col = 1;
@@ -123,79 +108,39 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         // Rotate the entire top row by 90 degrees
                         ws.Row(row).Style.TextRotation = 90;
 
-                        // Column headers for the fixed columns
-
-                        ws.Column(col).Width = 26.0 / 7;
-                        ws.Cells[row, col++].Value = "Cluster Number";
-
-                        ws.Column(col).Width = 15;
-                        ws.Cells[row, col].Style.TextRotation = 0;
-                        ws.Cells[row, col++].Value = "Name";
-
-                        ws.Column(col).Width = 10;
-                        ws.Cells[row, col].Style.TextRotation = 0;
-                        ws.Cells[row, col++].Value = "Test ID";
-
-                        if (!string.IsNullOrEmpty(_testTakerTestId))
+                        // Fixed columns
+                        var clusterNumberWriter = new ClusterNumberWriter(indexClusterNumbers);
+                        var columnWriters = new IColumnWriter[]
                         {
-                            autofitColumns.Add(col);
-                            ws.Cells[row, col].Style.TextRotation = 0;
-                            ws.Cells[row, col++].Value = "Link";
-                        }
+                            clusterNumberWriter,
+                            new NameWriter(),
+                            !string.IsNullOrEmpty(_testTakerTestId) ? new LinkWriter(_testTakerTestId) : null,
+                            new SharedCentimorgansWriter(),
+                            matches.Any(match => match.Match.SharedSegments > 0) ? new SharedSegmentsWriter() : null,
+                            matches.Any(match => match.Match.LongestBlock > 0) ? new LongestBlockWriter() : null,
+                            matches.Any(match => !string.IsNullOrEmpty(match.Match.TreeUrl)) ? new TreeUrlWriter(_testTakerTestId) : null,
+                            matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined) ? new TreeTypeWriter() : null,
+                            matches.Any(match => match.Match.TreeSize > 0) ? new TreeSizeWriter() : null,
+                            matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
+                            matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
+                            new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter),
+                        }.Where(writer => writer != null).ToList();
 
-                        autofitColumns.Add(col);
-                        decimalColumns.Add(col);
-                        ws.Cells[row, col++].Value = "Shared Centimorgans";
-
-                        if (hasSharedSegments)
+                        foreach (var writer in columnWriters)
                         {
-                            autofitColumns.Add(col);
-                            ws.Cells[row, col++].Value = "Shared Segments";
+                            if (!writer.IsAutofit)
+                            {
+                                ws.Column(col).Width = writer.Width;
+                            }
+                            var cell = ws.Cells[row, col];
+                            if (!writer.RotateHeader)
+                            {
+                                cell.Style.TextRotation = 0;
+                            }
+                            cell.Value = writer.Header;
+
+                            ++col;
                         }
-
-                        if (hasLongestBlock)
-                        {
-                            autofitColumns.Add(col);
-                            decimalColumns.Add(col);
-                            ws.Cells[row, col++].Value = "Longest Block";
-                        }
-
-                        if (hasTreeUrl)
-                        {
-                            autofitColumns.Add(col);
-                            ws.Cells[row, col++].Value = "Tree";
-                        }
-
-                        if (hasTreeType)
-                        {
-                            autofitColumns.Add(col);
-                            ws.Cells[row, col++].Value = "Tree Type";
-                        }
-
-                        if (hasTreeSize)
-                        {
-                            autofitColumns.Add(col);
-                            ws.Cells[row, col++].Value = "Tree Size";
-                        }
-
-                        if (hasStarredMatches)
-                        {
-                            autofitColumns.Add(col);
-                            ws.Cells[row, col++].Value = "Starred";
-                        }
-
-                        if (hasHintsForMatches)
-                        {
-                            autofitColumns.Add(col);
-                            ws.Cells[row, col++].Value = "Shared Ancestor Hint";
-                        }
-
-                        ws.Column(col).Width = 15;
-                        ws.Cells[row, col++].Value = "Correlated Clusters";
-
-                        ws.Column(col).Width = 15;
-                        ws.Cells[row, col].Style.TextRotation = 0;
-                        ws.Cells[row, col++].Value = "Note";
 
                         var firstMatrixDataRow = row + 1;
                         var firstMatrixDataColumn = col;
@@ -215,83 +160,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 
                             // Row headers
                             col = 1;
-                            if (indexClusterNumbers.TryGetValue(leafNode.Index, out var clusterNumber))
+                            foreach (var writer in columnWriters)
                             {
-                                ws.Cells[row, col++].Value = clusterNumber;
-                            }
-                            else
-                            {
-                                col++;
-                            }
-                            ws.Cells[row, col++].Value = match.Match.Name;
-                            ws.Cells[row, col++].Value = match.Match.TestGuid;
-                            if (!string.IsNullOrEmpty(_testTakerTestId))
-                            {
-                                ws.Cells[row, col].StyleName = "HyperLink";
-                                ws.Cells[row, col++].Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/{match.Match.TestGuid}", UriKind.Absolute) { Display = "Link" };
-                            }
-                            ws.Cells[row, col++].Value = match.Match.SharedCentimorgans;
-                            if (hasSharedSegments)
-                            {
-                                ws.Cells[row, col++].Value = match.Match.SharedSegments;
-                            }
-                            if (hasLongestBlock)
-                            {
-                                ws.Cells[row, col++].Value = match.Match.LongestBlock;
-                            }
-                            if (hasTreeUrl)
-                            {
-                                if (!string.IsNullOrEmpty(_testTakerTestId))
-                                {
-                                    ws.Cells[row, col].StyleName = "HyperLink";
-                                    ws.Cells[row, col++].Hyperlink = new ExcelHyperLink(match.Match.TreeUrl, UriKind.Absolute) { Display = "Tree" };
-                                }
-                            }
-                            if (hasTreeType)
-                            {
-                                ws.Cells[row, col++].Value = match.Match.TreeType;
-                            }
-                            if (hasTreeSize)
-                            {
-                                ws.Cells[row, col++].Value = match.Match.TreeSize;
-                            }
-
-                            if (hasStarredMatches)
-                            {
-                                ws.Cells[row, col++].Value = match.Match.Starred ? "*" : null;
-                            }
-
-                            if (hasHintsForMatches)
-                            {
-                                ws.Cells[row, col++].Value = match.Match.HasHint ? "*" : null;
-                            }
-
-                            // Correlated clusters
-                            var correlatedClusterNumbers = leafNodes
-                                .Where(leafNode2 => !immediateFamilyIndexes.Contains(leafNode2.Index)
-                                                    && leafNode.Coords.TryGetValue(leafNode2.Index, out var correlationValue) && correlationValue >= 1)
-                                .Select(leafNode2 => indexClusterNumbers.TryGetValue(leafNode2.Index, out var correlatedClusterNumber) ? correlatedClusterNumber : 0)
-                                .Where(correlatedClusterNumber => correlatedClusterNumber != 0 && correlatedClusterNumber != clusterNumber)
-                                .Distinct()
-                                .OrderBy(n => n)
-                                .ToList();
-                            if (correlatedClusterNumbers.Count > 0)
-                            {
-                                ws.Cells[row, col++].Value = string.Join(", ", correlatedClusterNumbers);
-                            }
-                            else
-                            {
-                                col++;
-                            }
-
-                            // Note
-                            if (!string.IsNullOrEmpty(match.Match.Note))
-                            {
-                                ws.Cells[row, col++].Value = match.Match.Note;
-                            }
-                            else
-                            {
-                                col++;
+                                writer.WriteValue(ws.Cells[row, col++], match, leafNode);
                             }
 
                             // Correlation data
@@ -325,17 +196,20 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         // Heatmap number format
                         ws.Cells[$"1:{matchColumns.Count}"].Style.Numberformat.Format = "General";
 
-                        // Decimal number formats
-                        foreach (var column in decimalColumns)
-                        {
-                            ws.Column(column).Style.Numberformat.Format = "0.0";
-                        }
-
-                        // Column widths
                         ws.DefaultColWidth = 19.0 / 7; // 2
-                        foreach (var column in autofitColumns)
+
+                        col = 1;
+                        foreach (var writer in columnWriters)
                         {
-                            ws.Column(column).AutoFit();
+                            if (writer.IsDecimal)
+                            {
+                                ws.Column(col).Style.Numberformat.Format = "0.0";
+                            }
+                            if (writer.IsAutofit)
+                            {
+                                ws.Column(col).AutoFit();
+                            }
+                            col++;
                         }
 
                         // Freeze the column and row headers
