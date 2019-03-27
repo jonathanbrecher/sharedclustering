@@ -359,6 +359,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         }
                         catch (Exception ex)
                         {
+                            FileUtils.LogException(ex, false);
                             if (MessageBox.Show(
                                 $"An error occurred while saving {fileName}:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}Try again?",
                                 "File error",

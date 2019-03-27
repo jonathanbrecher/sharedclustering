@@ -67,6 +67,7 @@ namespace AncestryDnaClustering.Models.SavedData
             }
             catch (Exception ex)
             {
+                FileUtils.LogException(ex, false);
                 return (null, $"Unexpected error while reading DNAGedcom match file: {ex.Message}");
             }
 
@@ -76,6 +77,7 @@ namespace AncestryDnaClustering.Models.SavedData
             }
             catch (Exception ex)
             {
+                FileUtils.LogException(ex, false);
                 return (null, $"Unexpected error while reading DNAGedcom icw file: {ex.Message}");
             }
 

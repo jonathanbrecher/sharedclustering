@@ -50,6 +50,7 @@ namespace AncestryDnaClustering.Models.SavedData
             }
             catch (Exception ex)
             {
+                FileUtils.LogException(ex, false);
                 return (null, $"Unexpected error while reading AutoCluster match file: {ex.Message}");
             }
 
@@ -60,9 +61,8 @@ namespace AncestryDnaClustering.Models.SavedData
         {
             using (var fileStream = new FileStream(matchFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var package = new ExcelPackage(fileStream))
+            using (var ws = package.Workbook.Worksheets[1])
             {
-                var ws = package.Workbook.Worksheets[1];
-
                 var hyperlinkColumn = 0;
                 var totalSharedCmColumn = 0;
                 var notesColumn = 0;
@@ -70,11 +70,11 @@ namespace AncestryDnaClustering.Models.SavedData
                 var firstMatchFieldIndex = 0;
                 var lastMatchFieldIndex = 0;
 
-                // Find the columns that have interestingn data (don't assume specific column numbers)
+                // Find the columns that have interesting data (don't assume specific column numbers)
                 for (var col = 1; col < 1000; ++col)
                 {
                     var cell = ws.Cells[1, col];
-                    var cellValue = cell.Value.ToString();
+                    var cellValue = cell.GetValue<string>();
                     if (cellValue.Equals("name", StringComparison.OrdinalIgnoreCase))
                     {
                         hyperlinkColumn = col;
@@ -130,7 +130,7 @@ namespace AncestryDnaClustering.Models.SavedData
                     {
                         try
                         {
-                            var hyperlink = ws.Cells[row, hyperlinkColumn].Value.ToString();
+                            var hyperlink = ws.Cells[row, hyperlinkColumn].GetValue<string>();
                             var fields = hyperlink.Split('"');
                             var url = fields[1];
                             var name = fields[3];
@@ -143,19 +143,19 @@ namespace AncestryDnaClustering.Models.SavedData
                     }
                     if (totalSharedCmColumn != 0)
                     {
-                        resultMatch.SharedCentimorgans = Convert.ToDouble(ws.Cells[row, totalSharedCmColumn].Value ?? 0);
+                        resultMatch.SharedCentimorgans = ws.Cells[row, totalSharedCmColumn].GetValue<double>();
                     }
                     if (notesColumn != 0)
                     {
-                        resultMatch.Note = ws.Cells[row, notesColumn].Value?.ToString();
+                        resultMatch.Note = ws.Cells[row, notesColumn].GetValue<string>();
                     }
                     if (treeColumn != 0)
                     {
-                        resultMatch.TreeUrl = ws.Cells[row, treeColumn].Value?.ToString();
+                        resultMatch.TreeUrl = ws.Cells[row, treeColumn].GetValue<string>();
                     }
 
                     // Do not assume that the AutoCluster data is free of duplicates.
-                    if (serialized.MatchIndexes.ContainsKey(resultMatch.TestGuid))
+                    if (resultMatch.TestGuid == null || serialized.MatchIndexes.ContainsKey(resultMatch.TestGuid))
                     {
                         continue;
                     }
@@ -178,60 +178,13 @@ namespace AncestryDnaClustering.Models.SavedData
                 }
             }
 
+            if (serialized.Matches.Count == 0)
+            {
+                throw new Exception("No rows read.");
+            }
+
             // Do not assume that the AutoCluster data is already ordered by descending Shared Centimorgans.
-            var unsortedIndexes = serialized.MatchIndexes;
-
-            serialized.Matches = serialized.Matches.OrderByDescending(match => match.SharedCentimorgans).ToList();
-
-            serialized.MatchIndexes = serialized.Matches
-                .Select((match, index) => new { match.TestGuid, index })
-                .ToDictionary(pair => pair.TestGuid, pair => pair.index);
-
-            var indexUpdates = unsortedIndexes.ToDictionary(
-                kvp => kvp.Value,
-                kvp => serialized.MatchIndexes[kvp.Key]);
-
-            serialized.Icw = serialized.Icw.ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value.Select(index => indexUpdates[index]).ToList());
-        }
-
-        private static readonly IFormatProvider[] _cultures = { CultureInfo.CurrentCulture, CultureInfo.GetCultureInfo("en-US"), CultureInfo.InvariantCulture };
-
-        public static double GetDouble(string value)
-        {
-            foreach (var culture in _cultures)
-            {
-                if (double.TryParse(value, NumberStyles.Any, culture, out var result))
-                {
-                    return result;
-                }
-            }
-
-            return 0.0;
-        }
-
-        public static int GetInt(string value)
-        {
-            foreach (var culture in _cultures)
-            {
-                if (int.TryParse(value, NumberStyles.Any, culture, out var result))
-                {
-                    return result;
-                }
-            }
-
-            return 0;
-        }
-
-        // Load all fields as strings and parse manually, to protect against parse failures
-        private class AutoClusterMatch
-        {
-            public string TestGuid { get; set; }
-            public string Name { get; set; }
-            public string SharedCm { get; set; }
-            public string Tree { get; set; }
-            public string Notes { get; set; }
+            serialized.SortMatchesDescending();
         }
     }
 }

@@ -29,7 +29,7 @@ namespace AncestryDnaClustering
         // Example 2 
         private static void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
-            LogException(e.Exception);
+            FileUtils.LogException(e.Exception, true);
             e.Handled = true;
         }
 
@@ -37,31 +37,14 @@ namespace AncestryDnaClustering
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             var exception = e.ExceptionObject as Exception;
-            LogException(exception);
+            FileUtils.LogException(exception, true);
         }
 
         // Example 4 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
-            LogException(e.Exception);
+            FileUtils.LogException(e.Exception, true);
             e.SetObserved();
-        }
-
-        private static void LogException(Exception ex)
-        {
-            var logfile = Path.Combine(Path.GetTempPath(), "SharedClusteringLog.txt");
-            FileUtils.WriteAllLines(logfile, ex?.ToString(), false);
-            if (ex is OutOfMemoryException)
-            {
-                MessageBox.Show("Out of memory!" +
-                    $"{Environment.NewLine}{Environment.NewLine}" +
-                    "Try closing other applications to free up more memory " +
-                    "or increase the value of the lowest centimorgans to cluster", "Out of memory", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            MessageBox.Show($"An unexpected error has occurred: {ex?.Message}" +
-                $"{Environment.NewLine}{Environment.NewLine}" +
-                $"A log file has been written to {logfile}", "Unexpected failure", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }
