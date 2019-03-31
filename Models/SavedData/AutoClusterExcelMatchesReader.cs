@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AncestryDnaClustering.ViewModels;
 using CsvHelper;
 using CsvHelper.Configuration;
 using OfficeOpenXml;
@@ -30,7 +31,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return fileNameWithoutExtension;
         }
 
-        public async Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName)
+        public async Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName, ProgressData progressData)
         {
             if (!IsSupportedFileType(fileName))
             {
@@ -46,7 +47,7 @@ namespace AncestryDnaClustering.Models.SavedData
 
             try
             {
-                await Task.Run(() => ReadMatchFile(serialized, fileName));
+                await Task.Run(() => ReadMatchFile(serialized, fileName, progressData));
             }
             catch (Exception ex)
             {
@@ -57,7 +58,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return (serialized, null);
         }
 
-        private static void ReadMatchFile(Serialized serialized, string matchFile)
+        private static void ReadMatchFile(Serialized serialized, string matchFile, ProgressData progressData)
         {
             using (var fileStream = new FileStream(matchFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var package = new ExcelPackage(fileStream))
@@ -122,8 +123,12 @@ namespace AncestryDnaClustering.Models.SavedData
                     throw new Exception("No rows found.");
                 }
 
+                progressData.Reset("Loading data.", maxRow - 1);
+
                 for (var row = 2; row <= maxRow; ++row)
                 {
+                    progressData.Increment();
+
                     var resultMatch = new Match();
 
                     if (hyperlinkColumn != 0)

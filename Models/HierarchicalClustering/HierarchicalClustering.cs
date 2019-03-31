@@ -89,7 +89,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             {
                 var leafNodes = nodes.First().GetOrderedLeafNodes().ToList();
 
-                var primaryClustersSet = new HashSet<ClusterNode>(primaryClusters);
+                var primaryClustersSet = new HashSet<Node>(primaryClusters);
 
                 var extendedClusters = await ExtendClustersAsync(clusterableMatches, primaryClustersSet, leafNodes, minCentimorgansToCluster);
 
@@ -110,44 +110,60 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             return nodes;
         }
 
-        private async Task Recluster(ICollection<ClusterNode> nodes, Dictionary<ClusterNode, List<IClusterableMatch>> extendedClusters, List<IClusterableMatch> immediateFamily, IReadOnlyDictionary<int, IClusterableMatch> matchesByIndex, ConcurrentDictionary<int, float[]> matrix)
+        private async Task Recluster(ICollection<ClusterNode> nodes, Dictionary<Node, List<IClusterableMatch>> extendedClusters, List<IClusterableMatch> immediateFamily, IReadOnlyDictionary<int, IClusterableMatch> matchesByIndex, ConcurrentDictionary<int, float[]> matrix)
         {
             _progressData.Reset($"Reclustering {extendedClusters.Count} primary clusters", extendedClusters.Count);
 
-            var primaryClustersTasks = extendedClusters
+            var primaryClustersTaskData = extendedClusters
                 .Where(kvp => kvp.Value.Count > 0)
-                .Select(async kvp =>
+                .Select(kvp =>
                 {
                     var nodeToRecluster = kvp.Key;
                     var additionalMatches = kvp.Value;
                     var leafNodesByIndex = nodeToRecluster.GetOrderedLeafNodes().ToDictionary(leafNode => leafNode.Index);
                     var clusterableMatches = leafNodesByIndex.Keys.Select(index => matchesByIndex[index]).Concat(additionalMatches).ToList();
+                    return new
+                    {
+                        NodeToRecluster = nodeToRecluster,
+                        AdditionalMatches = additionalMatches,
+                        LeafNodesByIndex = leafNodesByIndex,
+                        ClusterableMatches = clusterableMatches,
+                    };
+                }).ToList();
 
-                    var maxIndex = additionalMatches.Max(match => match.Coords.Max());
-                    _matrixBuilder.ExtendMatrix(matrix, additionalMatches, maxIndex);
+            var additionalMatchesDistinct = primaryClustersTaskData.SelectMany(data => data.AdditionalMatches).Distinct().ToList();
+            var maxIndex = additionalMatchesDistinct.Max(match => match.Coords.Max());
+            _matrixBuilder.ExtendMatrix(matrix, additionalMatchesDistinct, maxIndex);
 
-                    var reclusteredNodes = await ClusterAsync(clusterableMatches, immediateFamily, matrix, ProgressData.SuppressProgress).ConfigureAwait(false);
+            var primaryClustersTasks = primaryClustersTaskData
+                .Select(async data =>
+                {
+                    var reclusteredNodes = await ClusterAsync(data.ClusterableMatches, immediateFamily, matrix, ProgressData.SuppressProgress).ConfigureAwait(false);
 
                     if (reclusteredNodes.Count == 0)
                     {
                         _progressData.Increment();
-                        return nodeToRecluster;
+                        return data.NodeToRecluster;
                     }
+                    var nodeToReclusterParent = data.NodeToRecluster.Parent;
                     var reclusteredNode = reclusteredNodes.First();
                     foreach (var reclusteredLeafNode in reclusteredNode.GetOrderedLeafNodes())
                     {
-                        if (leafNodesByIndex.TryGetValue(reclusteredLeafNode.Index, out var originalLeafNode))
+                        if (data.LeafNodesByIndex.TryGetValue(reclusteredLeafNode.Index, out var originalLeafNode))
                         {
                             reclusteredLeafNode.Parent.ReplaceChild(reclusteredLeafNode, originalLeafNode);
                         }
                     }
-                    if (nodeToRecluster.Parent != null)
+                    if (nodeToReclusterParent != null)
                     {
-                        nodeToRecluster.Parent.ReplaceChild(nodeToRecluster, reclusteredNode);
+                        nodeToReclusterParent.ReplaceChild(data.NodeToRecluster, reclusteredNode);
                     }
                     else
                     {
-                        nodes.Remove(nodeToRecluster);
+                        if (data.NodeToRecluster is ClusterNode clusterNode)
+                        {
+                            nodes.Remove(clusterNode);
+                        }
                         nodes.Add(reclusteredNode);
                     }
                     _progressData.Increment();
@@ -158,7 +174,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             _progressData.Reset();
         }
 
-        private async Task<Dictionary<ClusterNode, List<IClusterableMatch>>> ExtendClustersAsync(IEnumerable<IClusterableMatch> clusterableMatches, ICollection<ClusterNode> primaryClusters, IReadOnlyCollection<LeafNode> leafNodes, double minCentimorgansToCluster)
+        private async Task<Dictionary<Node, List<IClusterableMatch>>> ExtendClustersAsync(IEnumerable<IClusterableMatch> clusterableMatches, ICollection<Node> primaryClusters, IReadOnlyCollection<LeafNode> leafNodes, double minCentimorgansToCluster)
         {
             var maxClusteredIndex = leafNodes.Max(leafNode => leafNode.Index);
             var otherMatches = clusterableMatches
@@ -167,21 +183,21 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
 
             _progressData.Reset($"Extending clusters with {otherMatches.Count} matches...", otherMatches.Count);
 
-            var extendedClusters = await Task.Run(() => otherMatches.AsParallel().Select(match =>
+            var extendedClusters = await Task.Run(() => otherMatches.Select(match =>
             {
                 var parentClusters = match.Coords
                     .Select(coord => leafNodesByMatchIndex.TryGetValue(coord, out var leafNode) ? leafNode : null)
                     .Where(leafNode => leafNode != null)
-                    .SelectMany(leafNode => leafNode.GetParents())
+                    .SelectMany(leafNode => leafNode.GetParents().OfType<Node>().Concat(new[] { leafNode }))
                     .ToList();
 
                 var bestParentCluster = parentClusters
                     .Where(primaryClusters.Contains)
                     .GroupBy(c => c)
-                    .Where(g => g.Count() >= Math.Max(_minClusterSize, 0.35 * g.Key.NumChildren)
-                        || (g.Count() >= Math.Max(_minClusterSize, 0.5 * match.Coords.Count)))
-                    .Select(g => g.Key)
-                    .OrderByDescending(parentCluster => parentCluster.NumChildren)
+                    .Select(g => new { ParentCluster = g.Key, OverlapCount = g.Key.GetOrderedLeafNodes().Select(n => n.Index).Intersect(match.Coords).Count() })
+                    .Where(pair => pair.OverlapCount >= _minClusterSize)
+                    .OrderByDescending(pair => pair.OverlapCount)
+                    .Select(pair => pair.ParentCluster)
                     .FirstOrDefault();
 
                 _progressData.Increment();
@@ -262,7 +278,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                             .Where(leafNode => leafNode.NeighborsByDistance?.Count > 0);
 
                         var removeNeighborsTasks = leafNodesWithNeighbors
-                        .Where(node => nodesToRemove.Any(nodeToRemove => nodeToRemove.Index > node.Index))    
+                        .Where(node => nodesToRemove.Any(nodeToRemove => nodeToRemove.Index < node.Index))    
                         .Select(node => Task.Run(() =>
                             {
                                 var numNeighborsRemoved = node.NeighborsByDistance.RemoveAll(neighbor => nodesToRemove.Contains(neighbor.Node));
@@ -311,7 +327,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             return nodes.OfType<ClusterNode>().ToList();
         }
 
-        private static async Task<List<Node>> GetLeafNodesAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, IReadOnlyDictionary<int, float[]> matrix, IDistanceMetric distanceMetric, ProgressData progressData)
+        private async Task<List<Node>> GetLeafNodesAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, IReadOnlyDictionary<int, float[]> matrix, IDistanceMetric distanceMetric, ProgressData progressData)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count);
 
@@ -329,7 +345,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
 
             await CalculateNeighborsAsync(leafNodes, leafNodes, distanceMetric, progressData);
 
-            var result = leafNodes.Where(leafNode => leafNode.NeighborsByDistance.Count > 0).ToList<Node>();
+            var result = leafNodes.ToList<Node>();
 
             progressData.Reset();
             return result;
@@ -368,7 +384,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 // Get every node with at least one shared match in common
                 .SelectMany(coord => buckets.TryGetValue(coord, out var bucket) ? bucket : Enumerable.Empty<LeafNode>())
                 // We only need one direction A -> B (not also B -> A) since we're ultimately going to look at the smallest distances.
-                .Where(neighborNode => neighborNode.Index > leafNode.Index)
+                .Where(neighborNode => neighborNode.Index < leafNode.Index)
                 // Make sure that each node is considered only once (might have been in more than one bucket if more than one shared match in common.
                 .Distinct()
                 .Select(neighborNode => new Neighbor(neighborNode, leafNode))
@@ -380,7 +396,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
         private static List<Neighbor> GetNeighborsByDistance(IEnumerable<LeafNode> leafNodesAll, LeafNode leafNode, IDistanceMetric distanceMetric)
         {
             var neighbors = leafNodesAll
-                .Where(neighborNode => neighborNode.Index > leafNode.Index)
+                .Where(neighborNode => neighborNode.Index < leafNode.Index)
                 .Select(neighborNode => new Neighbor(neighborNode, leafNode))
                 .Where(neighbor => neighbor.DistanceSquared != double.PositiveInfinity)
                 .LowestN(neighbor => neighbor.DistanceSquared, _maxNeighbors)

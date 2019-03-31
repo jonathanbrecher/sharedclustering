@@ -338,7 +338,7 @@ namespace AncestryDnaClustering.ViewModels
             foreach (var serializedMatchesReader in serializedMatchesReaders)
             {
                 string thisErrorMessage;
-                (input, thisErrorMessage) = await serializedMatchesReader.ReadFileAsync(savedData);
+                (input, thisErrorMessage) = await serializedMatchesReader.ReadFileAsync(savedData, ProgressData);
                 if (input != null)
                 {
                     break;

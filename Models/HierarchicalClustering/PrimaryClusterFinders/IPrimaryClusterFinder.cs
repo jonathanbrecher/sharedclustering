@@ -7,6 +7,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.PrimaryClusterFind
     /// </summary>
     public interface IPrimaryClusterFinder
     {
-        IEnumerable<ClusterNode> GetPrimaryClusters(Node node);
+        IEnumerable<Node> GetPrimaryClusters(Node node);
     }
 }

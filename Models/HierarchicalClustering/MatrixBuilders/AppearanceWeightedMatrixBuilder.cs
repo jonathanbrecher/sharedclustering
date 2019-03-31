@@ -174,8 +174,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
             {
                 ExtendMatrixDirect(matrix, match, maxIndex, 1.0f);
             }
-
-            ReduceIndirectCoords(matrix);
         }
     }
 }

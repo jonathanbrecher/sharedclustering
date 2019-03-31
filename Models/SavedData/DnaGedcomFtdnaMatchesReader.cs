@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AncestryDnaClustering.ViewModels;
 using CsvHelper;
 using CsvHelper.Configuration;
 
@@ -35,7 +36,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return null;
         }
 
-        public async Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName)
+        public async Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName, ProgressData progressData)
         {
             if (!IsSupportedFileType(fileName))
             {

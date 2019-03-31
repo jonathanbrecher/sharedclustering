@@ -8,7 +8,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
     /// </summary>
     public abstract class Node
     {
-        public int NumChildren { get; }
+        public int NumChildren { get; protected set; }
         public Dictionary<int, double> Coords { get; set; }
         public List<Neighbor> NeighborsByDistance { get; set; }
         public ClusterNode Parent { get; set; }

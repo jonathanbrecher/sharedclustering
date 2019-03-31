@@ -9,11 +9,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.PrimaryClusterFind
     /// </summary>
     public class HalfMatchPrimaryClusterFinder : IPrimaryClusterFinder
     {
-        public IEnumerable<ClusterNode> GetPrimaryClusters(Node node)
+        public IEnumerable<Node> GetPrimaryClusters(Node node)
         {
             if (!(node is ClusterNode clusterNode))
             {
-                return Enumerable.Empty<ClusterNode>();
+                return new[] { node };
             }
 
             var leafNodes = clusterNode.GetOrderedLeafNodes();

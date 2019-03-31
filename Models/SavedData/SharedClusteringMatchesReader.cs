@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using AncestryDnaClustering.ViewModels;
 
 namespace AncestryDnaClustering.Models.SavedData
 {
@@ -12,7 +13,7 @@ namespace AncestryDnaClustering.Models.SavedData
 
         public string GetTrimmedFileName(string fileName) => IsSupportedFileType(fileName) ? Path.GetFileNameWithoutExtension(fileName) : null;
 
-        public async Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName)
+        public async Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName, ProgressData progressData)
         {
             if (!IsSupportedFileType(fileName))
             {

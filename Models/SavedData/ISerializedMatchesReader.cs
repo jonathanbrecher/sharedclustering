@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using AncestryDnaClustering.ViewModels;
 
 namespace AncestryDnaClustering.Models.SavedData
 {
@@ -17,6 +18,6 @@ namespace AncestryDnaClustering.Models.SavedData
         /// <summary>
         /// Read the file, or return an error message
         /// </summary>
-        Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName);
+        Task<(Serialized input, string errorMessage)> ReadFileAsync(string fileName, ProgressData progressData);
     }
 }

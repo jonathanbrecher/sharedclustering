@@ -89,6 +89,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 SecondLeaf = newChild.SecondLeaf;
             }
 
+            UpdateNumChildren();
+
             originalChild.Parent = null;
             newChild.Parent = this;
         }
@@ -109,6 +111,12 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             {
                 yield return leafNode;
             }
+        }
+
+        protected void UpdateNumChildren()
+        {
+            NumChildren = First.NumChildren + Second.NumChildren;
+            Parent?.UpdateNumChildren();
         }
     }
 }
