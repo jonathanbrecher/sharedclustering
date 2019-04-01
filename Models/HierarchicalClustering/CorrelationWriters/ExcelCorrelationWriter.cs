@@ -124,6 +124,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
                             matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
                             new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter),
+                            new NoteWriter(),
                         }.Where(writer => writer != null).ToList();
 
                         foreach (var writer in columnWriters)
