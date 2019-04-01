@@ -132,7 +132,13 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 }).ToList();
 
             var additionalMatchesDistinct = primaryClustersTaskData.SelectMany(data => data.AdditionalMatches).Distinct().ToList();
-            var maxIndex = additionalMatchesDistinct.Max(match => match.Coords.Max());
+            var maxIndex = additionalMatchesDistinct.SelectMany(match => match.Coords).DefaultIfEmpty(-1).Max();
+            if (maxIndex < 0)
+            {
+                _progressData.Reset();
+                return;
+            }
+
             _matrixBuilder.ExtendMatrix(matrix, additionalMatchesDistinct, maxIndex);
 
             var primaryClustersTasks = primaryClustersTaskData
