@@ -12,17 +12,19 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
         public bool IsDecimal => false;
         public double Width => 15;
 
-        private List<LeafNode> _leafNodes;
-        private HashSet<int> _immediateFamilyIndexes;
-        private Dictionary<int, int> _indexClusterNumbers;
-        private ClusterNumberWriter _clusterNumberWriter;
+        private readonly List<LeafNode> _leafNodes;
+        private readonly HashSet<int> _immediateFamilyIndexes;
+        private readonly Dictionary<int, int> _indexClusterNumbers;
+        private readonly ClusterNumberWriter _clusterNumberWriter;
+        private readonly int _minClusterSize;
 
-        public CorrelatedClustersWriter(List<LeafNode> leafNodes, HashSet<int> immediateFamilyIndexes, Dictionary<int, int> indexClusterNumbers, ClusterNumberWriter clusterNumberWriter)
+        public CorrelatedClustersWriter(List<LeafNode> leafNodes, HashSet<int> immediateFamilyIndexes, Dictionary<int, int> indexClusterNumbers, ClusterNumberWriter clusterNumberWriter, int minClusterSize)
         {
             _leafNodes = leafNodes;
             _immediateFamilyIndexes = immediateFamilyIndexes;
             _indexClusterNumbers = indexClusterNumbers;
             _clusterNumberWriter = clusterNumberWriter;
+            _minClusterSize = minClusterSize;
         }
 
         public void WriteValue(ExcelRange cell, IClusterableMatch match, LeafNode leafNode)
@@ -33,7 +35,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                                     && leafNode.Coords.TryGetValue(leafNode2.Index, out var correlationValue) && correlationValue >= 1)
                 .Select(leafNode2 => _indexClusterNumbers.TryGetValue(leafNode2.Index, out var correlatedClusterNumber) ? correlatedClusterNumber : 0)
                 .Where(correlatedClusterNumber => correlatedClusterNumber != 0 && correlatedClusterNumber != clusterNumber)
-                .Distinct()
+                .GroupBy(n => n)
+                .Where(g => g.Count() >= _minClusterSize)
+                .Select(g => g.Key)
                 .OrderBy(n => n)
                 .ToList();
             if (correlatedClusterNumbers.Count > 0)

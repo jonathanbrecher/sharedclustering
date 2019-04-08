@@ -315,7 +315,7 @@ namespace AncestryDnaClustering.ViewModels
                 _ => new OverlapWeightedEuclideanDistanceSquared(),
                 new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
                 new HalfMatchPrimaryClusterFinder(),
-                new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, ProgressData),
+                new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, _minClusterSize, ProgressData),
                 ProgressData);
             await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 

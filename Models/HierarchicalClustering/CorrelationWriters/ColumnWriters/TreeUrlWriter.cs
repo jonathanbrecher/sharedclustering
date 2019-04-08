@@ -20,8 +20,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 
         public void WriteValue(ExcelRange cell, IClusterableMatch match, LeafNode leafNode)
         {
-            cell.StyleName = "HyperLink";
-            cell.Hyperlink = new ExcelHyperLink(match.Match.TreeUrl, UriKind.Absolute) { Display = "Tree" };
+            if (!string.IsNullOrWhiteSpace(match.Match.TreeUrl))
+            {
+                cell.StyleName = "HyperLink";
+                cell.Hyperlink = new ExcelHyperLink(match.Match.TreeUrl, UriKind.Absolute) { Display = "Tree" };
+            }
         }
     }
 }

@@ -19,12 +19,14 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
     {
         private readonly string _correlationFilename;
         private readonly string _testTakerTestId;
+        private readonly int _minClusterSize;
         private readonly ProgressData _progressData;
 
-        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, ProgressData progressData)
+        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, int minClusterSize, ProgressData progressData)
         {
             _correlationFilename = correlationFilename;
             _testTakerTestId = testTakerTestId;
+            _minClusterSize = minClusterSize;
             _progressData = progressData;
         }
 
@@ -114,6 +116,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         {
                             clusterNumberWriter,
                             new NameWriter(),
+                            matches.Any(match => !string.IsNullOrEmpty(match.Match.TestGuid)) ? new TestIdWriter() : null,
                             !string.IsNullOrEmpty(_testTakerTestId) ? new LinkWriter(_testTakerTestId) : null,
                             new SharedCentimorgansWriter(),
                             matches.Any(match => match.Match.SharedSegments > 0) ? new SharedSegmentsWriter() : null,
@@ -123,7 +126,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             matches.Any(match => match.Match.TreeSize > 0) ? new TreeSizeWriter() : null,
                             matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
                             matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
-                            new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter),
+                            new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter, _minClusterSize),
                             new NoteWriter(),
                         }.Where(writer => writer != null).ToList();
 
