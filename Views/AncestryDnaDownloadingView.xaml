@@ -78,7 +78,7 @@
                         <ColumnDefinition Width="50"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Number of tests to retrieve: "/>
-                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding NumTestsToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding NumMatchesToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
                     <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Highest shared match to retrieve: "/>
                     <TextBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding HighestSharedMatchToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
                 </Grid>
@@ -125,17 +125,17 @@
                 <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Background="White" Padding="10">
-                    <Run Text="Downloading is currently disabled pending some sort of acknowledgement from Ancestry that this tool will not overload or otherwise harm their website."/>
-                    <LineBreak/>
-                    <LineBreak/>
-                    <Run Text="Clustering can still be performed on icw_*.csv files from DNAGedcom or *.csv files from AutoCluster."/>
-                    <LineBreak/>
-                    <LineBreak/>
-                    <Run Text="Does anyone have a good contact at Ancestry who could discuss this? Please have them contact me."/>
-                </TextBlock>
-            </Grid>
+            <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Background="White" Padding="10">
+                <Run Text="Downloading is currently disabled pending some sort of acknowledgement from Ancestry that this tool will not overload or otherwise harm their website."/>
+                <LineBreak/>
+                <LineBreak/>
+                <Run Text="Clustering can still be performed on icw_*.csv files from DNAGedcom or *.csv files from AutoCluster."/>
+                <LineBreak/>
+                <LineBreak/>
+                <Run Text="Does anyone have a good contact at Ancestry who could discuss this? Please have them contact me."/>
+            </TextBlock>
         </Grid>
-    </DataTemplate>
+    </Grid>
+</DataTemplate>
     
 </ResourceDictionary>

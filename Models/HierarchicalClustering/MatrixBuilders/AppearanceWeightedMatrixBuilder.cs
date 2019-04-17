@@ -95,7 +95,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 return;
             }
 
-            var totalCoords = matrix.Count * matrix.Count;
+            var totalCoords = matrix.Values.Sum(row => row.Count());
             var numDirectCoords = matrix.Values.Sum(row => row.Count(coord => coord >= 1));
             var numIndirectCoords = matrix.AsParallel().Sum(row => row.Value.Count(coord => coord > 0 && coord < 1));
             var maxAllowedIndirectCoords = (int)((totalCoords - numDirectCoords) * _maxIndirectPercentage);

@@ -322,7 +322,7 @@ namespace AncestryDnaClustering.ViewModels
             ProgressData.Reset($"Downloading shared matches for {matches.Count} matches...", matches.Count);
 
             // Make sure there are no more than 100 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
-            var semaphore = new SemaphoreSlim(100);
+            var semaphore = new SemaphoreSlim(10);
             var counter = 0;
 
             var icwDictionary = matches.ToDictionary(

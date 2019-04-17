@@ -41,6 +41,11 @@ namespace AncestryDnaClustering.Models
         // Much faster than sorting the list, especially for large lists
         public static T NthLargest<T>(this IEnumerable<T> items, int count)
         {
+            if (count == 1)
+            {
+                return items.Max();
+            }
+
             var comparer = Comparer<T>.Default;
             var set = new SortedDictionary<T, int> { { default(T), 0 } };
             var resultCount = 0;
