@@ -296,7 +296,7 @@ namespace AncestryDnaClustering.ViewModels
             var startTime = DateTime.Now;
 
             var (testTakerTestId, clusterableMatches) = await LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches);
-            if (clusterableMatches == null)
+            if (clusterableMatches == null || clusterableMatches.Count == 0)
             {
                 return;
             }
@@ -304,11 +304,19 @@ namespace AncestryDnaClustering.ViewModels
             var testIdsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)));
 
             var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
-            var lowestClusterableCentimorgans = clusterableMatches
+            var clusterableCoords = clusterableMatches
                 .SelectMany(match => match.Coords.Where(coord => coord != match.Index))
                 .Distinct()
                 .Where(coord => matchesByIndex.ContainsKey(coord))
-                .Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
+                .ToList();
+
+            if (clusterableCoords.Count == 0)
+            {
+                MessageBox.Show("Unable to read ICW data", "Unexpected failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var lowestClusterableCentimorgans = clusterableCoords.Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
 
             var hierarchicalClustering = new HierarchicalClustering(
                 MinClusterSize,
