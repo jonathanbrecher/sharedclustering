@@ -298,6 +298,7 @@ namespace AncestryDnaClustering.ViewModels
             var (testTakerTestId, clusterableMatches) = await LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches);
             if (clusterableMatches == null || clusterableMatches.Count == 0)
             {
+                ProgressData.Reset(DateTime.Now - startTime, "Done");
                 return;
             }
 
@@ -313,6 +314,7 @@ namespace AncestryDnaClustering.ViewModels
             if (clusterableCoords.Count == 0)
             {
                 MessageBox.Show("Unable to read ICW data", "Unexpected failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                ProgressData.Reset(DateTime.Now - startTime, "Done");
                 return;
             }
 

@@ -135,16 +135,32 @@ namespace AncestryDnaClustering.Models.SavedData
                     {
                         try
                         {
-                            var hyperlink = ws.Cells[row, hyperlinkColumn].GetValue<string>();
-                            var fields = hyperlink.Split('"');
-                            var url = fields[1];
-                            var name = fields[3];
+                            // new format
+                            var url = ws.Cells[row, hyperlinkColumn].Hyperlink.ToString();
+                            var name = ws.Cells[row, hyperlinkColumn].GetValue<string>();
                             var path = url.Split('/');
                             resultMatch.MatchTestDisplayName = name;
                             serialized.TestTakerTestId = path[4];
                             resultMatch.TestGuid = path[6];
                         }
-                        catch { }
+                        catch
+                        {
+                            try
+                            {
+                                // old format
+                                var hyperlink = ws.Cells[row, hyperlinkColumn].GetValue<string>();
+                                var fields = hyperlink.Split('"');
+                                var url = fields[1];
+                                var name = fields[3];
+                                var path = url.Split('/');
+                                resultMatch.MatchTestDisplayName = name;
+                                serialized.TestTakerTestId = path[4];
+                                resultMatch.TestGuid = path[6];
+                            }
+                            catch
+                            {
+                            }
+                        }
                     }
                     if (totalSharedCmColumn != 0)
                     {
@@ -156,7 +172,19 @@ namespace AncestryDnaClustering.Models.SavedData
                     }
                     if (treeColumn != 0)
                     {
-                        resultMatch.TreeUrl = ws.Cells[row, treeColumn].GetValue<string>();
+                        try
+                        {
+                            resultMatch.TreeUrl = ws.Cells[row, treeColumn].Hyperlink?.ToString();
+                            if (!string.IsNullOrEmpty(resultMatch.TreeUrl))
+                            {
+                                var fields = ws.Cells[row, treeColumn].GetValue<string>().Split(' ');
+                                if (fields.Last() == "persons")
+                                {
+                                    resultMatch.TreeSize = Convert.ToInt32(fields.First());
+                                }
+                            }
+                        }
+                        catch { }
                     }
 
                     // Do not assume that the AutoCluster data is free of duplicates.
