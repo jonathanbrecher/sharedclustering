@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Deployment.Application;
 using System.Windows.Input;
+using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
 
 namespace AncestryDnaClustering.ViewModels
@@ -12,12 +13,24 @@ namespace AncestryDnaClustering.ViewModels
     {
         public AncestryDnaToolsViewModel()
         {
+            var serializedMatchesReaders = new List<ISerializedMatchesReader>
+            {
+                new DnaGedcomAncestryMatchesReader(),
+                new DnaGedcomFtdnaMatchesReader(),
+                new SharedClusteringMatchesReader(),
+                new AutoClusterCsvMatchesReader(),
+                new AutoClusterExcelMatchesReader(),
+            };
+
+            var matchesLoader = new MatchesLoader(serializedMatchesReaders);
+
             // Extendable list of tabs to display.
             Tabs = new List<object>
             {
                 new IntroductionViewModel(),
                 new AncestryDnaDownloadingViewModel(),
-                new AncestryDnaHierarchicalClusteringViewModel(),
+                new AncestryDnaHierarchicalClusteringViewModel(matchesLoader),
+                new AncestryDnaDistanceViewModel(matchesLoader),
             };
             SelectedTabIndex = Settings.Default.SelectedTabIndex;
         }

@@ -300,10 +300,13 @@ namespace AncestryDnaClustering.ViewModels
 
             var guid = SelectedTest.Value;
 
+            // Make sure there are no more than 100 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
+            var throttle = new Throttle(10);
+
             // First download a list of all matches available in the test.
             // This is the data shown 50-at-a-time in list view on the Ancestry web site.
             ProgressData.Reset("Downloading matches...", NumMatchesToRetrieve);
-            var matches = await _matchesRetriever.GetMatchesAsync(guid, NumMatchesToRetrieve, true, ProgressData);
+            var matches = await _matchesRetriever.GetMatchesAsync(guid, NumMatchesToRetrieve, true, throttle, ProgressData);
 
             // Make sure there are no duplicates among the matches
             matches = matches
@@ -321,8 +324,6 @@ namespace AncestryDnaClustering.ViewModels
             // This takes much longer than downloading the list of matches themselves..
             ProgressData.Reset($"Downloading shared matches for {matches.Count} matches...", matches.Count);
 
-            // Make sure there are no more than 100 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
-            var semaphore = new SemaphoreSlim(10);
             var counter = 0;
 
             var icwDictionary = matches.ToDictionary(
@@ -330,7 +331,7 @@ namespace AncestryDnaClustering.ViewModels
                 match =>
                 {
                     var index = Interlocked.Increment(ref counter);
-                    var result = _matchesRetriever.GetMatchesInCommonAsync(guid, match, minSharedCentimorgans, semaphore, index, ProgressData);
+                    var result = _matchesRetriever.GetMatchesInCommonAsync(guid, match, minSharedCentimorgans, throttle, index, ProgressData);
                     return result;
                 });
             await Task.WhenAll(icwDictionary.Values);

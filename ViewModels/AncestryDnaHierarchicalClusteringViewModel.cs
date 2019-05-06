@@ -26,18 +26,11 @@ namespace AncestryDnaClustering.ViewModels
 
         public ProgressData ProgressData { get; } = new ProgressData();
 
-        private readonly List<ISerializedMatchesReader> _serializedMatchesReaders;
+        private readonly IMatchesLoader _matchesLoader;
 
-        public AncestryDnaHierarchicalClusteringViewModel()
+        public AncestryDnaHierarchicalClusteringViewModel(IMatchesLoader matchesLoader)
         {
-            _serializedMatchesReaders = new List<ISerializedMatchesReader>
-            {
-                new DnaGedcomAncestryMatchesReader(),
-                new DnaGedcomFtdnaMatchesReader(),
-                new SharedClusteringMatchesReader(),
-                new AutoClusterCsvMatchesReader(),
-                new AutoClusterExcelMatchesReader(),
-            };
+            _matchesLoader = matchesLoader;
 
             SelectFileCommand = new RelayCommand(SelectFile);
 
@@ -82,17 +75,11 @@ namespace AncestryDnaClustering.ViewModels
         // Present an Open File dialog to allow selecting the saved DNA data from disk
         private void SelectFile()
         {
-            var openFileDialog = new OpenFileDialog
+            var (fileName, trimmedFileName) = _matchesLoader.SelectFile(Filename);
+            if (fileName != null)
             {
-                InitialDirectory = string.IsNullOrEmpty(Filename) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(Filename),
-                FileName = Filename,
-                Filter = "DNAGedcom icw_ or AutoCluster files (*.csv)|*.csv|AutoCluster files (*.xlsx)|*.xlsx|Shared Clustering downloaded data (*.txt)|*.txt;*.json|All files (*.*)|*.*",
-            };
-            if (openFileDialog.ShowDialog() == true)
-            {
-                Filename = openFileDialog.FileName;
+                Filename = fileName;
 
-                var trimmedFileName = _serializedMatchesReaders.Select(reader => reader.GetTrimmedFileName(Filename)).FirstOrDefault(f => f != null);
                 if (trimmedFileName != null)
                 {
                     CorrelationFilename = Path.Combine(Path.GetDirectoryName(Filename), trimmedFileName + "-clusters.xlsx");
@@ -208,7 +195,7 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
-        // Display a Save File dialog to specify where the final cluster diagram shoudl be saved.
+        // Display a Save File dialog to specify where the final cluster diagram should be saved.
         private void SelectCorrelationFile()
         {
             var saveFileDialog = new SaveFileDialog
@@ -295,7 +282,7 @@ namespace AncestryDnaClustering.ViewModels
 
             var startTime = DateTime.Now;
 
-            var (testTakerTestId, clusterableMatches) = await LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches);
+            var (testTakerTestId, clusterableMatches) = await _matchesLoader.LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches, ProgressData);
             if (clusterableMatches == null || clusterableMatches.Count == 0)
             {
                 ProgressData.Reset(DateTime.Now - startTime, "Done");
@@ -330,67 +317,6 @@ namespace AncestryDnaClustering.ViewModels
             await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 
             ProgressData.Reset(DateTime.Now - startTime, "Done");
-        }
-
-        private async Task<(string, List<IClusterableMatch>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches)
-        {
-            ProgressData.Description = "Loading data...";
-
-            var serializedMatchesReaders = _serializedMatchesReaders.Where(reader => reader.IsSupportedFileType(savedData)).ToList();
-            if (serializedMatchesReaders.Count == 0)
-            {
-                MessageBox.Show("Unsupported file type.");
-                return (null, null);
-            }
-
-            Serialized input = null;
-            string errorMessage = null;
-            foreach (var serializedMatchesReader in serializedMatchesReaders)
-            {
-                string thisErrorMessage;
-                (input, thisErrorMessage) = await serializedMatchesReader.ReadFileAsync(savedData, ProgressData);
-                if (input != null)
-                {
-                    break;
-                }
-                if (errorMessage == null)
-                {
-                    errorMessage = thisErrorMessage;
-                }
-            }
-
-            if (input == null)
-            {
-                MessageBox.Show(errorMessage);
-                return (null, null);
-            }
-
-            return await Task.Run(() =>
-            {
-                var strongMatches = input.Matches.Where(match => match.SharedCentimorgans >= minCentimorgansToCluster).ToList();
-                var maxMatchIndex = strongMatches.Count + 1;
-                var maxIcwIndex = Math.Min(maxMatchIndex, input.Matches.Count(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches) + 1);
-                maxIcwIndex = Math.Min(maxIcwIndex, input.Matches.Count - 1);
-                var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestGuid));
-                var icw = input.Icw
-                    .Where(kvp => strongMatchesGuids.Contains(kvp.Key))
-                    .OrderBy(kvp => input.MatchIndexes.TryGetValue(kvp.Key, out var index) ? index : input.MatchIndexes.Count)
-                    .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Where(index => index <= maxIcwIndex).ToList()
-                    );
-                var matchesDictionary = strongMatches.ToDictionary(match => match.TestGuid);
-                var clusterableMatches = icw
-                    .AsParallel().AsOrdered()
-                    .Select((kvp, index) =>
-                    {
-                        var match = matchesDictionary[kvp.Key];
-                        return (IClusterableMatch)new ClusterableMatch(index, match, kvp.Value);
-                    }
-                    )
-                    .ToList();
-                return (input.TestTakerTestId, clusterableMatches);
-            });
         }
     }
 }

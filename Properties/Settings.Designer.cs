@@ -298,5 +298,77 @@ namespace AncestryDnaClustering.Properties {
                 this["MaxGrayPercentage"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowAdvancedDistanceOptions {
+            get {
+                return ((bool)(this["ShowAdvancedDistanceOptions"]));
+            }
+            set {
+                this["ShowAdvancedDistanceOptions"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string FilenameDistance {
+            get {
+                return ((string)(this["FilenameDistance"]));
+            }
+            set {
+                this["FilenameDistance"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int MinClusterSizeDistance {
+            get {
+                return ((int)(this["MinClusterSizeDistance"]));
+            }
+            set {
+                this["MinClusterSizeDistance"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("40")]
+        public double MinCentimorgansToCompareDistance {
+            get {
+                return ((double)(this["MinCentimorgansToCompareDistance"]));
+            }
+            set {
+                this["MinCentimorgansToCompareDistance"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("40")]
+        public double MinCentimorgansInSharedMatchesDistance {
+            get {
+                return ((double)(this["MinCentimorgansInSharedMatchesDistance"]));
+            }
+            set {
+                this["MinCentimorgansInSharedMatchesDistance"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DistanceBasisIds {
+            get {
+                return ((string)(this["DistanceBasisIds"]));
+            }
+            set {
+                this["DistanceBasisIds"] = value;
+            }
+        }
     }
 }

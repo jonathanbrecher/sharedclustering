@@ -109,7 +109,9 @@
     <Compile Include="Models\AncestryDnaClusteringModel.cs" />
     <Compile Include="Models\AncestryLoginHelper.cs" />
     <Compile Include="Models\AncestryMatchesRetriever.cs" />
+    <Compile Include="Models\AncestrySavedDataExtender.cs" />
     <Compile Include="Models\AncestryTestsRetriever.cs" />
+    <Compile Include="Models\DistanceFinding\DistanceFinder.cs" />
     <Compile Include="Models\HierarchicalClustering\ClusterableMatch.cs" />
     <Compile Include="Models\HierarchicalClustering\CorrelationWriters\ColumnWriters\NoteWriter.cs" />
     <Compile Include="Models\HierarchicalClustering\CorrelationWriters\ColumnWriters\CorrelatedClustersWriter.cs" />
@@ -154,11 +156,15 @@
     <Compile Include="Models\SavedData\AutoClusterCsvMatchesReader.cs" />
     <Compile Include="Models\SavedData\DnaGedcomAncestryMatchesReader.cs" />
     <Compile Include="Models\SavedData\DnaGedcomFtdnaMatchesReader.cs" />
+    <Compile Include="Models\SavedData\IMatchesLoader.cs" />
     <Compile Include="Models\SavedData\ISerializedMatchesReader.cs" />
     <Compile Include="Models\SavedData\Match.cs" />
+    <Compile Include="Models\SavedData\MatchesLoader.cs" />
     <Compile Include="Models\SavedData\Serialized.cs" />
     <Compile Include="Models\SavedData\SharedClusteringMatchesReader.cs" />
     <Compile Include="Models\SavedData\TreeType.cs" />
+    <Compile Include="Models\Throttle.cs" />
+    <Compile Include="ViewModels\AncestryDnaDistanceViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaHierarchicalClusteringViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaDownloadingViewModel.cs" />
     <Compile Include="ViewModels\ObservableObject.cs" />
@@ -166,6 +172,10 @@
     <Compile Include="ViewModels\ProgressData.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="ViewModels\AncestryDnaToolsViewModel.cs" />
+    <Page Include="Views\AncestryDnaDistanceView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\IntroductionView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

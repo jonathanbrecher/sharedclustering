@@ -16,7 +16,7 @@ namespace AncestryDnaClustering.Models
             _dnaHomeClient = dnaHomeClient;
         }
 
-        public async Task<List<Match>> GetMatchesAsync(string guid, int numMatches, bool includeTreeInfo, ProgressData progressData)
+        public async Task<List<Match>> GetMatchesAsync(string guid, int numMatches, bool includeTreeInfo, Throttle throttle, ProgressData progressData)
         {
             return new List<Match>();
         }
@@ -26,7 +26,7 @@ namespace AncestryDnaClustering.Models
             return new MatchCounts();
         }
 
-        public async Task<Dictionary<string, string>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, System.Threading.SemaphoreSlim semaphore, int index, ProgressData progressData)
+        public async Task<Dictionary<string, string>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, Throttle throttle, int index, ProgressData progressData)
         {
             return await Task.FromResult(new Dictionary<string, string>());
         }

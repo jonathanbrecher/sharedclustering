@@ -71,5 +71,23 @@
     <Setting Name="MaxGrayPercentage" Type="System.Double" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>
+    <Setting Name="ShowAdvancedDistanceOptions" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="FilenameDistance" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MinClusterSizeDistance" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="MinCentimorgansToCompareDistance" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">40</Value>
+    </Setting>
+    <Setting Name="MinCentimorgansInSharedMatchesDistance" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">40</Value>
+    </Setting>
+    <Setting Name="DistanceBasisIds" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>
