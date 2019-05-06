@@ -108,6 +108,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 csv.Configuration.BadDataFound = null;
                 csv.Configuration.LineBreakInQuotedFieldIsBadData = false;
                 csv.Configuration.RegisterClassMap<DnaGedcomMatchMap>();
+                csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.Replace('_', ' ');
                 var dnaGedcomMatches = csv.GetRecords<DnaGedcomMatch>();
                 if (dnaGedcomMatches == null)
                 {
@@ -168,6 +169,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 csv.Configuration.BadDataFound = null;
                 csv.Configuration.LineBreakInQuotedFieldIsBadData = false;
                 csv.Configuration.RegisterClassMap<DnaGedcomIcwMap>();
+                csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.Replace('_', ' ');
 
                 // Translate the ICW data.
                 // Shared Clustering assumes that every match also matches themselves.
@@ -208,6 +210,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 csv.Configuration.BadDataFound = null;
                 csv.Configuration.LineBreakInQuotedFieldIsBadData = false;
                 csv.Configuration.RegisterClassMap<DnaGedcomTreeNodeMap>();
+                csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.Replace('_', ' ');
 
                 // Translate the ICW data.
                 // Shared Clustering assumes that every match also matches themselves.

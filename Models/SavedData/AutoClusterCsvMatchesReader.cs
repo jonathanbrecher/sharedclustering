@@ -63,6 +63,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 csv.Configuration.BadDataFound = null;
                 csv.Configuration.LineBreakInQuotedFieldIsBadData = false;
                 csv.Configuration.RegisterClassMap<AutoClusterMatchMap>();
+                csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.Replace('_', ' ');
 
                 serialized.Matches = new List<Match>();
                 serialized.MatchIndexes = new Dictionary<string, int>();
