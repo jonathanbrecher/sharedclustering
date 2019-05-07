@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using AncestryDnaClustering.Models.HierarchicalClustering;
+using AncestryDnaClustering.Properties;
 using AncestryDnaClustering.ViewModels;
 using Microsoft.Win32;
 
@@ -27,9 +28,13 @@ namespace AncestryDnaClustering.Models.SavedData
                 InitialDirectory = string.IsNullOrEmpty(fileName) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(fileName),
                 FileName = fileName,
                 Filter = "DNAGedcom icw_ or AutoCluster files (*.csv)|*.csv|AutoCluster files (*.xlsx)|*.xlsx|Shared Clustering downloaded data (*.txt)|*.txt;*.json|All files (*.*)|*.*",
+                FilterIndex = Settings.Default.MatchesLoaderFilterIndex,
             };
             if (openFileDialog.ShowDialog() == true)
             {
+                Settings.Default.MatchesLoaderFilterIndex = openFileDialog.FilterIndex;
+                Settings.Default.Save();
+
                 fileName = openFileDialog.FileName;
 
                 var trimmedFileName = _serializedMatchesReaders.Select(reader => reader.GetTrimmedFileName(fileName)).FirstOrDefault(f => f != null);

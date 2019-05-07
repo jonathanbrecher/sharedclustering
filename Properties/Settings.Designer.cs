@@ -370,5 +370,17 @@ namespace AncestryDnaClustering.Properties {
                 this["DistanceBasisIds"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int MatchesLoaderFilterIndex {
+            get {
+                return ((int)(this["MatchesLoaderFilterIndex"]));
+            }
+            set {
+                this["MatchesLoaderFilterIndex"] = value;
+            }
+        }
     }
 }
