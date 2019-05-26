@@ -382,5 +382,41 @@ namespace AncestryDnaClustering.Properties {
                 this["MatchesLoaderFilterIndex"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DownloadTypeEndogamy {
+            get {
+                return ((bool)(this["DownloadTypeEndogamy"]));
+            }
+            set {
+                this["DownloadTypeEndogamy"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double MinCentimorgansToRetrieve {
+            get {
+                return ((double)(this["MinCentimorgansToRetrieve"]));
+            }
+            set {
+                this["MinCentimorgansToRetrieve"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double MinSharedMatchesCentimorgansToRetrieve {
+            get {
+                return ((double)(this["MinSharedMatchesCentimorgansToRetrieve"]));
+            }
+            set {
+                this["MinSharedMatchesCentimorgansToRetrieve"] = value;
+            }
+        }
     }
 }

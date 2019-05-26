@@ -17,6 +17,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="10"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="A"/>
@@ -61,7 +63,14 @@
                         <TextBlock Text="Slow and complete (all matches &#x2014; usually at least several hours)" TextWrapping="Wrap"/>
                     </RadioButton.Content>
                 </RadioButton>
-            </Grid>
+                <RadioButton Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
+                             GroupName="DownloadType"
+                             IsChecked="{Binding DownloadTypeEndogamy}">
+                    <RadioButton.Content>
+                        <TextBlock Text="Endogamy special, for use with heavy endogamy (all matches, but only shared matches over 50 cM &#x2014; usually at least several hours)" TextWrapping="Wrap"/>
+                    </RadioButton.Content>
+                </RadioButton>
+                </Grid>
 
             <Expander Margin="10"
                       Header="Advanced options:"
@@ -77,10 +86,10 @@
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="50"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Number of tests to retrieve: "/>
-                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding NumMatchesToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
-                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Highest shared match to retrieve: "/>
-                    <TextBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding HighestSharedMatchToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans to retrieve: "/>
+                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding MinCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans of shared matches: "/>
+                        <TextBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding MinSharedMatchesCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
                 </Grid>
             </Expander>
 

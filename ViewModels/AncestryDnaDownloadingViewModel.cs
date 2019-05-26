@@ -41,11 +41,12 @@ namespace AncestryDnaClustering.ViewModels
             GetDnaMatchesCommand = new RelayCommand(async () => await GetDnaMatchesAsync());
 
             AncestryUserName = Settings.Default.AncestryUserName;
-            NumMatchesToRetrieve = Settings.Default.NumTestsToRetrieve;
-            HighestSharedMatchToRetrieve = Settings.Default.HighestSharedMatchToRetrieve;
+            MinCentimorgansToRetrieve = Settings.Default.MinCentimorgansToRetrieve;
+            MinSharedMatchesCentimorgansToRetrieve = Settings.Default.MinSharedMatchesCentimorgansToRetrieve;
             ShowAdvancedDownloadOptions = Settings.Default.ShowAdvancedDownloadOptions;
             DownloadTypeFast = Settings.Default.DownloadTypeFast;
             DownloadTypeComplete = Settings.Default.DownloadTypeComplete;
+            DownloadTypeEndogamy = Settings.Default.DownloadTypeEndogamy;
         }
 
         public ICommand SignInCommand { get; }
@@ -110,7 +111,7 @@ namespace AncestryDnaClustering.ViewModels
                 if (SetFieldValue(ref _selectedTest, value, nameof(SelectedTest)))
                 {
                     Settings.Default.SelectedTestId = SelectedTest.Key;
-                    CanGetDnaMatches = Tests?.Count > 0 && NumMatchesToRetrieve > 0;
+                    CheckCanGetDnaMatches();
 
                     // When the selected test is changed, for convenience report the number of matches in that test.
                     // Stop any previous task that was downloading match counts from a previous test.
@@ -130,17 +131,10 @@ namespace AncestryDnaClustering.ViewModels
             {
                 MatchCounts = null;
                 _matchCountsData = await _matchesRetriever.GetMatchCounts(guid);
+                CheckCanGetDnaMatches();
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     MatchCounts = $"{_matchCountsData.ThirdCousins} third cousins, {_matchCountsData.FourthCousins} fourth cousins, {_matchCountsData.TotalMatches} total matches";
-                    if (DownloadTypeFast)
-                    {
-                        NumMatchesToRetrieve = HighestSharedMatchToRetrieve = _matchCountsData.FourthCousins;
-                    }
-                    if (DownloadTypeComplete)
-                    {
-                        NumMatchesToRetrieve = HighestSharedMatchToRetrieve = _matchCountsData.TotalMatches;
-                    }
                 }
             }
             catch (Exception)
@@ -149,6 +143,8 @@ namespace AncestryDnaClustering.ViewModels
                 // This data is provided only for convenience, so there is no harm if an error occurs and it cannot be downloaded.
             }
         }
+
+        private bool CheckCanGetDnaMatches() => CanGetDnaMatches = Tests?.Count > 0 && MinCentimorgansToRetrieve > 0 && _matchCountsData?.TotalMatches > 0;
 
         // A user-visible string that describes how many matches are available in the currently-selected test.
         private string _matchCounts;
@@ -181,9 +177,9 @@ namespace AncestryDnaClustering.ViewModels
                 if (SetFieldValue(ref _downloadTypeFast, value, nameof(DownloadTypeFast)))
                 {
                     Settings.Default.DownloadTypeFast = DownloadTypeFast;
-                    if (DownloadTypeFast && _matchCountsData != null)
+                    if (DownloadTypeFast)
                     {
-                        NumMatchesToRetrieve = HighestSharedMatchToRetrieve = _matchCountsData.FourthCousins;
+                        MinCentimorgansToRetrieve = MinSharedMatchesCentimorgansToRetrieve = 20;
                     }
                 }
             }
@@ -198,9 +194,27 @@ namespace AncestryDnaClustering.ViewModels
                 if (SetFieldValue(ref _downloadTypeComplete, value, nameof(DownloadTypeComplete)))
                 {
                     Settings.Default.DownloadTypeComplete = DownloadTypeComplete;
-                    if (DownloadTypeComplete && _matchCountsData != null)
+                    if (DownloadTypeComplete)
                     {
-                        NumMatchesToRetrieve = HighestSharedMatchToRetrieve = _matchCountsData.TotalMatches;
+                        MinCentimorgansToRetrieve = MinSharedMatchesCentimorgansToRetrieve = 6;
+                    }
+                }
+            }
+        }
+
+        private bool _downloadTypeEndogamy;
+        public bool DownloadTypeEndogamy
+        {
+            get => _downloadTypeEndogamy;
+            set
+            {
+                if (SetFieldValue(ref _downloadTypeEndogamy, value, nameof(DownloadTypeEndogamy)))
+                {
+                    Settings.Default.DownloadTypeEndogamy = DownloadTypeEndogamy;
+                    if (DownloadTypeEndogamy)
+                    {
+                        MinCentimorgansToRetrieve = 6;
+                        MinSharedMatchesCentimorgansToRetrieve = 50;
                     }
                 }
             }
@@ -239,24 +253,28 @@ namespace AncestryDnaClustering.ViewModels
         // The total number of matches to retrieve.
         // Typical values are the number of matches with 20 or higher (the lowest values shown on the Ancestry website)
         // and the total count of all matches.
-        private int _numMatchesToRetrieve;
-        public int NumMatchesToRetrieve
+        private double _minCentimorgansToRetrieve;
+        public double MinCentimorgansToRetrieve
         {
-            get => _numMatchesToRetrieve;
+            get => _minCentimorgansToRetrieve;
             set
             {
-                if (SetFieldValue(ref _numMatchesToRetrieve, value, nameof(NumMatchesToRetrieve)))
+                if (SetFieldValue(ref _minCentimorgansToRetrieve, value, nameof(MinCentimorgansToRetrieve)))
                 {
-                    Settings.Default.NumTestsToRetrieve = NumMatchesToRetrieve;
-                    CanGetDnaMatches = Tests?.Count > 0 && NumMatchesToRetrieve > 0;
+                    Settings.Default.MinCentimorgansToRetrieve = MinCentimorgansToRetrieve;
+                    CheckCanGetDnaMatches();
 
-                    if (DownloadTypeFast && _matchCountsData != null && NumMatchesToRetrieve != _matchCountsData.FourthCousins)
+                    if (DownloadTypeFast && MinCentimorgansToRetrieve != 20)
                     {
                         DownloadTypeFast = false;
                     }
-                    if (DownloadTypeComplete && _matchCountsData != null && NumMatchesToRetrieve != _matchCountsData.TotalMatches)
+                    if (DownloadTypeComplete && MinCentimorgansToRetrieve != 6)
                     {
                         DownloadTypeComplete = false;
+                    }
+                    if (DownloadTypeEndogamy && MinCentimorgansToRetrieve != 6)
+                    {
+                        DownloadTypeEndogamy = false;
                     }
                 }
             }
@@ -267,23 +285,27 @@ namespace AncestryDnaClustering.ViewModels
         // and the total count of all matches.
         // This might need to be set to an artificially low number in the presence of endogamy,
         // to avoid ridiculously long download times when each match might have thousands of shared matches.
-        private int _highestSharedMatchToRetrieve;
-        public int HighestSharedMatchToRetrieve
+        private double _minSharedMatchesCentimorgansToRetrieve;
+        public double MinSharedMatchesCentimorgansToRetrieve
         {
-            get => _highestSharedMatchToRetrieve;
+            get => _minSharedMatchesCentimorgansToRetrieve;
             set
             {
-                if (SetFieldValue(ref _highestSharedMatchToRetrieve, value, nameof(HighestSharedMatchToRetrieve)))
+                if (SetFieldValue(ref _minSharedMatchesCentimorgansToRetrieve, value, nameof(MinSharedMatchesCentimorgansToRetrieve)))
                 {
-                    Settings.Default.HighestSharedMatchToRetrieve = HighestSharedMatchToRetrieve;
+                    Settings.Default.MinSharedMatchesCentimorgansToRetrieve = MinSharedMatchesCentimorgansToRetrieve;
 
-                    if (DownloadTypeFast && _matchCountsData != null && HighestSharedMatchToRetrieve != _matchCountsData.FourthCousins)
+                    if (DownloadTypeFast && MinSharedMatchesCentimorgansToRetrieve != 20)
                     {
                         DownloadTypeFast = false;
                     }
-                    if (DownloadTypeComplete && _matchCountsData != null && HighestSharedMatchToRetrieve != _matchCountsData.TotalMatches)
+                    if (DownloadTypeComplete && MinSharedMatchesCentimorgansToRetrieve != 6)
                     {
                         DownloadTypeComplete = false;
+                    }
+                    if (DownloadTypeEndogamy && MinSharedMatchesCentimorgansToRetrieve != 50)
+                    {
+                        DownloadTypeEndogamy = false;
                     }
                 }
             }
@@ -319,11 +341,13 @@ namespace AncestryDnaClustering.ViewModels
 
             // First download a list of all matches available in the test.
             // This is the data shown 50-at-a-time in list view on the Ancestry web site.
-            ProgressData.Reset("Downloading matches...", NumMatchesToRetrieve);
-            var matches = await _matchesRetriever.GetMatchesAsync(guid, NumMatchesToRetrieve, true, throttle, ProgressData);
+            var numMatchesToRetrieve = MinSharedMatchesCentimorgansToRetrieve >= 20 ? _matchCountsData.FourthCousins : _matchCountsData.TotalMatches;
+            ProgressData.Reset("Downloading matches...", numMatchesToRetrieve);
+            var matches = await _matchesRetriever.GetMatchesAsync(guid, numMatchesToRetrieve, true, throttle, ProgressData);
 
             // Make sure there are no duplicates among the matches
             matches = matches
+                .Where(match => match.SharedCentimorgans >= MinCentimorgansToRetrieve)
                 .GroupBy(match => match.TestGuid)
                 .Select(g => g.First())
                 .ToList();
@@ -331,8 +355,6 @@ namespace AncestryDnaClustering.ViewModels
             var matchIndexes = matches
                 .Select((match, index) => new { match.TestGuid, Index = index })
                 .ToDictionary(pair => pair.TestGuid, pair => pair.Index);
-
-            var minSharedCentimorgans = matches.Take(HighestSharedMatchToRetrieve).Last().SharedCentimorgans;
 
             // Now download the shared matches for each match.
             // This takes much longer than downloading the list of matches themselves..
@@ -345,7 +367,7 @@ namespace AncestryDnaClustering.ViewModels
                 match =>
                 {
                     var index = Interlocked.Increment(ref counter);
-                    var result = _matchesRetriever.GetMatchesInCommonAsync(guid, match, minSharedCentimorgans, throttle, index, ProgressData);
+                    var result = _matchesRetriever.GetMatchesInCommonAsync(guid, match, MinSharedMatchesCentimorgansToRetrieve, throttle, index, ProgressData);
                     return result;
                 });
             await Task.WhenAll(icwDictionary.Values);
