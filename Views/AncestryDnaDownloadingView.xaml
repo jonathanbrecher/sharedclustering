@@ -21,9 +21,9 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="A"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition MaxWidth="250"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry user name: "/>
@@ -113,7 +113,7 @@
                         IsEnabled="{Binding CanGetDnaMatches}"/>
             </Grid>
         </StackPanel>
-        <Rectangle Fill="Black" Opacity="0.25"/>
+        <!--<Rectangle Fill="Black" Opacity="0.25"/>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -134,7 +134,7 @@
                 <LineBreak/>
                 <Run Text="Does anyone have a good contact at Ancestry who could discuss this? Please have them contact me."/>
             </TextBlock>
-        </Grid>
+        </Grid>-->
     </Grid>
 </DataTemplate>
     

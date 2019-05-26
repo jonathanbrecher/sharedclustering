@@ -15,9 +15,9 @@ namespace AncestryDnaClustering.Models
             _cookies = cookies;
         }
 
-        public async Task LoginAsync(string username, string password)
+        public Task<bool> LoginAsync(string username, string password)
         {
-            await Task.CompletedTask;
+            return Task.FromResult(false);
         }
     }
 }

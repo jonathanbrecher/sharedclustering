@@ -84,11 +84,18 @@ namespace AncestryDnaClustering.ViewModels
             {
                 if (SetFieldValue(ref _tests, value, nameof(Tests)))
                 {
-                    // The selected test is the first one that matches the last-used value, otherwise the first one.
-                    // The tests are ordered in the same order as in the Ancestry web site, with test taker's own test listed first.
-                    SelectedTest = Tests.Any(test => test.Key == Settings.Default.SelectedTestId)
-                           ? Tests.FirstOrDefault(test => test.Key == Settings.Default.SelectedTestId)
-                           : Tests.First();
+                    if (Tests?.Count > 0)
+                    {
+                        // The selected test is the first one that matches the last-used value, otherwise the first one.
+                        // The tests are ordered in the same order as in the Ancestry web site, with test taker's own test listed first.
+                        SelectedTest = Tests?.Any(test => test.Key == Settings.Default.SelectedTestId) == true
+                               ? Tests.FirstOrDefault(test => test.Key == Settings.Default.SelectedTestId)
+                               : Tests.First();
+                    }
+                    else
+                    {
+                        SelectedTest = new KeyValuePair<string, string>();
+                    }
                 }
             }
         }
@@ -205,9 +212,16 @@ namespace AncestryDnaClustering.ViewModels
 
             try
             {
-                await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password);
-
-                Tests = await _testsRetriever.GetTestsAsync();
+                if (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password))
+                {
+                    Tests = (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password)) 
+                        ? await _testsRetriever.GetTestsAsync()
+                        : null;
+                }
+                else
+                {
+                    Tests = null;
+                }
             }
             catch (Exception ex)
             {
