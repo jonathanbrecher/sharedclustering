@@ -82,7 +82,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 var maxMatchIndex = strongMatches.Count + 1;
                 var maxIcwIndex = Math.Min(maxMatchIndex, input.Matches.Count(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches) + 1);
                 maxIcwIndex = Math.Min(maxIcwIndex, input.Matches.Count - 1);
-                var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestGuid));
+                var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestGuid), StringComparer.OrdinalIgnoreCase);
                 var icw = input.Icw
                     .Where(kvp => strongMatchesGuids.Contains(kvp.Key))
                     .OrderBy(kvp => input.MatchIndexes.TryGetValue(kvp.Key, out var index) ? index : input.MatchIndexes.Count)

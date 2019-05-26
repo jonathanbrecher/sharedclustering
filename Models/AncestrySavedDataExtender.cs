@@ -97,7 +97,7 @@ namespace AncestryDnaClustering.ViewModels
             _progressData.Reset(DateTime.Now - startTime, $"Done. Downloaded {matches.Count} matches ({matchesWithSharedMatches.Count} with shared matches, averaging {averageSharedMatches:0.#} shared matches");
         }
 
-        private HashSet<string> _toExtend = new HashSet<string>
+        private HashSet<string> _toExtend = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
 "4E6B58A8-B6DE-417F-A75A-DF648ADA8E59",
 "0EB8B69C-2C05-4412-80AB-7AF57494D924",

@@ -289,7 +289,7 @@ namespace AncestryDnaClustering.ViewModels
                 return;
             }
 
-            var testIdsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)));
+            var testIdsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
 
             var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
             var clusterableCoords = clusterableMatches

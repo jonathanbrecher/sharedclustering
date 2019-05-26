@@ -209,7 +209,7 @@ namespace AncestryDnaClustering.ViewModels
 
             if (!string.IsNullOrEmpty(DistanceBasisIds))
             {
-                var testIdsAsBasis = new HashSet<string>(Regex.Split(DistanceBasisIds, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)));
+                var testIdsAsBasis = new HashSet<string>(Regex.Split(DistanceBasisIds, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
                 var indexesAsBasis = new HashSet<int>(clusterableMatches.Where(match => testIdsAsBasis.Contains(match.Match.TestGuid)).Select(match => match.Index));
                 await distanceFinder.FindClosestByDistanceAsync(clusterableMatches, indexesAsBasis, DistanceFilename);
             }
