@@ -100,9 +100,9 @@ namespace AncestryDnaClustering.ViewModels
                 timeSpan.Hours == 0 ? null : $"{timeSpan.Hours} hour{(timeSpan.Hours == 1 ? "" : "s")}",
                 timeSpan.Minutes == 0 ? null : $"{timeSpan.Minutes} minute{(timeSpan.Minutes == 1 ? "" : "s")}",
                 timeSpan.Seconds == 0 ? null : $"{timeSpan.Seconds} second{(timeSpan.Seconds == 1 ? "" : "s")}",
-                complete ? "elapsed." : "remaining.",
-                complete ? "Complete:" : "Expected completion:",
-                $"{(DateTime.Now + timeSpan):h:mm:ss tt}",
+                complete 
+                    ? $"elapsed. Complete: {(DateTime.Now):h:mm:ss tt}" 
+                    : $"remaining. Expected completion: {(DateTime.Now + timeSpan):h:mm:ss tt}",
             };
             return string.Join(" ", segments.Where(s => s != null));
         }

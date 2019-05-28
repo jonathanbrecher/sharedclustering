@@ -226,16 +226,9 @@ namespace AncestryDnaClustering.ViewModels
 
             try
             {
-                if (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password))
-                {
-                    Tests = (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password)) 
-                        ? await _testsRetriever.GetTestsAsync()
-                        : null;
-                }
-                else
-                {
-                    Tests = null;
-                }
+                Tests = (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password)) 
+                    ? await _testsRetriever.GetTestsAsync()
+                    : null;
             }
             catch (Exception ex)
             {
@@ -341,7 +334,7 @@ namespace AncestryDnaClustering.ViewModels
 
             // First download a list of all matches available in the test.
             // This is the data shown 50-at-a-time in list view on the Ancestry web site.
-            var numMatchesToRetrieve = MinSharedMatchesCentimorgansToRetrieve >= 20 ? _matchCountsData.FourthCousins : _matchCountsData.TotalMatches;
+            var numMatchesToRetrieve = MinCentimorgansToRetrieve >= 20 ? _matchCountsData.FourthCousins : _matchCountsData.TotalMatches;
             ProgressData.Reset("Downloading matches...", numMatchesToRetrieve);
             var matches = await _matchesRetriever.GetMatchesAsync(guid, numMatchesToRetrieve, true, throttle, ProgressData);
 
