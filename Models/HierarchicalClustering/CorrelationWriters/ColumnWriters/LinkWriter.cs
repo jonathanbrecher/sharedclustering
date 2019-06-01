@@ -21,7 +21,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
         public void WriteValue(ExcelRange cell, IClusterableMatch match, LeafNode leafNode)
         {
             cell.StyleName = "HyperLink";
-            cell .Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/{match.Match.TestGuid}", UriKind.Absolute) { Display = "Link" };
+            cell.Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/discoveryui-matches/compare-ng/{_testTakerTestId}/with/{match.Match.TestGuid}/trees", UriKind.Absolute) { Display = "Link" };
+            //cell.Hyperlink = new ExcelHyperLink($"https://www.ancestry.com/discoveryui-matches/compare-ng/{_testTakerTestId}/with/{match.Match.TestGuid}/sharedmatches", UriKind.Absolute) { Display = "Link" };
         }
     }
 }

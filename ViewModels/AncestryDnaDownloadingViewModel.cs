@@ -310,7 +310,7 @@ namespace AncestryDnaClustering.ViewModels
 
             var startTime = DateTime.Now;
 
-            var fileName = "icw.txt";
+            var fileName = $"{SelectedTest.Key} Ancestry Shared Clustering.txt";
             var saveFileDialog = new SaveFileDialog
             {
                 InitialDirectory = AppDomain.CurrentDomain.BaseDirectory,
@@ -334,7 +334,10 @@ namespace AncestryDnaClustering.ViewModels
 
             // First download a list of all matches available in the test.
             // This is the data shown 50-at-a-time in list view on the Ancestry web site.
-            var numMatchesToRetrieve = MinCentimorgansToRetrieve >= 20 ? _matchCountsData.FourthCousins : _matchCountsData.TotalMatches;
+            var numMatchesToRetrieve = 
+                MinCentimorgansToRetrieve >= 90 ? _matchCountsData.ThirdCousins 
+                : MinCentimorgansToRetrieve >= 20 ? _matchCountsData.FourthCousins 
+                : _matchCountsData.TotalMatches;
             ProgressData.Reset("Downloading matches...", numMatchesToRetrieve);
             var matches = await _matchesRetriever.GetMatchesAsync(guid, numMatchesToRetrieve, true, throttle, ProgressData);
 

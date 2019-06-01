@@ -97,12 +97,15 @@ namespace AncestryDnaClustering.ViewModels
 
             var segments = new[]
             {
+                timeSpan.Days == 0 ? null : $"{timeSpan.Days} day{(timeSpan.Days == 1 ? "" : "s")}",
                 timeSpan.Hours == 0 ? null : $"{timeSpan.Hours} hour{(timeSpan.Hours == 1 ? "" : "s")}",
                 timeSpan.Minutes == 0 ? null : $"{timeSpan.Minutes} minute{(timeSpan.Minutes == 1 ? "" : "s")}",
                 timeSpan.Seconds == 0 ? null : $"{timeSpan.Seconds} second{(timeSpan.Seconds == 1 ? "" : "s")}",
                 complete 
                     ? $"elapsed. Complete: {(DateTime.Now):h:mm:ss tt}" 
-                    : $"remaining. Expected completion: {(DateTime.Now + timeSpan):h:mm:ss tt}",
+                    : timeSpan.Days == 0
+                    ? $"remaining. Expected completion: {(DateTime.Now + timeSpan).ToLongTimeString()}"
+                    : $"remaining. Expected completion: {(DateTime.Now + timeSpan).ToLongTimeString()} on {(DateTime.Now + timeSpan).ToLongDateString()}",
             };
             return string.Join(" ", segments.Where(s => s != null));
         }

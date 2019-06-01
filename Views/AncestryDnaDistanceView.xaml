@@ -1,6 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:viewmodels="clr-namespace:AncestryDnaClustering.ViewModels">
+                    xmlns:viewmodels="clr-namespace:AncestryDnaClustering.ViewModels"
+                    xmlns:views="clr-namespace:AncestryDnaClustering.Views">
 
     <DataTemplate DataType="{x:Type viewmodels:AncestryDnaDistanceViewModel}">
         <StackPanel Orientation="Vertical">
@@ -49,9 +50,15 @@
                 <TextBox Grid.Row="6" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="50" Text="{Binding MinCentimorgansInSharedMatchesDistance}"/>
 
                 <TextBlock Grid.Row="10" Grid.Column="0" Text="Test IDs to find distance from: "/>
-                <TextBox Grid.Row="10" Grid.Column="2" HorizontalAlignment="Stretch" Height="80"
-                     TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
-                     Text="{Binding DistanceBasisIds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <AdornerDecorator Grid.Row="10" Grid.Column="2">
+                    <TextBox HorizontalAlignment="Stretch" Height="80"
+                             AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                             Text="{Binding DistanceBasisIds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <views:WatermarkService.Watermark>
+                            <TextBlock TextWrapping="Wrap" Margin="3">Enter IDs for group of related matches to find other matches that have the most similar shared matches. Or leave blank to find most similar matches for every match (long!)</TextBlock>
+                        </views:WatermarkService.Watermark>
+                    </TextBox>
+                </AdornerDecorator>
             </Grid>
 
             <Expander Margin="10"

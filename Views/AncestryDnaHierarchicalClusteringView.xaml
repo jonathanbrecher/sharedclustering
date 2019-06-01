@@ -1,6 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:viewmodels="clr-namespace:AncestryDnaClustering.ViewModels">
+                    xmlns:viewmodels="clr-namespace:AncestryDnaClustering.ViewModels"
+                    xmlns:views="clr-namespace:AncestryDnaClustering.Views">
 
     <DataTemplate DataType="{x:Type viewmodels:AncestryDnaHierarchicalClusteringViewModel}">
         <StackPanel Orientation="Vertical">
@@ -100,9 +101,15 @@
                     <TextBox Grid.Row="8" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="50" Text="{Binding MaxGrayPercentage}"/>
 
                     <TextBlock Grid.Row="10" Grid.Column="0" Text="Filter Test IDs to: "/>
-                    <TextBox Grid.Row="10" Grid.Column="2" HorizontalAlignment="Stretch" Height="80"
-                     TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
-                     Text="{Binding FilterToGuids, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <AdornerDecorator Grid.Row="10" Grid.Column="2">
+                        <TextBox Grid.Row="10" Grid.Column="2" HorizontalAlignment="Stretch" Height="80"
+                                 TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                                 Text="{Binding FilterToGuids, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <views:WatermarkService.Watermark>
+                                <TextBlock TextWrapping="Wrap" Margin="3">Enter IDs to generate clusters including only those matches. Or leave blank to generate clusters for all matches</TextBlock>
+                            </views:WatermarkService.Watermark>
+                        </TextBox>
+                    </AdornerDecorator>
                 </Grid>
             </Expander>
 
