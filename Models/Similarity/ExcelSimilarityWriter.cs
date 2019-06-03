@@ -4,9 +4,9 @@ using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters;
 using OfficeOpenXml;
 
-namespace AncestryDnaClustering.Models.DistanceFinding
+namespace AncestryDnaClustering.Models.SimilarityFinding
 {
-    public class ExcelDistanceWriter : IDistanceWriter
+    public class ExcelSimilarityWriter : ISimilarityWriter
     {
         private readonly string _fileName;
         private ExcelPackage _p;
@@ -16,7 +16,7 @@ namespace AncestryDnaClustering.Models.DistanceFinding
         private int _col = 1;
         private readonly GenericObjectWriter _overlapWriter = new GenericObjectWriter("Shared matches with overlap");
 
-        public ExcelDistanceWriter(string testTakerTestId, List<IClusterableMatch> matches, string fileName)
+        public ExcelSimilarityWriter(string testTakerTestId, List<IClusterableMatch> matches, string fileName)
         {
             _fileName = fileName;
             _p = new ExcelPackage();
@@ -47,7 +47,7 @@ namespace AncestryDnaClustering.Models.DistanceFinding
             ++_row;
         }
 
-        ~ExcelDistanceWriter()
+        ~ExcelSimilarityWriter()
         {
             Dispose(false);
         }

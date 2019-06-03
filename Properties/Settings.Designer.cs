@@ -134,12 +134,12 @@ namespace AncestryDnaClustering.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string DistanceFilename {
+        public string SimilarityFilename {
             get {
-                return ((string)(this["DistanceFilename"]));
+                return ((string)(this["SimilarityFilename"]));
             }
             set {
-                this["DistanceFilename"] = value;
+                this["SimilarityFilename"] = value;
             }
         }
         
@@ -302,72 +302,72 @@ namespace AncestryDnaClustering.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowAdvancedDistanceOptions {
+        public bool ShowAdvancedSimilarityOptions {
             get {
-                return ((bool)(this["ShowAdvancedDistanceOptions"]));
+                return ((bool)(this["ShowAdvancedSimilarityOptions"]));
             }
             set {
-                this["ShowAdvancedDistanceOptions"] = value;
+                this["ShowAdvancedSimilarityOptions"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string FilenameDistance {
+        public string FilenameSimilarity {
             get {
-                return ((string)(this["FilenameDistance"]));
+                return ((string)(this["FilenameSimilarity"]));
             }
             set {
-                this["FilenameDistance"] = value;
+                this["FilenameSimilarity"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("3")]
-        public int MinClusterSizeDistance {
+        public int MinClusterSizeSimilarity {
             get {
-                return ((int)(this["MinClusterSizeDistance"]));
+                return ((int)(this["MinClusterSizeSimilarity"]));
             }
             set {
-                this["MinClusterSizeDistance"] = value;
+                this["MinClusterSizeSimilarity"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("40")]
-        public double MinCentimorgansToCompareDistance {
+        public double MinCentimorgansToCompareSimilarity {
             get {
-                return ((double)(this["MinCentimorgansToCompareDistance"]));
+                return ((double)(this["MinCentimorgansToCompareSimilarity"]));
             }
             set {
-                this["MinCentimorgansToCompareDistance"] = value;
+                this["MinCentimorgansToCompareSimilarity"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("40")]
-        public double MinCentimorgansInSharedMatchesDistance {
+        public double MinCentimorgansInSharedMatchesSimilarity {
             get {
-                return ((double)(this["MinCentimorgansInSharedMatchesDistance"]));
+                return ((double)(this["MinCentimorgansInSharedMatchesSimilarity"]));
             }
             set {
-                this["MinCentimorgansInSharedMatchesDistance"] = value;
+                this["MinCentimorgansInSharedMatchesSimilarity"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string DistanceBasisIds {
+        public string SimilarityBasisIds {
             get {
-                return ((string)(this["DistanceBasisIds"]));
+                return ((string)(this["SimilarityBasisIds"]));
             }
             set {
-                this["DistanceBasisIds"] = value;
+                this["SimilarityBasisIds"] = value;
             }
         }
         

@@ -29,7 +29,7 @@
     <Setting Name="HighestSharedMatchToConsider" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="DistanceFilename" Type="System.String" Scope="User">
+    <Setting Name="SimilarityFilename" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="FlattenedFilename" Type="System.String" Scope="User">
@@ -71,22 +71,22 @@
     <Setting Name="MaxGrayPercentage" Type="System.Double" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>
-    <Setting Name="ShowAdvancedDistanceOptions" Type="System.Boolean" Scope="User">
+    <Setting Name="ShowAdvancedSimilarityOptions" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="FilenameDistance" Type="System.String" Scope="User">
+    <Setting Name="FilenameSimilarity" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="MinClusterSizeDistance" Type="System.Int32" Scope="User">
+    <Setting Name="MinClusterSizeSimilarity" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">3</Value>
     </Setting>
-    <Setting Name="MinCentimorgansToCompareDistance" Type="System.Double" Scope="User">
+    <Setting Name="MinCentimorgansToCompareSimilarity" Type="System.Double" Scope="User">
       <Value Profile="(Default)">40</Value>
     </Setting>
-    <Setting Name="MinCentimorgansInSharedMatchesDistance" Type="System.Double" Scope="User">
+    <Setting Name="MinCentimorgansInSharedMatchesSimilarity" Type="System.Double" Scope="User">
       <Value Profile="(Default)">40</Value>
     </Setting>
-    <Setting Name="DistanceBasisIds" Type="System.String" Scope="User">
+    <Setting Name="SimilarityBasisIds" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="MatchesLoaderFilterIndex" Type="System.Int32" Scope="User">

@@ -1,9 +1,9 @@
 ﻿using System;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 
-namespace AncestryDnaClustering.Models.DistanceFinding
+namespace AncestryDnaClustering.Models.SimilarityFinding
 {
-    public interface IDistanceWriter : IDisposable
+    public interface ISimilarityWriter : IDisposable
     {
         void WriteHeader(IClusterableMatch match);
         void WriteLine(IClusterableMatch match, int overlapCount);

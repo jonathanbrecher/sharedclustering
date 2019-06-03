@@ -2,14 +2,14 @@
 using System.Text;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 
-namespace AncestryDnaClustering.Models.DistanceFinding
+namespace AncestryDnaClustering.Models.SimilarityFinding
 {
-    public class TextDistanceWriter : IDistanceWriter
+    public class TextSimilarityWriter : ISimilarityWriter
     {
         private readonly string _fileName;
         private StringBuilder _stringBuilder = new StringBuilder();
 
-        public TextDistanceWriter(string testTakerTestId, List<IClusterableMatch> matches, string fileName)
+        public TextSimilarityWriter(string testTakerTestId, List<IClusterableMatch> matches, string fileName)
         {
             _fileName = fileName;
         }

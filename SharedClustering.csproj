@@ -114,10 +114,10 @@
     <Compile Include="Models\ColumnWriters\ColumnWritersCollection.cs" />
     <Compile Include="Models\ColumnWriters\CountWriter.cs" />
     <Compile Include="Models\ColumnWriters\GenericObjectWriter.cs" />
-    <Compile Include="Models\DistanceFinding\DistanceFinder.cs" />
-    <Compile Include="Models\DistanceFinding\ExcelDistanceWriter.cs" />
-    <Compile Include="Models\DistanceFinding\IDistanceWriter.cs" />
-    <Compile Include="Models\DistanceFinding\TextDistanceWriter.cs" />
+    <Compile Include="Models\Similarity\SimilarityFinder.cs" />
+    <Compile Include="Models\Similarity\ExcelSimilarityWriter.cs" />
+    <Compile Include="Models\Similarity\ISimilarityWriter.cs" />
+    <Compile Include="Models\Similarity\TextSimilarityWriter.cs" />
     <Compile Include="Models\HierarchicalClustering\ClusterableMatch.cs" />
     <Compile Include="Models\ColumnWriters\NoteWriter.cs" />
     <Compile Include="Models\ColumnWriters\CorrelatedClustersWriter.cs" />
@@ -170,7 +170,7 @@
     <Compile Include="Models\SavedData\SharedClusteringMatchesReader.cs" />
     <Compile Include="Models\SavedData\TreeType.cs" />
     <Compile Include="Models\Throttle.cs" />
-    <Compile Include="ViewModels\AncestryDnaDistanceViewModel.cs" />
+    <Compile Include="ViewModels\AncestryDnaSimilarityViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaHierarchicalClusteringViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaDownloadingViewModel.cs" />
     <Compile Include="ViewModels\ObservableObject.cs" />

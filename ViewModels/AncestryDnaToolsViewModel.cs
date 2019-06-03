@@ -30,7 +30,7 @@ namespace AncestryDnaClustering.ViewModels
                 new IntroductionViewModel(),
                 new AncestryDnaDownloadingViewModel(),
                 new AncestryDnaHierarchicalClusteringViewModel(matchesLoader),
-                new AncestryDnaDistanceViewModel(matchesLoader),
+                new AncestryDnaSimilarityViewModel(matchesLoader),
             };
             SelectedTabIndex = Settings.Default.SelectedTabIndex;
         }

@@ -10,6 +10,7 @@
                 <ResourceDictionary Source="IntroductionView.xaml" />
                 <ResourceDictionary Source="AncestryDnaDownloadingView.xaml" />
                 <ResourceDictionary Source="AncestryDnaHierarchicalClusteringView.xaml" />
+                <ResourceDictionary Source="AncestryDnaSimilarityView.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>

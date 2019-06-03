@@ -5,23 +5,23 @@ using System.Threading.Tasks;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.ViewModels;
 
-namespace AncestryDnaClustering.Models.DistanceFinding
+namespace AncestryDnaClustering.Models.SimilarityFinding
 {
-    public class DistanceFinder
+    public class SimilarityFinder
     {
         private readonly int _minClusterSize;
         private readonly ProgressData _progressData;
 
-        public DistanceFinder(int minClusterSize, ProgressData progressData)
+        public SimilarityFinder(int minClusterSize, ProgressData progressData)
         {
             _minClusterSize = minClusterSize;
             _progressData = progressData;
         }
 
-        public async Task FindClosestByDistanceAsync(List<IClusterableMatch> clusterableMatches, Func<IDistanceWriter> getDistanceWriter)
+        public async Task FindClosestBySimilarityAsync(List<IClusterableMatch> clusterableMatches, Func<ISimilarityWriter> getSimilarityWriter)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count());
-            _progressData.Reset($"Finding closest chains by distance for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
+            _progressData.Reset($"Finding closest chains by Similarity for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
 
             var buckets = clusterableMatches
                .SelectMany(match => match.Coords.Select(coord => new { Coord = coord, Match = match }))
@@ -30,13 +30,13 @@ namespace AncestryDnaClustering.Models.DistanceFinding
 
             try
             {
-                using (var writer = getDistanceWriter())
+                using (var writer = getSimilarityWriter())
                 {
                     await Task.Run(() =>
                     {
                         foreach (var match in clusterableMatches)
                         {
-                            CalculateDistance(match.Coords, buckets, match, (otherMatch, overlapCount) => overlapCount >= _minClusterSize && overlapCount >= otherMatch.Count / 3, 100, writer);
+                            CalculateSimilarity(match.Coords, buckets, match, (otherMatch, overlapCount) => overlapCount >= _minClusterSize && overlapCount >= otherMatch.Count / 3, 100, writer);
                         }
                     });
 
@@ -49,10 +49,10 @@ namespace AncestryDnaClustering.Models.DistanceFinding
             }
         }
 
-        public async Task FindClosestByDistanceAsync(List<IClusterableMatch> clusterableMatches, HashSet<int> indexesAsBasis, Func<IDistanceWriter> getDistanceWriter)
+        public async Task FindClosestBySimilarityAsync(List<IClusterableMatch> clusterableMatches, HashSet<int> indexesAsBasis, Func<ISimilarityWriter> getSimilarityWriter)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count());
-            _progressData.Reset($"Finding closest chains by distance for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
+            _progressData.Reset($"Finding closest chains by Similarity for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
 
             var buckets = clusterableMatches
                 .SelectMany(match => match.Coords.Where(coord => indexesAsBasis.Contains(coord)).Select(coord => new { Coord = coord, Match = match }))
@@ -61,9 +61,9 @@ namespace AncestryDnaClustering.Models.DistanceFinding
 
             try
             {
-                using (var writer = getDistanceWriter())
+                using (var writer = getSimilarityWriter())
                 {
-                    await Task.Run(() => CalculateDistance(indexesAsBasis, buckets, null, (_, overlapCount) => overlapCount >= _minClusterSize, clusterableMatches.Count, writer));
+                    await Task.Run(() => CalculateSimilarity(indexesAsBasis, buckets, null, (_, overlapCount) => overlapCount >= _minClusterSize, clusterableMatches.Count, writer));
                     writer.Save();
                 }
             }
@@ -73,13 +73,13 @@ namespace AncestryDnaClustering.Models.DistanceFinding
             }
         }
 
-        public void CalculateDistance(
+        public void CalculateSimilarity(
             HashSet<int> coords,
             Dictionary<int, List<IClusterableMatch>> buckets,
             IClusterableMatch excludeMatch,
             Func<IClusterableMatch, int, bool> inclusionFunc,
             int maxClusterSize,
-            IDistanceWriter writer)
+            ISimilarityWriter writer)
         {
             writer.WriteHeader(excludeMatch);
 
