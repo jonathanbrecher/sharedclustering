@@ -1,6 +1,6 @@
 ﻿using OfficeOpenXml;
 
-namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters.ColumnWriters
+namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
 {
     public class NoteWriter : IColumnWriter
     {

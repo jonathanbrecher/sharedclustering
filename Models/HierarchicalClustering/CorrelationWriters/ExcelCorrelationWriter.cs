@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters.ColumnWriters;
+using AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters;
 using AncestryDnaClustering.ViewModels;
 using OfficeOpenXml;
 using OfficeOpenXml.ConditionalFormatting;
@@ -94,15 +94,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                     {
                         var ws = p.Workbook.Worksheets.Add("heatmap");
 
-                        if (!string.IsNullOrEmpty(_testTakerTestId))
-                        {
-                            // Google Sheets does not support HyperlinkBase
-                            // p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/");
-                            var namedStyle = p.Workbook.Styles.CreateNamedStyle("HyperLink");   // Language-dependent
-                            namedStyle.Style.Font.UnderLine = true;
-                            namedStyle.Style.Font.Color.SetColor(Color.Blue);
-                        }
-
                         // Start at the top left of the sheet
                         var row = 1;
                         var col = 1;
@@ -112,10 +103,10 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 
                         // Fixed columns
                         var clusterNumberWriter = new ClusterNumberWriter(indexClusterNumbers);
-                        var columnWriters = new IColumnWriter[]
+                        var writers = new IColumnWriter[]
                         {
                             clusterNumberWriter,
-                            new NameWriter(),
+                            new NameWriter(false),
                             matches.Any(match => !string.IsNullOrEmpty(match.Match.TestGuid)) ? new TestIdWriter() : null,
                             !string.IsNullOrEmpty(_testTakerTestId) ? new LinkWriter(_testTakerTestId) : null,
                             new SharedCentimorgansWriter(),
@@ -128,23 +119,10 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
                             new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter, _minClusterSize),
                             new NoteWriter(),
-                        }.Where(writer => writer != null).ToList();
+                        }.Where(writer => writer != null).ToArray();
+                        var columnWriters = new ColumnWritersCollection(p, ws, writers, _testTakerTestId);
 
-                        foreach (var writer in columnWriters)
-                        {
-                            if (!writer.IsAutofit)
-                            {
-                                ws.Column(col).Width = writer.Width;
-                            }
-                            var cell = ws.Cells[row, col];
-                            if (!writer.RotateHeader)
-                            {
-                                cell.Style.TextRotation = 0;
-                            }
-                            cell.Value = writer.Header;
-
-                            ++col;
-                        }
+                        col = columnWriters.WriteHeaders(row, col);
 
                         var firstMatrixDataRow = row + 1;
                         var firstMatrixDataColumn = col;
@@ -164,10 +142,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 
                             // Row headers
                             col = 1;
-                            foreach (var writer in columnWriters)
-                            {
-                                writer.WriteValue(ws.Cells[row, col++], match, leafNode);
-                            }
+                            col = columnWriters.WriteColumns(row, col, match, leafNode);
 
                             // Correlation data
                             foreach (var coordAndIndex in leafNode.GetCoordsArray(orderedIndexes)
@@ -200,21 +175,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         // Heatmap number format
                         ws.Cells[$"1:{matchColumns.Count}"].Style.Numberformat.Format = "General";
 
-                        ws.DefaultColWidth = 19.0 / 7; // 2
-
                         col = 1;
-                        foreach (var writer in columnWriters)
-                        {
-                            if (writer.IsDecimal)
-                            {
-                                ws.Column(col).Style.Numberformat.Format = "0.0";
-                            }
-                            if (writer.IsAutofit)
-                            {
-                                ws.Column(col).AutoFit();
-                            }
-                            col++;
-                        }
+                        col = columnWriters.FormatColumns(row, col);
 
                         // Freeze the column and row headers
                         ws.View.FreezePanes(firstMatrixDataRow, firstMatrixDataColumn);
@@ -228,26 +190,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             Path.GetFileNameWithoutExtension(fileName) + $"-{fileNum + 1}" + Path.GetExtension(fileName));
                     }
 
-                    while (true)
-                    {
-                        try
-                        {
-                            p.SaveAs(new FileInfo(fileName));
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            FileUtils.LogException(ex, false);
-                            if (MessageBox.Show(
-                                $"An error occurred while saving {fileName}:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}Try again?",
-                                "File error",
-                                MessageBoxButton.YesNo,
-                                MessageBoxImage.Warning) != MessageBoxResult.Yes)
-                            {
-                                throw;
-                            }
-                        }
-                    }
+                    FileUtils.Save(p, fileName);
                 }
             }
         }

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using OfficeOpenXml;
 
-namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters.ColumnWriters
+namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
 {
     public class ClusterNumberWriter : IColumnWriter
     {

@@ -1,6 +1,6 @@
 ﻿using OfficeOpenXml;
 
-namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters.ColumnWriters
+namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
 {
     /// <summary>
     /// Write one column of data to an output file

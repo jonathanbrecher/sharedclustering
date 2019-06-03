@@ -1,129 +1,108 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AncestryDnaClustering.Models.HierarchicalClustering;
-using AncestryDnaClustering.ViewModels;
+using AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters;
+using OfficeOpenXml;
 
 namespace AncestryDnaClustering.Models.DistanceFinding
 {
-    public class DistanceFinder
+    public class ExcelDistanceWriter : IDistanceWriter
     {
-        private readonly int _minClusterSize;
-        private readonly ProgressData _progressData;
+        private readonly string _fileName;
+        private ExcelPackage _p;
+        private readonly ExcelWorksheet _ws;
+        private readonly ColumnWritersCollection _writers;
+        private int _row = 1;
+        private int _col = 1;
+        private readonly GenericObjectWriter _overlapWriter = new GenericObjectWriter("Shared matches with overlap");
 
-        public DistanceFinder(
-            int minClusterSize,
-            ProgressData progressData)
+        public ExcelDistanceWriter(string testTakerTestId, List<IClusterableMatch> matches, string fileName)
         {
-            _minClusterSize = minClusterSize;
-            _progressData = progressData;
-        }
-
-        public async Task FindClosestByDistanceAsync(List<IClusterableMatch> clusterableMatches, string fileName)
-        {
-            var average = clusterableMatches.Average(match => match.Coords.Count());
-            _progressData.Reset($"Finding closest chains by distance for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
-
-            var buckets = clusterableMatches
-               .SelectMany(match => match.Coords.Select(coord => new { Coord = coord, Match = match }))
-               .GroupBy(pair => pair.Coord, pair => pair.Match)
-               .ToDictionary(g => g.Key, g => g.ToList());
-
-            var clusters = await Task.Run(() => clusterableMatches
-                .AsParallel().AsOrdered()
-                .Select(match =>
-                {
-                    var header = $"{match.Count}" +
-                        $"\t{match.Count}" +
-                        $"\t{match.Match.SharedCentimorgans:####.0}" +
-                        $"\t{match.Match.SharedSegments}" +
-                        //$"\t{match.Match.TreeType}" +
-                        //$"\t{match.Match.TreeSize}" +
-                        $"\t{match.Match.Name}" +
-                        $"\t{match.Match.TestGuid}" +
-                        $"\t{match.Match.Note}";
-
-                    return CalculateDistance(match.Coords, buckets, match, header, (otherMatch, overlapCount) => overlapCount >= _minClusterSize && overlapCount >= otherMatch.Count / 3, 100);
-                })
-                .Where(cluster => cluster != null)
-                .ToList());
-
-            _progressData.Reset();
-
-            FileUtils.WriteAllLines(fileName, clusters, false);
-        }
-
-        public async Task FindClosestByDistanceAsync(List<IClusterableMatch> clusterableMatches, HashSet<int> indexesAsBasis, string fileName)
-        {
-            var average = clusterableMatches.Average(match => match.Coords.Count());
-            _progressData.Reset($"Finding closest chains by distance for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
-
-            var buckets = clusterableMatches
-                .SelectMany(match => match.Coords.Where(coord => indexesAsBasis.Contains(coord)).Select(coord => new { Coord = coord, Match = match }))
-                .GroupBy(pair => pair.Coord, pair => pair.Match)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            var clusters = await Task.Run(() => CalculateDistance(indexesAsBasis, buckets, null, null, (_, overlapCount) => overlapCount >= _minClusterSize, clusterableMatches.Count));
-
-            _progressData.Reset();
-
-            FileUtils.WriteAllLines(fileName, clusters, false);
-        }
-
-        private string CalculateDistance(
-            HashSet<int> coords,
-            Dictionary<int, List<IClusterableMatch>> buckets,
-            IClusterableMatch excludeMatch,
-            string header,
-            Func<IClusterableMatch, int, bool> inclusionFunc,
-            int maxClusterSize)
-        {
-            var sb = new StringBuilder();
-
-            if (header != null)
+            _fileName = fileName;
+            _p = new ExcelPackage();
+            _ws = _p.Workbook.Worksheets.Add("similarity");
+            var writers = new IColumnWriter[]
             {
-                sb.AppendLine(header);
-            }
+                new CountWriter(),
+                _overlapWriter,
+                new NameWriter(true),
+                matches.Any(match => !string.IsNullOrEmpty(match.Match.TestGuid)) ? new TestIdWriter() : null,
+                !string.IsNullOrEmpty(testTakerTestId) ? new LinkWriter(testTakerTestId) : null,
+                new SharedCentimorgansWriter(),
+                matches.Any(match => match.Match.SharedSegments > 0) ? new SharedSegmentsWriter() : null,
+                matches.Any(match => match.Match.LongestBlock > 0) ? new LongestBlockWriter() : null,
+                matches.Any(match => !string.IsNullOrEmpty(match.Match.TreeUrl)) ? new TreeUrlWriter(testTakerTestId) : null,
+                matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined) ? new TreeTypeWriter() : null,
+                matches.Any(match => match.Match.TreeSize > 0) ? new TreeSizeWriter() : null,
+                matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
+                matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
+                new NoteWriter(),
+            }.Where(writer => writer != null).ToArray();
+            _writers = new ColumnWritersCollection(_p, _ws, writers, testTakerTestId);
 
-            var results = (
-                from otherMatch in coords.SelectMany(coord => buckets[coord])
-                    .GroupBy(m => m).Where(g => g.Count() >= _minClusterSize).Select(g => g.Key)
-                where otherMatch != excludeMatch
-                let overlapCount = coords.Intersect(otherMatch.Coords).Count()
-                where inclusionFunc(otherMatch, overlapCount)
-                select new
+            // Rotate the entire top row by 90 degrees
+            _ws.Row(_row).Style.TextRotation = 90;
+
+            _col = _writers.WriteHeaders(_row, _col);
+            ++_row;
+        }
+
+        ~ExcelDistanceWriter()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_p != null)
                 {
-                    OtherMatch = otherMatch,
-                    OverlapCount = overlapCount,
+                    _p.Dispose();
+                    _p = null;
                 }
-            )
-            .OrderByDescending(pair => (double)pair.OverlapCount * pair.OverlapCount / coords.Count / pair.OtherMatch.Count)
-            .Take(maxClusterSize)
-            .ToList();
+            }
+        }
 
-            if (results.Count == 0)
+        public void WriteHeader(IClusterableMatch match)
+        {
+            if (match == null)
             {
-                return null;
+                return;
             }
 
-            foreach (var closestMatch in results)
-            {
-                sb.AppendLine(//$"{Math.Sqrt(closestMatch.DistSquared):N2}\t" +
-                    $"{closestMatch.OtherMatch.Count}" +
-                    $"\t{closestMatch.OverlapCount}" +
-                    $"\t{closestMatch.OtherMatch.Match.SharedCentimorgans:####.0}" +
-                    $"\t{closestMatch.OtherMatch.Match.SharedSegments}" +
-                    //$"\t{closestMatch.OtherMatch.Match.TreeType}" +
-                    //$"\t{closestMatch.OtherMatch.Match.TreeSize}" +
-                    $"\t{closestMatch.OtherMatch.Match.Name}" +
-                    $"\t{closestMatch.OtherMatch.Match.TestGuid}" +
-                    $"\t{closestMatch.OtherMatch.Match.Note}");
-            }
-            sb.AppendLine();
-            _progressData.Increment();
-            return sb.ToString();
+            _overlapWriter.GenericObject = match.Count;
+            _col = 1;
+            _col = _writers.WriteColumns(_row, _col, match, null);
+            ++_row;
+        }
+
+        public void WriteLine(IClusterableMatch match, int overlapCount)
+        {
+            _overlapWriter.GenericObject = overlapCount;
+            _col = 1;
+            _col = _writers.WriteColumns(_row, _col, match, null);
+            ++_row;
+        }
+
+        public void SkipLine()
+        {
+            ++_row;
+        }
+
+        public void Save()
+        {
+            // Freeze the column and row headers
+            _ws.View.FreezePanes(2, 1);
+
+            _writers.FormatColumns(1, 1);
+
+            FileUtils.Save(_p, _fileName);
         }
     }
 }

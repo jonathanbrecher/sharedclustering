@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using Newtonsoft.Json;
+using OfficeOpenXml;
 
 namespace AncestryDnaClustering.Models
 {
@@ -222,6 +223,30 @@ namespace AncestryDnaClustering.Models
             MessageBox.Show($"An unexpected error has occurred: {ex?.Message}" +
                 $"{Environment.NewLine}{Environment.NewLine}" +
                 $"A log file has been written to {logfile}", "Unexpected failure", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        public static void Save(ExcelPackage p, string fileName)
+        {
+            while (true)
+            {
+                try
+                {
+                    p.SaveAs(new FileInfo(fileName));
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    LogException(ex, false);
+                    if (MessageBox.Show(
+                        $"An error occurred while saving {fileName}:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}Try again?",
+                        "File error",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    {
+                        throw;
+                    }
+                }
+            }
         }
     }
 }

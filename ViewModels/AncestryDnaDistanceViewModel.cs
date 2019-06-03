@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AncestryDnaClustering.Models.DistanceFinding;
+using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
 using Microsoft.Win32;
@@ -73,7 +74,7 @@ namespace AncestryDnaClustering.ViewModels
 
                 if (trimmedFileName != null)
                 {
-                    DistanceFilename = Path.Combine(Path.GetDirectoryName(FilenameDistance), trimmedFileName + "-distance.txt");
+                    DistanceFilename = Path.Combine(Path.GetDirectoryName(FilenameDistance), trimmedFileName + "-distance.xlsx");
                 }
             }
         }
@@ -169,8 +170,8 @@ namespace AncestryDnaClustering.ViewModels
             {
                 InitialDirectory = string.IsNullOrEmpty(DistanceFilename) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(DistanceFilename),
                 FileName = DistanceFilename,
-                DefaultExt = ".txt",
-                Filter = "Text|*.txt",
+                DefaultExt = ".xlsx",
+                Filter = "Excel Workbook|*.xlsx",
             };
             if (saveFileDialog.ShowDialog() == true)
             {
@@ -206,16 +207,17 @@ namespace AncestryDnaClustering.ViewModels
             clusterableMatches = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= MinCentimorgansToCompareDistance).ToList();
 
             var distanceFinder = new DistanceFinder(MinClusterSizeDistance, ProgressData);
+            Func<IDistanceWriter> getDistanceWriter = () => new ExcelDistanceWriter(testTakerTestId, clusterableMatches, DistanceFilename);
 
             if (!string.IsNullOrEmpty(DistanceBasisIds))
             {
                 var testIdsAsBasis = new HashSet<string>(Regex.Split(DistanceBasisIds, @"[^a-zA-Z0-9-]+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
                 var indexesAsBasis = new HashSet<int>(clusterableMatches.Where(match => testIdsAsBasis.Contains(match.Match.TestGuid)).Select(match => match.Index));
-                await distanceFinder.FindClosestByDistanceAsync(clusterableMatches, indexesAsBasis, DistanceFilename);
+                await distanceFinder.FindClosestByDistanceAsync(clusterableMatches, indexesAsBasis, getDistanceWriter);
             }
             else
             {
-                await distanceFinder.FindClosestByDistanceAsync(clusterableMatches, DistanceFilename);
+                await distanceFinder.FindClosestByDistanceAsync(clusterableMatches, getDistanceWriter);
             }
 
             ProgressData.Reset(DateTime.Now - startTime, "Done");

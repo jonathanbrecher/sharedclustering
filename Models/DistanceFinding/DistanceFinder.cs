@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.ViewModels;
@@ -13,15 +12,13 @@ namespace AncestryDnaClustering.Models.DistanceFinding
         private readonly int _minClusterSize;
         private readonly ProgressData _progressData;
 
-        public DistanceFinder(
-            int minClusterSize,
-            ProgressData progressData)
+        public DistanceFinder(int minClusterSize, ProgressData progressData)
         {
             _minClusterSize = minClusterSize;
             _progressData = progressData;
         }
 
-        public async Task FindClosestByDistanceAsync(List<IClusterableMatch> clusterableMatches, string fileName)
+        public async Task FindClosestByDistanceAsync(List<IClusterableMatch> clusterableMatches, Func<IDistanceWriter> getDistanceWriter)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count());
             _progressData.Reset($"Finding closest chains by distance for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
@@ -31,31 +28,28 @@ namespace AncestryDnaClustering.Models.DistanceFinding
                .GroupBy(pair => pair.Coord, pair => pair.Match)
                .ToDictionary(g => g.Key, g => g.ToList());
 
-            var clusters = await Task.Run(() => clusterableMatches
-                .AsParallel().AsOrdered()
-                .Select(match =>
+            try
+            {
+                using (var writer = getDistanceWriter())
                 {
-                    var header = $"{match.Count}" +
-                        $"\t{match.Count}" +
-                        $"\t{match.Match.SharedCentimorgans:####.0}" +
-                        $"\t{match.Match.SharedSegments}" +
-                        //$"\t{match.Match.TreeType}" +
-                        //$"\t{match.Match.TreeSize}" +
-                        $"\t{match.Match.Name}" +
-                        $"\t{match.Match.TestGuid}" +
-                        $"\t{match.Match.Note}";
+                    await Task.Run(() =>
+                    {
+                        foreach (var match in clusterableMatches)
+                        {
+                            CalculateDistance(match.Coords, buckets, match, (otherMatch, overlapCount) => overlapCount >= _minClusterSize && overlapCount >= otherMatch.Count / 3, 100, writer);
+                        }
+                    });
 
-                    return CalculateDistance(match.Coords, buckets, match, header, (otherMatch, overlapCount) => overlapCount >= _minClusterSize && overlapCount >= otherMatch.Count / 3, 100);
-                })
-                .Where(cluster => cluster != null)
-                .ToList());
-
-            _progressData.Reset();
-
-            FileUtils.WriteAllLines(fileName, clusters, false);
+                    writer.Save();
+                }
+            }
+            finally
+            {
+                _progressData.Reset();
+            }
         }
 
-        public async Task FindClosestByDistanceAsync(List<IClusterableMatch> clusterableMatches, HashSet<int> indexesAsBasis, string fileName)
+        public async Task FindClosestByDistanceAsync(List<IClusterableMatch> clusterableMatches, HashSet<int> indexesAsBasis, Func<IDistanceWriter> getDistanceWriter)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count());
             _progressData.Reset($"Finding closest chains by distance for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
@@ -65,27 +59,29 @@ namespace AncestryDnaClustering.Models.DistanceFinding
                 .GroupBy(pair => pair.Coord, pair => pair.Match)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            var clusters = await Task.Run(() => CalculateDistance(indexesAsBasis, buckets, null, null, (_, overlapCount) => overlapCount >= _minClusterSize, clusterableMatches.Count));
-
-            _progressData.Reset();
-
-            FileUtils.WriteAllLines(fileName, clusters, false);
+            try
+            {
+                using (var writer = getDistanceWriter())
+                {
+                    await Task.Run(() => CalculateDistance(indexesAsBasis, buckets, null, (_, overlapCount) => overlapCount >= _minClusterSize, clusterableMatches.Count, writer));
+                    writer.Save();
+                }
+            }
+            finally
+            {
+                _progressData.Reset();
+            }
         }
 
-        private string CalculateDistance(
+        public void CalculateDistance(
             HashSet<int> coords,
             Dictionary<int, List<IClusterableMatch>> buckets,
             IClusterableMatch excludeMatch,
-            string header,
             Func<IClusterableMatch, int, bool> inclusionFunc,
-            int maxClusterSize)
+            int maxClusterSize,
+            IDistanceWriter writer)
         {
-            var sb = new StringBuilder();
-
-            if (header != null)
-            {
-                sb.AppendLine(header);
-            }
+            writer.WriteHeader(excludeMatch);
 
             var results = (
                 from otherMatch in coords.SelectMany(coord => buckets[coord])
@@ -105,25 +101,16 @@ namespace AncestryDnaClustering.Models.DistanceFinding
 
             if (results.Count == 0)
             {
-                return null;
+                return;
             }
 
             foreach (var closestMatch in results)
             {
-                sb.AppendLine(//$"{Math.Sqrt(closestMatch.DistSquared):N2}\t" +
-                    $"{closestMatch.OtherMatch.Count}" +
-                    $"\t{closestMatch.OverlapCount}" +
-                    $"\t{closestMatch.OtherMatch.Match.SharedCentimorgans:####.0}" +
-                    $"\t{closestMatch.OtherMatch.Match.SharedSegments}" +
-                    //$"\t{closestMatch.OtherMatch.Match.TreeType}" +
-                    //$"\t{closestMatch.OtherMatch.Match.TreeSize}" +
-                    $"\t{closestMatch.OtherMatch.Match.Name}" +
-                    $"\t{closestMatch.OtherMatch.Match.TestGuid}" +
-                    $"\t{closestMatch.OtherMatch.Match.Note}");
+                writer.WriteLine(closestMatch.OtherMatch, closestMatch.OverlapCount);
             }
-            sb.AppendLine();
+            writer.SkipLine();
+
             _progressData.Increment();
-            return sb.ToString();
         }
     }
 }
