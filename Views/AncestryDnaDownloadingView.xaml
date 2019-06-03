@@ -60,14 +60,14 @@
                              GroupName="DownloadType"
                              IsChecked="{Binding DownloadTypeComplete}">
                     <RadioButton.Content>
-                        <TextBlock Text="Slow and complete (all matches &#x2014; usually at least several hours)" TextWrapping="Wrap"/>
+                        <TextBlock Text="Slow and complete (all matches &#x2014; usually at least several hours, even without endogamy)" TextWrapping="Wrap"/>
                     </RadioButton.Content>
                 </RadioButton>
                 <RadioButton Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
                              GroupName="DownloadType"
                              IsChecked="{Binding DownloadTypeEndogamy}">
                     <RadioButton.Content>
-                        <TextBlock Text="Endogamy special, for use with heavy endogamy (all matches, but only shared matches over 50 cM &#x2014; usually at least several hours)" TextWrapping="Wrap"/>
+                        <TextBlock Text="Endogamy special, for use with heavy endogamy (all matches, but only shared matches over 50 cM &#x2014; can be 24 hours or longer)" TextWrapping="Wrap"/>
                     </RadioButton.Content>
                 </RadioButton>
                 </Grid>

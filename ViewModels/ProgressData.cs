@@ -46,6 +46,9 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
+        private DateTime _nextTimeStringUpdate = DateTime.MaxValue;
+        private TimeSpan _mandatoryTimeStringUpdateDuration = TimeSpan.FromSeconds(5);
+
         // Current value of the progress bar.
         private int _value;
         public int Value
@@ -61,6 +64,7 @@ namespace AncestryDnaClustering.ViewModels
                     {
                         // This was the first increment. Record the time when it happened.
                         _referenceTimes = new List<DateTime> { DateTime.Now };
+                        _nextTimeStringUpdate = _referenceTimes[0] + _mandatoryTimeStringUpdateDuration;
                     }
                     else if (Value == 0)
                     {
@@ -70,20 +74,31 @@ namespace AncestryDnaClustering.ViewModels
                     else if (Value % _referenceTimeValueIncrement == 0)
                     {
                         // Update the TimeLeftString every _referenceTimeValueIncrement.
-                        // Estimate of the time left is based on the most recent 20 reference times.
-                        // This smooths out short-term fluctuations while still adjusting for long-term rate changes.
-                        var increments = Math.Min(20, _referenceTimes.Count);
-                        var referenceTime = _referenceTimes[_referenceTimes.Count - increments];
-                        var elapsedTime = DateTime.Now - referenceTime;
-                        var remainingTime = TimeSpan.FromTicks((long)(elapsedTime.Ticks * (double)(Maximum - Value) / _referenceTimeValueIncrement / increments));
-
-                        TimeLeftString = GetTimeString(remainingTime, false);
+                        UpdateTimeLeftString();
 
                         _referenceTimes.Add(DateTime.Now);
-
+                    }
+                    else if (DateTime.Now >= _nextTimeStringUpdate)
+                    {
+                        // Also update the TimeLeftString if it hasn't been updated recently.
+                        UpdateTimeLeftString();
                     }
                 }
             }
+        }
+
+        private void UpdateTimeLeftString()
+        {
+            // Estimate of the time left is based on the most recent 20 reference times.
+            // This smooths out short-term fluctuations while still adjusting for long-term rate changes.
+            var increments = Math.Min(20, _referenceTimes.Count);
+            var referenceTime = _referenceTimes[_referenceTimes.Count - increments];
+            var elapsedTime = DateTime.Now - referenceTime;
+            var remainingTime = TimeSpan.FromTicks((long)(elapsedTime.Ticks * (double)(Maximum - Value) / _referenceTimeValueIncrement / increments));
+
+            TimeLeftString = GetTimeString(remainingTime, false);
+
+            _nextTimeStringUpdate = DateTime.Now + _mandatoryTimeStringUpdateDuration;
         }
 
         // Build a textual representation of the time remaining.

@@ -329,8 +329,8 @@ namespace AncestryDnaClustering.ViewModels
 
             var guid = SelectedTest.Value;
 
-            // Make sure there are no more than 100 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
-            var throttle = new Throttle(10);
+            // Make sure there are no more than 50 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
+            var throttle = new Throttle(50);
 
             // First download a list of all matches available in the test.
             // This is the data shown 50-at-a-time in list view on the Ancestry web site.

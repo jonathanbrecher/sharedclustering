@@ -180,7 +180,7 @@
     <Compile Include="ViewModels\AncestryDnaToolsViewModel.cs" />
     <Compile Include="Views\WatermarkAdorner.cs" />
     <Compile Include="Views\WatermarkService.cs" />
-    <Page Include="Views\AncestryDnaDistanceView.xaml">
+    <Page Include="Views\AncestryDnaSimilarityView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
