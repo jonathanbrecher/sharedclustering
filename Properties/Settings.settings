@@ -81,7 +81,7 @@
       <Value Profile="(Default)">3</Value>
     </Setting>
     <Setting Name="MinCentimorgansToCompareSimilarity" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">40</Value>
+      <Value Profile="(Default)">6</Value>
     </Setting>
     <Setting Name="MinCentimorgansInSharedMatchesSimilarity" Type="System.Double" Scope="User">
       <Value Profile="(Default)">40</Value>

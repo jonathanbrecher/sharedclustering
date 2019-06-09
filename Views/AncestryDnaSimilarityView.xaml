@@ -46,10 +46,10 @@
                         Command="{Binding SelectSimilarityFileCommand}"/>
                 <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans to compare: "/>
                 <TextBox Width="50" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Left" Text="{Binding MinCentimorgansToCompareSimilarity}"/>
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="Lowest centimorgans in shared matches: "/>
-                <TextBox Grid.Row="6" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="50" Text="{Binding MinCentimorgansInSharedMatchesSimilarity}"/>
+                <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans in shared matches: "/>
+                <TextBox Grid.Row="6" Grid.Column="2" HorizontalAlignment="Left" Width="50" Text="{Binding MinCentimorgansInSharedMatchesSimilarity}"/>
 
-                <TextBlock Grid.Row="10" Grid.Column="0" Text="Test IDs to find Similarity from: "/>
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="Test IDs to compare for similarity: "/>
                 <AdornerDecorator Grid.Row="10" Grid.Column="2">
                     <TextBox HorizontalAlignment="Stretch" Height="80"
                              AcceptsReturn="True" VerticalScrollBarVisibility="Auto"

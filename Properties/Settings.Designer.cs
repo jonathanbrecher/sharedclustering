@@ -337,7 +337,7 @@ namespace AncestryDnaClustering.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("40")]
+        [global::System.Configuration.DefaultSettingValueAttribute("6")]
         public double MinCentimorgansToCompareSimilarity {
             get {
                 return ((double)(this["MinCentimorgansToCompareSimilarity"]));

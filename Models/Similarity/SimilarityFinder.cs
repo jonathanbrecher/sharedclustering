@@ -84,7 +84,9 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
             writer.WriteHeader(excludeMatch);
 
             var results = (
-                from otherMatch in coords.SelectMany(coord => buckets[coord])
+                from otherMatch in coords
+                    .Where(coord => buckets.ContainsKey(coord))
+                    .SelectMany(coord => buckets[coord])
                     .GroupBy(m => m).Where(g => g.Count() >= _minClusterSize).Select(g => g.Key)
                 where otherMatch != excludeMatch
                 let overlapCount = coords.Intersect(otherMatch.Coords).Count()

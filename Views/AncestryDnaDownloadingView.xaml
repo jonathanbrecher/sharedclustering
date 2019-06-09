@@ -48,26 +48,38 @@
                           DisplayMemberPath="Key"/>
                 <TextBlock Grid.Row="4" Grid.Column="4" VerticalAlignment="Center" Text="{Binding MatchCounts}"/>
 
-                <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Text="Download completeness: "/>
+                <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Top" Text="Download completeness: "/>
                 <RadioButton Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
                              GroupName="DownloadType"
                              IsChecked="{Binding DownloadTypeFast}">
                     <RadioButton.Content>
-                        <TextBlock Text="Fast but incomplete (fourth cousin matches or higher &#x2014; usually 10 minutes or less)" TextWrapping="Wrap"/>
+                        <TextBlock TextWrapping="Wrap">
+                            <Run Text="Fast but incomplete"/>
+                            <LineBreak/>
+                            <Run Text="Fourth cousin matches or higher &#x2014; usually 10 minutes or less"/>
+                        </TextBlock>
                     </RadioButton.Content>
                 </RadioButton>
                 <RadioButton Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
                              GroupName="DownloadType"
                              IsChecked="{Binding DownloadTypeComplete}">
                     <RadioButton.Content>
-                        <TextBlock Text="Slow and complete (all matches &#x2014; usually at least several hours, even without endogamy)" TextWrapping="Wrap"/>
+                        <TextBlock TextWrapping="Wrap">
+                            <Run Text="Slow and complete"/>
+                            <LineBreak/>
+                            <Run Text="All matches &#x2014; usually at least several hours, even without endogamy"/>
+                        </TextBlock>
                     </RadioButton.Content>
                 </RadioButton>
                 <RadioButton Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
                              GroupName="DownloadType"
                              IsChecked="{Binding DownloadTypeEndogamy}">
                     <RadioButton.Content>
-                        <TextBlock Text="Endogamy special, for use with heavy endogamy (all matches, but only shared matches over 50 cM &#x2014; can be 24 hours or longer)" TextWrapping="Wrap"/>
+                        <TextBlock TextWrapping="Wrap">
+                            <Run Text="Endogamy special, for use with heavy endogamy"/>
+                            <LineBreak/>
+                            <Run Text="All matches, but only shared matches over 50 cM &#x2014; can take 24 hours or longer"/>
+                        </TextBlock>
                     </RadioButton.Content>
                 </RadioButton>
                 </Grid>

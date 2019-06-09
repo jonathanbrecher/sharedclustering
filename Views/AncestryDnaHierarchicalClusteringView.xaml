@@ -95,10 +95,10 @@
                     <TextBox Grid.Row="2" Grid.Column="2" Width="50" HorizontalAlignment="Left" Text="{Binding MinClusterSize}"/>
                     <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans to cluster: "/>
                     <TextBox Width="50" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Left" Text="{Binding MinCentimorgansToCluster}"/>
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Lowest centimorgans in shared matches: "/>
-                    <TextBox Grid.Row="6" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="50" Text="{Binding MinCentimorgansInSharedMatches}"/>
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Maximum gray percentage: "/>
-                    <TextBox Grid.Row="8" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="50" Text="{Binding MaxGrayPercentage}"/>
+                    <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans in shared matches: "/>
+                    <TextBox Grid.Row="6" Grid.Column="2" HorizontalAlignment="Left" Width="50" Text="{Binding MinCentimorgansInSharedMatches}"/>
+                    <TextBlock Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" Text="Maximum gray percentage: "/>
+                    <TextBox Grid.Row="8" Grid.Column="2" HorizontalAlignment="Left" Width="50" Text="{Binding MaxGrayPercentage}"/>
 
                     <TextBlock Grid.Row="10" Grid.Column="0" Text="Filter Test IDs to: "/>
                     <AdornerDecorator Grid.Row="10" Grid.Column="2">
@@ -106,7 +106,7 @@
                                  TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
                                  Text="{Binding FilterToGuids, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                         <views:WatermarkService.Watermark>
-                                <TextBlock TextWrapping="Wrap" Margin="3">Enter IDs to generate clusters including only those matches. Or leave blank to generate clusters for all matches</TextBlock>
+                                <TextBlock TextWrapping="Wrap" Margin="3">Enter IDs to generate clusters including only those matches. Or leave blank to generate clusters for all matches.</TextBlock>
                             </views:WatermarkService.Watermark>
                         </TextBox>
                     </AdornerDecorator>
