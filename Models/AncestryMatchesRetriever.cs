@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.ViewModels;
-using Newtonsoft.Json.Linq;
 
 namespace AncestryDnaClustering.Models
 {
@@ -216,7 +214,7 @@ namespace AncestryDnaClustering.Models
                         throttle.Release();
                         throw;
                     }
-                    await Task.Delay(30000);
+                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                 }
             }
         }
@@ -306,7 +304,7 @@ namespace AncestryDnaClustering.Models
                     {
                         throw;
                     }
-                    await Task.Delay(30000);
+                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                 }
                 finally
                 {
@@ -335,7 +333,7 @@ namespace AncestryDnaClustering.Models
         private async Task GetPublicTreeAsync(string guid, Match match, Throttle throttle, bool doThrow)
         {
             var retryCount = 0;
-            var retryMax = 60;
+            var retryMax = 5;
             while (true)
             {
                 try
@@ -375,7 +373,7 @@ namespace AncestryDnaClustering.Models
                         }
                         return;
                     }
-                    await Task.Delay(30000);
+                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                 }
                 finally
                 {
@@ -427,7 +425,7 @@ namespace AncestryDnaClustering.Models
 
 /*
                 var retryCount = 0;
-                var retryMax = 60;
+                var retryMax = 5;
                 try
                 {
                     await throttle.WaitAsync();
@@ -456,7 +454,7 @@ namespace AncestryDnaClustering.Models
                     {
                         throw;
                     }
-                    await Task.Delay(30000);
+                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                 }
                 finally
                 {
