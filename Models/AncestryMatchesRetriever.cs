@@ -216,7 +216,7 @@ namespace AncestryDnaClustering.Models
                         throttle.Release();
                         throw;
                     }
-                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                    await Task.Delay(30000);
                 }
             }
         }
@@ -246,7 +246,7 @@ namespace AncestryDnaClustering.Models
         public async Task<Dictionary<string, string>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, Throttle throttle, int index, ProgressData progressData)
         {
             // Start retrieving the tree info in the background.
-            var treeTask = match.TreeType == TreeType.Undetermined ? GetPublicTreeAsync(guid, match, throttle) : Task.CompletedTask;
+            var treeTask = match.TreeType == TreeType.Undetermined ? GetPublicTreeAsync(guid, match, throttle, false) : Task.CompletedTask;
 
             // Retrieve the matches.
             var matches = await GetRawMatchesInCommonAsync(guid, match.TestGuid, minSharedCentimorgans, throttle);
@@ -306,7 +306,7 @@ namespace AncestryDnaClustering.Models
                     {
                         throw;
                     }
-                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                    await Task.Delay(30000);
                 }
                 finally
                 {
@@ -332,7 +332,7 @@ namespace AncestryDnaClustering.Models
             public string UcdmId { get; set; }
         }
 
-        private async Task GetPublicTreeAsync(string guid, Match match, Throttle throttle)
+        private async Task GetPublicTreeAsync(string guid, Match match, Throttle throttle, bool doThrow)
         {
             var retryCount = 0;
             var retryMax = 60;
@@ -369,9 +369,13 @@ namespace AncestryDnaClustering.Models
                 {
                     if (++retryCount >= retryMax)
                     {
-                        throw;
+                        if (doThrow)
+                        {
+                            throw;
+                        }
+                        return;
                     }
-                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                    await Task.Delay(30000);
                 }
                 finally
                 {
@@ -452,7 +456,7 @@ namespace AncestryDnaClustering.Models
                     {
                         throw;
                     }
-                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                    await Task.Delay(30000);
                 }
                 finally
                 {
