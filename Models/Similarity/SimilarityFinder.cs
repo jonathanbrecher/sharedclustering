@@ -18,7 +18,7 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
             _progressData = progressData;
         }
 
-        public async Task FindClosestBySimilarityAsync(List<IClusterableMatch> clusterableMatches, Func<ISimilarityWriter> getSimilarityWriter)
+        public async Task FindClosestBySimilarityAsync(List<IClusterableMatch> clusterableMatches, Func<string, ISimilarityWriter> getSimilarityWriter)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count());
             _progressData.Reset($"Finding closest chains by Similarity for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
@@ -28,28 +28,33 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
                .GroupBy(pair => pair.Coord, pair => pair.Match)
                .ToDictionary(g => g.Key, g => g.ToList());
 
+            var fileNum = 1;
+            var writer = getSimilarityWriter(null);
             try
             {
-                using (var writer = getSimilarityWriter())
+                await Task.Run(() =>
                 {
-                    await Task.Run(() =>
+                    foreach (var match in clusterableMatches)
                     {
-                        foreach (var match in clusterableMatches)
+                        CalculateSimilarity(match.Coords, buckets, match, (otherMatch, overlapCount) => overlapCount >= _minClusterSize && overlapCount >= otherMatch.Count / 3, 100, writer);
+                        if (writer.FileLimitReached())
                         {
-                            CalculateSimilarity(match.Coords, buckets, match, (otherMatch, overlapCount) => overlapCount >= _minClusterSize && overlapCount >= otherMatch.Count / 3, 100, writer);
+                            writer.Save();
+                            writer.Dispose();
+                            writer = getSimilarityWriter((++fileNum).ToString());
                         }
-                    });
-
-                    writer.Save();
-                }
+                    }
+                });
             }
             finally
             {
+                writer.Save();
+                writer.Dispose();
                 _progressData.Reset();
             }
         }
 
-        public async Task FindClosestBySimilarityAsync(List<IClusterableMatch> clusterableMatches, HashSet<int> indexesAsBasis, Func<ISimilarityWriter> getSimilarityWriter)
+        public async Task FindClosestBySimilarityAsync(List<IClusterableMatch> clusterableMatches, HashSet<int> indexesAsBasis, Func<string, ISimilarityWriter> getSimilarityWriter)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count());
             _progressData.Reset($"Finding closest chains by Similarity for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
@@ -61,7 +66,7 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
 
             try
             {
-                using (var writer = getSimilarityWriter())
+                using (var writer = getSimilarityWriter(null))
                 {
                     await Task.Run(() => CalculateSimilarity(indexesAsBasis, buckets, null, (_, overlapCount) => overlapCount >= _minClusterSize, clusterableMatches.Count, writer));
                     writer.Save();

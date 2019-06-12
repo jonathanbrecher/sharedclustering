@@ -194,6 +194,13 @@ namespace AncestryDnaClustering.Models
             }
         }
 
+        public static string AddSuffixToFilename(string fileName, string suffix)
+        {
+            return Path.Combine(
+                Path.GetDirectoryName(fileName),
+                Path.GetFileNameWithoutExtension(fileName) + $"-{suffix}" + Path.GetExtension(fileName));
+        }
+
         private static bool MaybeRetry(Exception ex, string action)
         {
             return MessageBox.Show(

@@ -185,9 +185,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                     var fileName = _correlationFilename;
                     if (fileNum > 0)
                     {
-                        fileName = Path.Combine(
-                            Path.GetDirectoryName(fileName),
-                            Path.GetFileNameWithoutExtension(fileName) + $"-{fileNum + 1}" + Path.GetExtension(fileName));
+                        fileName = FileUtils.AddSuffixToFilename(fileName, (fileNum + 1).ToString());
                     }
 
                     FileUtils.Save(p, fileName);

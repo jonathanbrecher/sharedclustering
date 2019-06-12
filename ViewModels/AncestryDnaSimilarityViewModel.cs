@@ -10,6 +10,7 @@ using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
 using Microsoft.Win32;
+using System.Windows;
 
 namespace AncestryDnaClustering.ViewModels
 {
@@ -199,28 +200,48 @@ namespace AncestryDnaClustering.ViewModels
 
             var startTime = DateTime.Now;
 
-            var (testTakerTestId, clusterableMatches) = await _matchesLoader.LoadClusterableMatchesAsync(FilenameSimilarity, MinCentimorgansToCompareSimilarity, MinCentimorgansInSharedMatchesSimilarity, ProgressData);
-            if (clusterableMatches == null)
+            try
             {
-                return;
+                var (testTakerTestId, clusterableMatches) = await _matchesLoader.LoadClusterableMatchesAsync(FilenameSimilarity, MinCentimorgansToCompareSimilarity, MinCentimorgansInSharedMatchesSimilarity, ProgressData);
+                if (clusterableMatches == null)
+                {
+                    return;
+                }
+                clusterableMatches = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= MinCentimorgansToCompareSimilarity).ToList();
+
+                var SimilarityFinder = new SimilarityFinder(MinClusterSizeSimilarity, ProgressData);
+                Func<string, ISimilarityWriter> getSimilarityWriter = fileNameSuffix => new ExcelSimilarityWriter(testTakerTestId, clusterableMatches, SimilarityFilename, fileNameSuffix);
+
+                if (!string.IsNullOrEmpty(SimilarityBasisIds))
+                {
+                    var testIdsAsBasis = new HashSet<string>(Regex.Split(SimilarityBasisIds, @"[^a-zA-Z0-9-]+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
+                    var indexesAsBasis = new HashSet<int>(clusterableMatches.Where(match => testIdsAsBasis.Contains(match.Match.TestGuid)).Select(match => match.Index));
+                    await SimilarityFinder.FindClosestBySimilarityAsync(clusterableMatches, indexesAsBasis, getSimilarityWriter);
+                }
+                else
+                {
+                    if (MessageBox.Show(
+                        $"No test IDs have been specified. This will report all similarity for all matches, possibly millions of lines of data. Proceed anyway?",
+                        "Lots of data",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    {
+                        return;
+                    }
+
+                    MessageBox.Show(
+                        $"Large numbers of results will be split into multiple files, with about 100,000 lines per file.",
+                        "Lots of data",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    await SimilarityFinder.FindClosestBySimilarityAsync(clusterableMatches, getSimilarityWriter);
+                }
             }
-            clusterableMatches = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= MinCentimorgansToCompareSimilarity).ToList();
-
-            var SimilarityFinder = new SimilarityFinder(MinClusterSizeSimilarity, ProgressData);
-            Func<ISimilarityWriter> getSimilarityWriter = () => new ExcelSimilarityWriter(testTakerTestId, clusterableMatches, SimilarityFilename);
-
-            if (!string.IsNullOrEmpty(SimilarityBasisIds))
+            finally
             {
-                var testIdsAsBasis = new HashSet<string>(Regex.Split(SimilarityBasisIds, @"[^a-zA-Z0-9-]+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
-                var indexesAsBasis = new HashSet<int>(clusterableMatches.Where(match => testIdsAsBasis.Contains(match.Match.TestGuid)).Select(match => match.Index));
-                await SimilarityFinder.FindClosestBySimilarityAsync(clusterableMatches, indexesAsBasis, getSimilarityWriter);
+                ProgressData.Reset(DateTime.Now - startTime, "Done");
             }
-            else
-            {
-                await SimilarityFinder.FindClosestBySimilarityAsync(clusterableMatches, getSimilarityWriter);
-            }
-
-            ProgressData.Reset(DateTime.Now - startTime, "Done");
         }
     }
 }

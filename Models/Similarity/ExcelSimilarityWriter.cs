@@ -16,9 +16,9 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
         private int _col = 1;
         private readonly GenericObjectWriter _overlapWriter = new GenericObjectWriter("Shared matches with overlap");
 
-        public ExcelSimilarityWriter(string testTakerTestId, List<IClusterableMatch> matches, string fileName)
+        public ExcelSimilarityWriter(string testTakerTestId, List<IClusterableMatch> matches, string fileName, string fileNameSuffix)
         {
-            _fileName = fileName;
+            _fileName = string.IsNullOrEmpty(fileNameSuffix) ? fileName : FileUtils.AddSuffixToFilename(fileName, fileNameSuffix);
             _p = new ExcelPackage();
             _ws = _p.Workbook.Worksheets.Add("similarity");
             var writers = new IColumnWriter[]
@@ -94,6 +94,8 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
         {
             ++_row;
         }
+
+        public bool FileLimitReached() => _row > 100000;
 
         public void Save()
         {
