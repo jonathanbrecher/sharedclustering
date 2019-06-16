@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -25,7 +26,7 @@ namespace AncestryDnaClustering.ViewModels
 
         public ProgressData ProgressData { get; } = new ProgressData();
 
-        public AncestryDnaDownloadingViewModel()
+        public AncestryDnaDownloadingViewModel(Action<string> continueInClusterTab)
         {
             // Ancestry's security works by setting some cookies in the browser when someone signs in.
             // The CookieContainer captures those cookies when they are set, and adds them to subsequent requests.
@@ -39,6 +40,7 @@ namespace AncestryDnaClustering.ViewModels
 
             SignInCommand = new RelayCommand<PasswordBox>(async password => await SignInAsync(password));
             GetDnaMatchesCommand = new RelayCommand(async () => await GetDnaMatchesAsync());
+            ContinueInClusterTabCommand = new RelayCommand(() => continueInClusterTab(LastFileDownloaded));
 
             AncestryUserName = Settings.Default.AncestryUserName;
             MinCentimorgansToRetrieve = Settings.Default.MinCentimorgansToRetrieve;
@@ -47,10 +49,12 @@ namespace AncestryDnaClustering.ViewModels
             DownloadTypeFast = Settings.Default.DownloadTypeFast;
             DownloadTypeComplete = Settings.Default.DownloadTypeComplete;
             DownloadTypeEndogamy = Settings.Default.DownloadTypeEndogamy;
+            LastFileDownloaded = Settings.Default.LastFileDownloaded;
         }
 
         public ICommand SignInCommand { get; }
         public ICommand GetDnaMatchesCommand { get; }
+        public ICommand ContinueInClusterTabCommand { get; }
 
         // The user name for the account to use. This value is saved and will be restored when the application is relaunched.
         // For security, the password is not saved.
@@ -327,66 +331,104 @@ namespace AncestryDnaClustering.ViewModels
                 return;
             }
 
-            var guid = SelectedTest.Value;
+            try
+            {
+                CanGetDnaMatches = false;
+                LastFileDownloaded = null;
 
-            // Make sure there are no more than 50 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
-            var throttle = new Throttle(50);
+                var guid = SelectedTest.Value;
 
-            // First download a list of all matches available in the test.
-            // This is the data shown 50-at-a-time in list view on the Ancestry web site.
-            var numMatchesToRetrieve = 
-                MinCentimorgansToRetrieve >= 90 ? _matchCountsData.ThirdCousins 
-                : MinCentimorgansToRetrieve >= 20 ? _matchCountsData.FourthCousins 
-                : _matchCountsData.TotalMatches;
-            ProgressData.Reset("Downloading matches...", numMatchesToRetrieve);
-            var matches = await _matchesRetriever.GetMatchesAsync(guid, numMatchesToRetrieve, true, throttle, ProgressData);
+                // Make sure there are no more than 50 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
+                var throttle = new Throttle(50);
 
-            // Make sure there are no duplicates among the matches
-            matches = matches
-                .Where(match => match.SharedCentimorgans >= MinCentimorgansToRetrieve)
-                .GroupBy(match => match.TestGuid)
-                .Select(g => g.First())
-                .ToList();
+                // First download a list of all matches available in the test.
+                // This is the data shown 50-at-a-time in list view on the Ancestry web site.
+                var numMatchesToRetrieve =
+                    MinCentimorgansToRetrieve >= 90 ? _matchCountsData.ThirdCousins
+                    : MinCentimorgansToRetrieve >= 20 ? _matchCountsData.FourthCousins
+                    : _matchCountsData.TotalMatches;
+                ProgressData.Reset("Downloading matches...", numMatchesToRetrieve);
+                var matches = await _matchesRetriever.GetMatchesAsync(guid, numMatchesToRetrieve, true, throttle, ProgressData);
 
-            var matchIndexes = matches
-                .Select((match, index) => new { match.TestGuid, Index = index })
-                .ToDictionary(pair => pair.TestGuid, pair => pair.Index);
+                // Make sure there are no duplicates among the matches
+                matches = matches
+                    .Where(match => match.SharedCentimorgans >= MinCentimorgansToRetrieve)
+                    .GroupBy(match => match.TestGuid)
+                    .Select(g => g.First())
+                    .ToList();
 
-            // Now download the shared matches for each match.
-            // This takes much longer than downloading the list of matches themselves..
-            ProgressData.Reset($"Downloading shared matches for {matches.Count} matches...", matches.Count);
+                var matchIndexes = matches
+                    .Select((match, index) => new { match.TestGuid, Index = index })
+                    .ToDictionary(pair => pair.TestGuid, pair => pair.Index);
 
-            var counter = 0;
+                // Now download the shared matches for each match.
+                // This takes much longer than downloading the list of matches themselves..
+                ProgressData.Reset($"Downloading shared matches for {matches.Count} matches...", matches.Count);
 
-            var icwDictionary = matches.ToDictionary(
-                match => match.TestGuid,
-                match =>
+                var counter = 0;
+
+                var icwDictionary = matches.ToDictionary(
+                    match => match.TestGuid,
+                    match =>
+                    {
+                        var index = Interlocked.Increment(ref counter);
+                        var result = _matchesRetriever.GetMatchesInCommonAsync(guid, match, MinSharedMatchesCentimorgansToRetrieve, throttle, index, ProgressData);
+                        return result;
+                    });
+                await Task.WhenAll(icwDictionary.Values);
+
+                // Save the downloaded data to disk.
+                ProgressData.Reset("Saving data...");
+
+                var icw = icwDictionary.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Result.Keys
+                        .Select(matchName =>
+                            matchIndexes.TryGetValue(matchName, out var matchIndex) ? matchIndex : (int?)null).Where(index => index != null)
+                                .Select(index => index.Value)
+                                .Concat(new[] { matchIndexes[kvp.Key] })
+                                .ToList()
+                            );
+
+                var output = new Serialized { TestTakerTestId = guid, Matches = matches, MatchIndexes = matchIndexes, Icw = icw };
+                FileUtils.WriteAsJson(fileName, output, false);
+                LastFileDownloaded = fileName;
+
+                var matchesWithSharedMatches = output.Icw.Where(match => match.Value.Count > 1).ToList();
+                var averageSharedMatches = matchesWithSharedMatches.Sum(match => match.Value.Count - 1) / (double)matchesWithSharedMatches.Count;
+                ProgressData.Reset(DateTime.Now - startTime, $"Done. Downloaded {matches.Count} matches ({matchesWithSharedMatches.Count} with shared matches, averaging {averageSharedMatches:0.#} shared matches)");
+            }
+            catch (Exception)
+            {
+                ProgressData.Reset();
+            }
+            finally
+            {
+                CheckCanGetDnaMatches();
+            }
+        }
+
+        private bool _continueInClusterTabVisible;
+        public bool ContinueInClusterTabVisible
+        {
+            get => _continueInClusterTabVisible;
+            set => SetFieldValue(ref _continueInClusterTabVisible, value, nameof(ContinueInClusterTabVisible));
+        }
+
+        private bool CanContinueInClusterTab => !string.IsNullOrWhiteSpace(LastFileDownloaded) && File.Exists(LastFileDownloaded);
+
+        private string _lastFileDownloaded;
+        public string LastFileDownloaded
+        {
+            get => _lastFileDownloaded;
+            set
+            {
+                if (SetFieldValue(ref _lastFileDownloaded, value, nameof(LastFileDownloaded)))
                 {
-                    var index = Interlocked.Increment(ref counter);
-                    var result = _matchesRetriever.GetMatchesInCommonAsync(guid, match, MinSharedMatchesCentimorgansToRetrieve, throttle, index, ProgressData);
-                    return result;
-                });
-            await Task.WhenAll(icwDictionary.Values);
-
-            // Save the downloaded data to disk.
-            ProgressData.Reset("Saving data...");
-
-            var icw = icwDictionary.ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value.Result.Keys
-                    .Select(matchName => 
-                        matchIndexes.TryGetValue(matchName, out var matchIndex) ? matchIndex : (int?)null).Where(index => index != null)
-                            .Select(index => index.Value)
-                            .Concat(new[] { matchIndexes[kvp.Key] })
-                            .ToList()
-                        );
-
-            var output = new Serialized { TestTakerTestId = guid, Matches = matches, MatchIndexes = matchIndexes, Icw = icw };
-            FileUtils.WriteAsJson(fileName, output, false);
-
-            var matchesWithSharedMatches = output.Icw.Where(match => match.Value.Count > 1).ToList();
-            var averageSharedMatches = matchesWithSharedMatches.Sum(match => match.Value.Count - 1) / (double)matchesWithSharedMatches.Count;
-            ProgressData.Reset(DateTime.Now - startTime, $"Done. Downloaded {matches.Count} matches ({matchesWithSharedMatches.Count} with shared matches, averaging {averageSharedMatches:0.#} shared matches");
+                    Settings.Default.LastFileDownloaded = LastFileDownloaded;
+                    ContinueInClusterTabVisible = CanContinueInClusterTab;
+                }
+            }
         }
     }
 }

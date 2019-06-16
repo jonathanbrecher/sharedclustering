@@ -9,6 +9,6 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
         void WriteLine(IClusterableMatch match, int overlapCount);
         void SkipLine();
         bool FileLimitReached();
-        void Save();
+        string Save();
     }
 }

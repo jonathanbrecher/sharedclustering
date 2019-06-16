@@ -18,7 +18,7 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
             _progressData = progressData;
         }
 
-        public async Task FindClosestBySimilarityAsync(List<IClusterableMatch> clusterableMatches, Func<string, ISimilarityWriter> getSimilarityWriter)
+        public async Task<List<string>> FindClosestBySimilarityAsync(List<IClusterableMatch> clusterableMatches, Func<string, ISimilarityWriter> getSimilarityWriter)
         {
             var average = clusterableMatches.Average(match => match.Coords.Count());
             _progressData.Reset($"Finding closest chains by Similarity for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
@@ -28,7 +28,7 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
                .GroupBy(pair => pair.Coord, pair => pair.Match)
                .ToDictionary(g => g.Key, g => g.ToList());
 
-            var fileNum = 1;
+            var files = new List<string>();
             var writer = getSimilarityWriter(null);
             try
             {
@@ -39,19 +39,22 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
                         CalculateSimilarity(match.Coords, buckets, match, (otherMatch, overlapCount) => overlapCount >= _minClusterSize && overlapCount >= otherMatch.Count / 3, 100, writer);
                         if (writer.FileLimitReached())
                         {
-                            writer.Save();
+                            var file = writer.Save();
+                            files.Add(file);
                             writer.Dispose();
-                            writer = getSimilarityWriter((++fileNum).ToString());
+                            writer = getSimilarityWriter((files.Count + 1).ToString());
                         }
                     }
                 });
             }
             finally
             {
-                writer.Save();
+                var file = writer.Save();
+                files.Add(file);
                 writer.Dispose();
                 _progressData.Reset();
             }
+            return files;
         }
 
         public async Task FindClosestBySimilarityAsync(List<IClusterableMatch> clusterableMatches, HashSet<int> indexesAsBasis, Func<string, ISimilarityWriter> getSimilarityWriter)

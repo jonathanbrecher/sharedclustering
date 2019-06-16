@@ -16,8 +16,6 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="10"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="220"/>
@@ -49,8 +47,8 @@
                 <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans in shared matches: "/>
                 <TextBox Grid.Row="6" Grid.Column="2" HorizontalAlignment="Left" Width="50" Text="{Binding MinCentimorgansInSharedMatchesSimilarity}"/>
 
-                <TextBlock Grid.Row="10" Grid.Column="0" Text="Test IDs to compare for similarity: "/>
-                <AdornerDecorator Grid.Row="10" Grid.Column="2">
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Test IDs to compare for similarity: "/>
+                <AdornerDecorator Grid.Row="8" Grid.Column="2">
                     <TextBox HorizontalAlignment="Stretch" Height="80"
                              AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
                              Text="{Binding SimilarityBasisIds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
@@ -69,6 +67,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="10"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="220"/>
@@ -79,6 +79,8 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Minimum cluster size: "/>
                     <TextBox Grid.Row="2" Grid.Column="2" Width="50" HorizontalAlignment="Left" Text="{Binding MinClusterSizeSimilarity}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Open similarity file(s) when complete: "/>
+                    <CheckBox Grid.Row="4" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" IsChecked="{Binding OpenSimilarityFileWhenComplete}"/>
                 </Grid>
             </Expander>
 

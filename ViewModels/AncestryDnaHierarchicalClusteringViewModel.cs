@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using AncestryDnaClustering.Models;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters;
 using AncestryDnaClustering.Models.HierarchicalClustering.Distance;
@@ -49,6 +50,7 @@ namespace AncestryDnaClustering.ViewModels
             ClusterTypeVeryClose = Settings.Default.ClusterTypeVeryClose;
             ClusterTypeOver20 = Settings.Default.ClusterTypeOver20;
             ClusterTypeComplete = Settings.Default.ClusterTypeComplete;
+            OpenClusterFileWhenComplete = Settings.Default.OpenClusterFileWhenComplete;
         }
 
         public ICommand SelectFileCommand { get; set; }
@@ -75,15 +77,21 @@ namespace AncestryDnaClustering.ViewModels
         // Present an Open File dialog to allow selecting the saved DNA data from disk
         private void SelectFile()
         {
-            var (fileName, trimmedFileName) = _matchesLoader.SelectFile(Filename);
+            var fileName = _matchesLoader.SelectFile(Filename);
             if (fileName != null)
             {
                 Filename = fileName;
+                SetDefaultFileName(Filename);
+            }
+        }
 
-                if (trimmedFileName != null)
-                {
-                    CorrelationFilename = Path.Combine(Path.GetDirectoryName(Filename), trimmedFileName + "-clusters.xlsx");
-                }
+        public void SetDefaultFileName(string fileName)
+        {
+            var trimmedFileName = _matchesLoader.GetTrimmedFileName(fileName);
+
+            if (trimmedFileName != null)
+            {
+                CorrelationFilename = Path.Combine(Path.GetDirectoryName(Filename), trimmedFileName + "-clusters.xlsx");
             }
         }
 
@@ -276,47 +284,71 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
+        private bool _openClusterFileWhenComplete;
+        public bool OpenClusterFileWhenComplete
+        {
+            get => _openClusterFileWhenComplete;
+            set
+            {
+                if (SetFieldValue(ref _openClusterFileWhenComplete, value, nameof(OpenClusterFileWhenComplete)))
+                {
+                    Settings.Default.OpenClusterFileWhenComplete = OpenClusterFileWhenComplete;
+                }
+            }
+        }
+
         private async Task ProcessSavedDataAsync()
         {
             Settings.Default.Save();
 
             var startTime = DateTime.Now;
 
-            var (testTakerTestId, clusterableMatches) = await _matchesLoader.LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches, ProgressData);
-            if (clusterableMatches == null || clusterableMatches.Count == 0)
+            try
+            {
+                var (testTakerTestId, clusterableMatches) = await _matchesLoader.LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches, ProgressData);
+                if (clusterableMatches == null || clusterableMatches.Count == 0)
+                {
+                    return;
+                }
+
+                var testIdsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
+
+                var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
+                var clusterableCoords = clusterableMatches
+                    .SelectMany(match => match.Coords.Where(coord => coord != match.Index))
+                    .Distinct()
+                    .Where(coord => matchesByIndex.ContainsKey(coord))
+                    .ToList();
+
+                if (clusterableCoords.Count == 0)
+                {
+                    MessageBox.Show("Unable to read ICW data", "Unexpected failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                var lowestClusterableCentimorgans = clusterableCoords.Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
+
+                var hierarchicalClustering = new HierarchicalClustering(
+                    MinClusterSize,
+                    _ => new OverlapWeightedEuclideanDistanceSquared(),
+                    new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
+                    new HalfMatchPrimaryClusterFinder(),
+                    new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, _minClusterSize, ProgressData),
+                    ProgressData);
+                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
+
+                if (OpenClusterFileWhenComplete)
+                {
+                    foreach (var file in files)
+                    {
+                        FileUtils.LaunchFile(file);
+                    }
+                }
+            }
+            finally
             {
                 ProgressData.Reset(DateTime.Now - startTime, "Done");
-                return;
             }
-
-            var testIdsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
-
-            var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
-            var clusterableCoords = clusterableMatches
-                .SelectMany(match => match.Coords.Where(coord => coord != match.Index))
-                .Distinct()
-                .Where(coord => matchesByIndex.ContainsKey(coord))
-                .ToList();
-
-            if (clusterableCoords.Count == 0)
-            {
-                MessageBox.Show("Unable to read ICW data", "Unexpected failure", MessageBoxButton.OK, MessageBoxImage.Error);
-                ProgressData.Reset(DateTime.Now - startTime, "Done");
-                return;
-            }
-
-            var lowestClusterableCentimorgans = clusterableCoords.Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
-
-            var hierarchicalClustering = new HierarchicalClustering(
-                MinClusterSize,
-                _ => new OverlapWeightedEuclideanDistanceSquared(),
-                new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
-                new HalfMatchPrimaryClusterFinder(),
-                new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, _minClusterSize, ProgressData),
-                ProgressData);
-            await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
-
-            ProgressData.Reset(DateTime.Now - startTime, "Done");
         }
     }
 }

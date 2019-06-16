@@ -58,9 +58,10 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
 
         public bool FileLimitReached() => false;
 
-        public void Save()
+        public string Save()
         {
             FileUtils.WriteAllLines(_fileName, _stringBuilder.ToString(), false);
+            return _fileName;
         }
     }
 }

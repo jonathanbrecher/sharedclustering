@@ -255,5 +255,26 @@ namespace AncestryDnaClustering.Models
                 }
             }
         }
+
+        public static void LaunchFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName) || !File.Exists(fileName))
+            {
+                MessageBox.Show(
+                    $"The file {fileName} does not exist{Environment.NewLine}{Environment.NewLine}It may have been moved or deleted.",
+                    "File error",
+                    MessageBoxButton.OK);
+                return;
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(fileName);
+            }
+            catch (Exception ex)
+            {
+                LogException(ex, true);
+            }
+        }
     }
 }

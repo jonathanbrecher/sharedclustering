@@ -33,16 +33,16 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
         public int MaxColumns => 16000;
         public int MaxColumnsPerSplit => 10000;
 
-        public async Task OutputCorrelationAsync(List<ClusterNode> nodes, Dictionary<int, IClusterableMatch> matchesByIndex, Dictionary<int, int> indexClusterNumbers)
+        public async Task<List<string>> OutputCorrelationAsync(List<ClusterNode> nodes, Dictionary<int, IClusterableMatch> matchesByIndex, Dictionary<int, int> indexClusterNumbers)
         {
             if (string.IsNullOrEmpty(_correlationFilename))
             {
-                return;
+                return new List<string>();
             }
 
             if (nodes.Count == 0)
             {
-                return;
+                return new List<string>();
             }
 
             // All nodes, in order. These will become rows/columns in the Excel file.
@@ -85,6 +85,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                 .Where(match => match.Match.SharedCentimorgans > 200)
                 .Select(match => match.Index)
                 );
+
+            var files = new List<string>();
 
             for (var fileNum = 0; fileNum < numOutputFiles; ++fileNum)
             { 
@@ -189,8 +191,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                     }
 
                     FileUtils.Save(p, fileName);
+
+                    files.Add(fileName);
                 }
             }
+            return files;
         }
     }
 }

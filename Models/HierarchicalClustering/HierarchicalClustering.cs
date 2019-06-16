@@ -37,7 +37,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             _progressData = progressData;
         }
 
-        public async Task ClusterAsync(List<IClusterableMatch> clusterableMatches, Dictionary<int, IClusterableMatch> matchesByIndex, HashSet<string> testIdsToFilter, double lowestClusterableCentimorgans, double minCentimorgansToCluster)
+        public async Task<List<string>> ClusterAsync(List<IClusterableMatch> clusterableMatches, Dictionary<int, IClusterableMatch> matchesByIndex, HashSet<string> testIdsToFilter, double lowestClusterableCentimorgans, double minCentimorgansToCluster)
         {
             var minCentimorgansToClusterTruncated = Math.Max(lowestClusterableCentimorgans, minCentimorgansToCluster);
             var maxIndex = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= minCentimorgansToClusterTruncated).Max(match => match.Index);
@@ -50,7 +50,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             var clusterableMatchesToCorrelateList = clusterableMatchesToCorrelate.ToList();
             if (clusterableMatchesToCorrelateList.Count == 0)
             {
-                return;
+                return new List<string>();
             }
 
             if (clusterableMatchesToCorrelateList.Count > _correlationWriter.MaxColumns)
@@ -63,7 +63,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 {
-                    return;
+                    return new List<string>();
                 }
             }
 
@@ -96,7 +96,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 await Recluster(nodes, extendedClusters, immediateFamily, matchesByIndex, matrix);
             }
 
-            await _correlationWriter.OutputCorrelationAsync(nodes, matchesByIndex, indexClusterNumbers);
+            var files = await _correlationWriter.OutputCorrelationAsync(nodes, matchesByIndex, indexClusterNumbers);
+
+            return files;
         }
 
         private async Task<List<ClusterNode>> ClusterAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, List<IClusterableMatch> immediateFamily, IReadOnlyDictionary<int, float[]> matrix, ProgressData progressData)

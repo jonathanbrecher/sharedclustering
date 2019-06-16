@@ -7,7 +7,8 @@ namespace AncestryDnaClustering.Models.SavedData
 {
     public interface IMatchesLoader
     {
-        (string fileName, string trimmedFileName) SelectFile(string fileName);
+        string SelectFile(string fileName);
+        string GetTrimmedFileName(string fileName);
         Task<(string, List<IClusterableMatch>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, ProgressData progressData);
     }
 }

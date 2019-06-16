@@ -97,7 +97,7 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
 
         public bool FileLimitReached() => _row > 100000;
 
-        public void Save()
+        public string Save()
         {
             // Freeze the column and row headers
             _ws.View.FreezePanes(2, 1);
@@ -105,6 +105,8 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
             _writers.FormatColumns(1, 1);
 
             FileUtils.Save(_p, _fileName);
+
+            return _fileName;
         }
     }
 }

@@ -11,6 +11,7 @@ using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
 using Microsoft.Win32;
 using System.Windows;
+using AncestryDnaClustering.Models;
 
 namespace AncestryDnaClustering.ViewModels
 {
@@ -42,6 +43,7 @@ namespace AncestryDnaClustering.ViewModels
             SimilarityBasisIds = Settings.Default.SimilarityBasisIds;
             SimilarityFilename = Settings.Default.SimilarityFilename;
             ShowAdvancedSimilarityOptions = Settings.Default.ShowAdvancedSimilarityOptions;
+            OpenSimilarityFileWhenComplete = Settings.Default.OpenSimilarityFileWhenComplete;
         }
 
         public ICommand SelectFileCommand { get; set; }
@@ -68,11 +70,12 @@ namespace AncestryDnaClustering.ViewModels
         // Present an Open File dialog to allow selecting the saved DNA data from disk
         private void SelectFile()
         {
-            var (fileName, trimmedFileName) = _matchesLoader.SelectFile(FilenameSimilarity);
+            var fileName = _matchesLoader.SelectFile(FilenameSimilarity);
             if (fileName != null)
             {
                 FilenameSimilarity = fileName;
 
+                var trimmedFileName = _matchesLoader.GetTrimmedFileName(FilenameSimilarity);
                 if (trimmedFileName != null)
                 {
                     SimilarityFilename = Path.Combine(Path.GetDirectoryName(FilenameSimilarity), trimmedFileName + "-Similarity.xlsx");
@@ -194,6 +197,19 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
+        private bool _openSimilarityFileWhenComplete;
+        public bool OpenSimilarityFileWhenComplete
+        {
+            get => _openSimilarityFileWhenComplete;
+            set
+            {
+                if (SetFieldValue(ref _openSimilarityFileWhenComplete, value, nameof(OpenSimilarityFileWhenComplete)))
+                {
+                    Settings.Default.OpenSimilarityFileWhenComplete = OpenSimilarityFileWhenComplete;
+                }
+            }
+        }
+
         private async Task ProcessSavedDataAsync()
         {
             Settings.Default.Save();
@@ -235,7 +251,15 @@ namespace AncestryDnaClustering.ViewModels
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
 
-                    await SimilarityFinder.FindClosestBySimilarityAsync(clusterableMatches, getSimilarityWriter);
+                    var files = await SimilarityFinder.FindClosestBySimilarityAsync(clusterableMatches, getSimilarityWriter);
+
+                    if (OpenSimilarityFileWhenComplete)
+                    {
+                        foreach (var file in files)
+                        {
+                            FileUtils.LaunchFile(file);
+                        }
+                    }
                 }
             }
             finally

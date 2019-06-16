@@ -418,5 +418,41 @@ namespace AncestryDnaClustering.Properties {
                 this["MinSharedMatchesCentimorgansToRetrieve"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastFileDownloaded {
+            get {
+                return ((string)(this["LastFileDownloaded"]));
+            }
+            set {
+                this["LastFileDownloaded"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool OpenClusterFileWhenComplete {
+            get {
+                return ((bool)(this["OpenClusterFileWhenComplete"]));
+            }
+            set {
+                this["OpenClusterFileWhenComplete"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool OpenSimilarityFileWhenComplete {
+            get {
+                return ((bool)(this["OpenSimilarityFileWhenComplete"]));
+            }
+            set {
+                this["OpenSimilarityFileWhenComplete"] = value;
+            }
+        }
     }
 }

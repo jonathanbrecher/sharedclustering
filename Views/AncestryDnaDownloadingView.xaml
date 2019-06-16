@@ -4,7 +4,10 @@
 
     <DataTemplate DataType="{x:Type viewmodels:AncestryDnaDownloadingViewModel}">
         <Grid>
-        <StackPanel Orientation="Vertical"
+            <Grid.Resources>
+                <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+            </Grid.Resources>
+            <StackPanel Orientation="Vertical"
                     Grid.IsSharedSizeScope="True">
             <Grid Margin="10" HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
@@ -114,24 +117,35 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="10"/>
                     <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding ProgressData.Description}"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding ProgressData.Description}"/>
                 <ProgressBar Grid.Row="2" Grid.Column="0"
                              HorizontalAlignment="Stretch"
                              Maximum="{Binding ProgressData.Maximum}"
                              Value="{Binding ProgressData.Value}"/>
                 <TextBlock  Grid.Row="2" Grid.Column="2" Text="{Binding ProgressData.Percent, StringFormat=P2}"/>
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding ProgressData.TimeLeftString}"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding ProgressData.TimeLeftString}"/>
                 <Button Grid.Row="6" Grid.Column="0"
                         Height="23" Width="120"
                         Content="Get DNA Matches" 
                         Command="{Binding GetDnaMatchesCommand}"
                         IsEnabled="{Binding CanGetDnaMatches}"/>
+                <StackPanel Grid.Row="8" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center"
+                            Visibility="{Binding ContinueInClusterTabVisible, Converter={StaticResource BooleanToVisibility}}">
+                    <TextBlock VerticalAlignment="Center" Text="Last file downloaded:"/>
+                    <TextBox Margin="10,0,0,0" IsReadOnly="True" Background="Transparent" BorderThickness="0" VerticalAlignment="Center"
+                             Text="{Binding LastFileDownloaded}"/>
+                    <Button Height="23" Width="150" Margin="10,0,0,0"
+                        Content="Continue in Cluster tab" 
+                        Command="{Binding ContinueInClusterTabCommand}"/>
+                </StackPanel>
             </Grid>
         </StackPanel>
         <!--<Rectangle Fill="Black" Opacity="0.25"/>

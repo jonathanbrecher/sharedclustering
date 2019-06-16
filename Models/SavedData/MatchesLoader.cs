@@ -21,7 +21,7 @@ namespace AncestryDnaClustering.Models.SavedData
         }
 
         // Present an Open File dialog to allow selecting the saved DNA data from disk
-        public (string fileName, string trimmedFileName) SelectFile(string fileName)
+        public string SelectFile(string fileName)
         {
             var openFileDialog = new OpenFileDialog
             {
@@ -35,12 +35,14 @@ namespace AncestryDnaClustering.Models.SavedData
                 Settings.Default.MatchesLoaderFilterIndex = openFileDialog.FilterIndex;
                 Settings.Default.Save();
 
-                fileName = openFileDialog.FileName;
-
-                var trimmedFileName = _serializedMatchesReaders.Select(reader => reader.GetTrimmedFileName(fileName)).FirstOrDefault(f => f != null);
-               return (fileName, trimmedFileName);
+                return openFileDialog.FileName;
             }
-            return (null, null);
+            return null;
+        }
+
+        public string GetTrimmedFileName(string fileName)
+        {
+            return _serializedMatchesReaders.Select(reader => reader.GetTrimmedFileName(fileName)).FirstOrDefault(f => f != null);
         }
 
         public async Task<(string, List<IClusterableMatch>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, ProgressData progressData)
