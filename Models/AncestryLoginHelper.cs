@@ -23,11 +23,26 @@ namespace AncestryDnaClustering.Models
             var queryString = new StringContent($"username={username}&password={password}");
             queryString.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
-            using (var loginResponse = await _ancestryClient.PostAsync("account/signin", queryString))
+            if (!await LoginAsync("account/signin/frame/authenticate", queryString) // new url
+                && !await LoginAsync("account/signin", queryString)) // old url
+            {
+                return LoginFailure();
+            }
+
+            foreach (Cookie cookie in _cookies.GetCookies(new Uri("https://www.ancestry.com")))
+            {
+                _cookies.Add(new Uri("https://www.ancestry.com"), new Cookie(cookie.Name, cookie.Value, cookie.Path, "ancestry.com"));
+            }
+            return true;
+        }
+
+        public async Task<bool> LoginAsync(string requestUri, StringContent queryString)
+        {
+            using (var loginResponse = await _ancestryClient.PostAsync(requestUri, queryString))
             {
                 if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    return LoginFailure();
+                    return false;
                 }
                 loginResponse.EnsureSuccessStatusCode();
                 try
@@ -35,20 +50,16 @@ namespace AncestryDnaClustering.Models
                     var result = await loginResponse.Content.ReadAsAsync<LoginResult>();
                     if (result.Status == "invalidCredentials")
                     {
-                        return LoginFailure();
+                        return false;
                     }
                 }
                 catch (Exception e)
                 {
                     FileUtils.LogException(e, false);
-                    return LoginFailure();
-                }                
+                    return false;
+                }
             }
 
-            foreach (Cookie cookie in _cookies.GetCookies(new Uri("https://www.ancestry.com")))
-            {
-                _cookies.Add(new Uri("https://www.ancestry.com"), new Cookie(cookie.Name, cookie.Value, cookie.Path, "ancestry.com"));
-            }
             return true;
         }
 
