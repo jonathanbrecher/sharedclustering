@@ -20,20 +20,25 @@ namespace AncestryDnaClustering.Models
 
         public async Task<bool> LoginAsync(string username, string password)
         {
-            var queryString = new StringContent($"username={username}&password={password}");
-            queryString.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-
-            if (!await LoginAsync("account/signin/frame/authenticate", queryString) // new url
-                && !await LoginAsync("account/signin", queryString)) // old url
+            foreach (var query in new[] { $"{{\"password\":\"{password}\",\"username\":\"{username}\"}}", $"username={username}&password={password}" })
             {
-                return LoginFailure();
+                var queryString = new StringContent(query);
+                queryString.Headers.ContentType = new MediaTypeHeaderValue(query[0] == '{' ? "application/json" : "application/x-www-form-urlencoded");
+
+                foreach (var url in new[] { "account/signin/frame/authenticate", "account/signin" })
+                {
+                    if (await LoginAsync(url, queryString))
+                    {
+                        foreach (Cookie cookie in _cookies.GetCookies(new Uri("https://www.ancestry.com")))
+                        {
+                            _cookies.Add(new Uri("https://www.ancestry.com"), new Cookie(cookie.Name, cookie.Value, cookie.Path, "ancestry.com"));
+                        }
+                        return true;
+                    }
+                }
             }
 
-            foreach (Cookie cookie in _cookies.GetCookies(new Uri("https://www.ancestry.com")))
-            {
-                _cookies.Add(new Uri("https://www.ancestry.com"), new Cookie(cookie.Name, cookie.Value, cookie.Path, "ancestry.com"));
-            }
-            return true;
+            return false;
         }
 
         public async Task<bool> LoginAsync(string requestUri, StringContent queryString)
