@@ -85,6 +85,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="10"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="220"/>
@@ -114,6 +116,9 @@
                             </views:WatermarkService.Watermark>
                         </TextBox>
                     </AdornerDecorator>
+
+                    <TextBlock Grid.Row="14" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry host name: "/>
+                    <TextBox Grid.Row="14" Grid.Column="2" HorizontalAlignment="Left" Width="250" Text="{Binding AncestryHostName}"/>
                 </Grid>
             </Expander>
 

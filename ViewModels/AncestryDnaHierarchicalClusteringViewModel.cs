@@ -45,6 +45,7 @@ namespace AncestryDnaClustering.ViewModels
             MinCentimorgansInSharedMatches = Settings.Default.MinCentimorgansInSharedMatches;
             MaxGrayPercentage = Settings.Default.MaxGrayPercentage;
             FilterToGuids = Settings.Default.FilterToGuids;
+            AncestryHostName = Settings.Default.AncestryHostName;
             CorrelationFilename = Settings.Default.CorrelationFilename;
             ShowAdvancedClusteringOptions = Settings.Default.ShowAdvancedClusteringOptions;
             ClusterTypeVeryClose = Settings.Default.ClusterTypeVeryClose;
@@ -185,6 +186,20 @@ namespace AncestryDnaClustering.ViewModels
                 if (SetFieldValue(ref _filterToGuids, value, nameof(FilterToGuids)))
                 {
                     Settings.Default.FilterToGuids = FilterToGuids;
+                }
+            }
+        }
+
+        // The Ancestry host name to be used in links within the cluster diagram.
+        private string _ancestryHostName;
+        public string AncestryHostName
+        {
+            get => _ancestryHostName;
+            set
+            {
+                if (SetFieldValue(ref _ancestryHostName, value, nameof(AncestryHostName)))
+                {
+                    Settings.Default.AncestryHostName = AncestryHostName;
                 }
             }
         }
@@ -333,7 +348,7 @@ namespace AncestryDnaClustering.ViewModels
                     _ => new OverlapWeightedEuclideanDistanceSquared(),
                     new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
                     new HalfMatchPrimaryClusterFinder(),
-                    new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, _minClusterSize, ProgressData),
+                    new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, AncestryHostName, _minClusterSize, ProgressData),
                     ProgressData);
                 var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 

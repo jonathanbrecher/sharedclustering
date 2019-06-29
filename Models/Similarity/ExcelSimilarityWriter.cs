@@ -16,7 +16,7 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
         private int _col = 1;
         private readonly GenericObjectWriter _overlapWriter = new GenericObjectWriter("Shared matches with overlap");
 
-        public ExcelSimilarityWriter(string testTakerTestId, List<IClusterableMatch> matches, string fileName, string fileNameSuffix)
+        public ExcelSimilarityWriter(string testTakerTestId, string ancestryHostName, List<IClusterableMatch> matches, string fileName, string fileNameSuffix)
         {
             _fileName = string.IsNullOrEmpty(fileNameSuffix) ? fileName : FileUtils.AddSuffixToFilename(fileName, fileNameSuffix);
             _p = new ExcelPackage();
@@ -27,7 +27,7 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
                 _overlapWriter,
                 new NameWriter(true),
                 matches.Any(match => !string.IsNullOrEmpty(match.Match.TestGuid)) ? new TestIdWriter() : null,
-                !string.IsNullOrEmpty(testTakerTestId) ? new LinkWriter(testTakerTestId) : null,
+                !string.IsNullOrEmpty(testTakerTestId) ? new LinkWriter(testTakerTestId, ancestryHostName) : null,
                 new SharedCentimorgansWriter(),
                 matches.Any(match => match.Match.SharedSegments > 0) ? new SharedSegmentsWriter() : null,
                 matches.Any(match => match.Match.LongestBlock > 0) ? new LongestBlockWriter() : null,

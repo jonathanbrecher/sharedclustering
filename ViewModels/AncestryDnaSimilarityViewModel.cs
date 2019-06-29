@@ -43,6 +43,7 @@ namespace AncestryDnaClustering.ViewModels
             SimilarityBasisIds = Settings.Default.SimilarityBasisIds;
             SimilarityFilename = Settings.Default.SimilarityFilename;
             ShowAdvancedSimilarityOptions = Settings.Default.ShowAdvancedSimilarityOptions;
+            AncestryHostName = Settings.Default.AncestryHostName;
             OpenSimilarityFileWhenComplete = Settings.Default.OpenSimilarityFileWhenComplete;
         }
 
@@ -197,6 +198,20 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
+        // The Ancestry host name to be used in links within the cluster diagram.
+        private string _ancestryHostName;
+        public string AncestryHostName
+        {
+            get => _ancestryHostName;
+            set
+            {
+                if (SetFieldValue(ref _ancestryHostName, value, nameof(AncestryHostName)))
+                {
+                    Settings.Default.AncestryHostName = AncestryHostName;
+                }
+            }
+        }
+
         private bool _openSimilarityFileWhenComplete;
         public bool OpenSimilarityFileWhenComplete
         {
@@ -226,7 +241,7 @@ namespace AncestryDnaClustering.ViewModels
                 clusterableMatches = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= MinCentimorgansToCompareSimilarity).ToList();
 
                 var SimilarityFinder = new SimilarityFinder(MinClusterSizeSimilarity, ProgressData);
-                Func<string, ISimilarityWriter> getSimilarityWriter = fileNameSuffix => new ExcelSimilarityWriter(testTakerTestId, clusterableMatches, SimilarityFilename, fileNameSuffix);
+                Func<string, ISimilarityWriter> getSimilarityWriter = fileNameSuffix => new ExcelSimilarityWriter(testTakerTestId, AncestryHostName, clusterableMatches, SimilarityFilename, fileNameSuffix);
 
                 if (!string.IsNullOrEmpty(SimilarityBasisIds))
                 {

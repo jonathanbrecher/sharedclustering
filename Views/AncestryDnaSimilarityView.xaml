@@ -69,6 +69,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="10"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="220"/>
@@ -79,8 +81,10 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Minimum cluster size: "/>
                     <TextBox Grid.Row="2" Grid.Column="2" Width="50" HorizontalAlignment="Left" Text="{Binding MinClusterSizeSimilarity}"/>
-                    <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Open similarity file(s) when complete: "/>
-                    <CheckBox Grid.Row="4" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" IsChecked="{Binding OpenSimilarityFileWhenComplete}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry host name: "/>
+                    <TextBox Grid.Row="4" Grid.Column="2" HorizontalAlignment="Left" Width="250" Text="{Binding AncestryHostName}"/>
+                    <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Text="Open similarity file(s) when complete: "/>
+                    <CheckBox Grid.Row="6" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" IsChecked="{Binding OpenSimilarityFileWhenComplete}"/>
                 </Grid>
             </Expander>
 

@@ -19,13 +19,15 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
     {
         private readonly string _correlationFilename;
         private readonly string _testTakerTestId;
+        private readonly string _ancestryHostName;
         private readonly int _minClusterSize;
         private readonly ProgressData _progressData;
 
-        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, int minClusterSize, ProgressData progressData)
+        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, string ancestryHostName, int minClusterSize, ProgressData progressData)
         {
             _correlationFilename = correlationFilename;
             _testTakerTestId = testTakerTestId;
+            _ancestryHostName = ancestryHostName;
             _minClusterSize = minClusterSize;
             _progressData = progressData;
         }
@@ -110,7 +112,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             clusterNumberWriter,
                             new NameWriter(false),
                             matches.Any(match => !string.IsNullOrEmpty(match.Match.TestGuid)) ? new TestIdWriter() : null,
-                            !string.IsNullOrEmpty(_testTakerTestId) ? new LinkWriter(_testTakerTestId) : null,
+                            !string.IsNullOrEmpty(_testTakerTestId) ? new LinkWriter(_testTakerTestId, _ancestryHostName) : null,
                             new SharedCentimorgansWriter(),
                             matches.Any(match => match.Match.SharedSegments > 0) ? new SharedSegmentsWriter() : null,
                             matches.Any(match => match.Match.LongestBlock > 0) ? new LongestBlockWriter() : null,

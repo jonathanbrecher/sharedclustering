@@ -454,5 +454,17 @@ namespace AncestryDnaClustering.Properties {
                 this["OpenSimilarityFileWhenComplete"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("www.ancestry.com")]
+        public string AncestryHostName {
+            get {
+                return ((string)(this["AncestryHostName"]));
+            }
+            set {
+                this["AncestryHostName"] = value;
+            }
+        }
     }
 }
