@@ -109,6 +109,7 @@
     <Compile Include="Models\AncestryDnaClusteringModel.cs" />
     <Compile Include="Models\AncestryLoginHelper.cs" />
     <Compile Include="Models\AncestryMatchesRetriever.cs" />
+    <Compile Include="Models\AncestryMatchesRetrieverOld.cs" />
     <Compile Include="Models\AncestrySavedDataExtender.cs" />
     <Compile Include="Models\AncestryTestsRetriever.cs" />
     <Compile Include="Models\ColumnWriters\ColumnWritersCollection.cs" />

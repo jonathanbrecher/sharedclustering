@@ -8,12 +8,12 @@ using AncestryDnaClustering.ViewModels;
 
 namespace AncestryDnaClustering.Models
 {
-    public class AncestryMatchesRetriever
+    public class AncestryMatchesRetrieverOld
     {
         HttpClient _dnaHomeClient;
-        const int _matchesPerPage = 100;
+        const int _matchesPerPage = 50;
 
-        public AncestryMatchesRetriever(HttpClient dnaHomeClient)
+        public AncestryMatchesRetrieverOld(HttpClient dnaHomeClient)
         {
             _dnaHomeClient = dnaHomeClient;
         }
@@ -53,14 +53,15 @@ namespace AncestryDnaClustering.Models
             var throttle = new Throttle(10);
 
             var thirdCousinsTask = CountThirdCousinsAsync(guid, throttle, ProgressData.SuppressProgress);
-            var matchesTask = CountMatchesAsync(guid, throttle, ProgressData.SuppressProgress);
-            await Task.WhenAll(thirdCousinsTask, matchesTask);
+            var fourthCousinsTask = CountFourthCousinsAsync(guid, throttle, ProgressData.SuppressProgress);
+            var totalMatchesTask = CountTotalMatchesAsync(guid, _ => true, 1, 1000, false, throttle, ProgressData.SuppressProgress);
+            await Task.WhenAll(thirdCousinsTask, fourthCousinsTask, totalMatchesTask);
 
             return new MatchCounts
             {
                 ThirdCousins = await thirdCousinsTask,
-                FourthCousins = (await matchesTask).fourthCousins,
-                TotalMatches = (await matchesTask).totalMatches,
+                FourthCousins = await fourthCousinsTask,
+                TotalMatches = await totalMatchesTask,
             };
         }
 
@@ -71,20 +72,25 @@ namespace AncestryDnaClustering.Models
 
         private class MatchesCounts
         {
-            public int All { get; set; }
-            public int Close { get; set; }
-            public int Starred { get; set; }
+            public int HighConfidenceCount { get; set; }
+            public int StarredCount { get; set; }
+            public int HintCount { get; set; }
+            public int MatchesCount { get; set; }
         }
 
-        private async Task<(int fourthCousins, int totalMatches)> CountMatchesAsync(string guid, Throttle throttle, ProgressData progressData)
+        private async Task<int> CountFourthCousinsAsync(string guid, Throttle throttle, ProgressData progressData)
         {
+            // Try to get the count of fourth cousin matches directly from Ancestry.
             try
             {
-                using (var testsResponse = await _dnaHomeClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchlist/counts"))
+                using (var testsResponse = await _dnaHomeClient.GetAsync($"dna/secure/tests/{guid}/matchCounts"))
                 {
                     testsResponse.EnsureSuccessStatusCode();
                     var matchesCounts = await testsResponse.Content.ReadAsAsync<MatchesCounts>();
-                    return (matchesCounts.Close, matchesCounts.All);
+                    if (matchesCounts.HighConfidenceCount > 0)
+                    {
+                        return matchesCounts.HighConfidenceCount;
+                    }
                 }
             }
             catch
@@ -93,10 +99,31 @@ namespace AncestryDnaClustering.Models
             }
 
             // Count the matches manually. 
-            var fourthCousinsTask = CountMatches(guid, match => match.SharedCentimorgans >= 20, 1, 20, throttle, progressData);
-            var totalMatchesTask = CountMatches(guid, _ => true, 1, 1000, throttle, progressData);
-            await Task.WhenAll(fourthCousinsTask, totalMatchesTask);
-            return (await fourthCousinsTask, await totalMatchesTask);
+            return await CountMatches(guid, match => match.SharedCentimorgans >= 20, 1, 20, throttle, progressData);
+        }
+
+        private async Task<int> CountTotalMatchesAsync(string guid, Func<Match, bool> criteria, int minPage, int maxPage, bool includeTreeInfo, Throttle throttle, ProgressData progressData)
+        {
+            // Try to get the count of fourth cousin matches directly from Ancestry.
+            try
+            {
+                using (var testsResponse = await _dnaHomeClient.GetAsync($"dna/secure/tests/{guid}/matchCounts?includeTotal=true"))
+                {
+                    testsResponse.EnsureSuccessStatusCode();
+                    var matchesCounts = await testsResponse.Content.ReadAsAsync<MatchesCounts>();
+                    if (matchesCounts.MatchesCount > 0)
+                    {
+                        return matchesCounts.MatchesCount;
+                    }
+                }
+            }
+            catch
+            {
+                // If any error occurs, fall through to count the matches manually. 
+            }
+
+            // Count the matches manually. 
+            return await CountMatches(guid, _ => true, 1, 1000, throttle, progressData);
         }
 
         private async Task<int> CountMatches(string guid, Func<Match, bool> criteria, int minPage, int maxPage, Throttle throttle, ProgressData progressData)
@@ -145,30 +172,14 @@ namespace AncestryDnaClustering.Models
             var retryMax = 5;
             while (true)
             {
-                await throttle.WaitAsync();
-                var throttleReleased = false;
-
                 try
                 {
-                    using (var testsResponse = await _dnaHomeClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchesv2?page={pageNumber}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
+                    await throttle.WaitAsync();
+                    using (var testsResponse = await _dnaHomeClient.GetAsync($"dna/secure/tests/{guid}/matches?filterBy=ALL&sortBy=RELATIONSHIP&rows={_matchesPerPage}&page={pageNumber}"))
                     {
-                        throttle.Release();
-                        throttleReleased = true;
-
                         testsResponse.EnsureSuccessStatusCode();
-                        var matches = await testsResponse.Content.ReadAsAsync<MatchesV2>();
-                        var result = matches.MatchGroups.SelectMany(matchGroup => matchGroup.Matches)
-                            .Select(match => new Match
-                            {
-                                MatchTestAdminDisplayName = match.AdminDisplayName,
-                                MatchTestDisplayName = match.DisplayName,
-                                TestGuid = match.TestGuid,
-                                SharedCentimorgans = match.Relationship?.SharedCentimorgans ?? 0,
-                                SharedSegments = match.Relationship?.SharedSegments ?? 0,
-                                Starred = match.Starred,
-                                Note = match.Note,
-                            })
-                            .ToList();
+                        var matches = await testsResponse.Content.ReadAsAsync<Matches>();
+                        var result = matches.MatchGroups.SelectMany(matchGroup => matchGroup.Matches);
 
                         // Sometimes Ancestry returns matches with partial data.
                         // If that happens, retry and hope to get full data the next time.
@@ -178,6 +189,7 @@ namespace AncestryDnaClustering.Models
                             continue;
                         }
 
+                        throttle.Release();
                         progressData.Increment();
                         if (includeTreeInfo)
                         {
@@ -199,16 +211,10 @@ namespace AncestryDnaClustering.Models
                 {
                     if (++retryCount >= retryMax)
                     {
+                        throttle.Release();
                         throw;
                     }
                     await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
-                }
-                finally
-                {
-                    if (!throttleReleased)
-                    {
-                        throttle.Release();
-                    }
                 }
             }
         }
@@ -216,19 +222,18 @@ namespace AncestryDnaClustering.Models
         private async Task<List<Match>> GetRawMatchesInCommonAsync(string guid, string guidInCommon, double minSharedCentimorgans, Throttle throttle)
         {
             var matches = new List<Match>();
-            const int maxPage = 10000;
+            var maxPage = 10000;
             for (var pageNumber = 1; pageNumber < maxPage; ++pageNumber)
             {
                 var originalCount = matches.Count;
-                var (pageMatches, moreMatchesAvailable) = await GetMatchesInCommonPageAsync(guid, guidInCommon, pageNumber, throttle);
+                var (pageMatches, pageCount) = await GetMatchesInCommonPageAsync(guid, guidInCommon, pageNumber, throttle);
                 matches.AddRange(pageMatches);
 
                 // Exit if we read past the end of the list of matches (a page with no matches),
                 // or if the last entry on the page is lower than the minimum.
-                if (!moreMatchesAvailable
-                    || originalCount == matches.Count 
+                if (originalCount == matches.Count 
                     || matches.Last().SharedCentimorgans < minSharedCentimorgans
-                    || matches.Count < _matchesPerPage)
+                    || (pageCount > 0 && pageNumber >= pageCount))
                 {
                     break;
                 }
@@ -238,19 +243,25 @@ namespace AncestryDnaClustering.Models
 
         public async Task<Dictionary<string, string>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, Throttle throttle, int index, ProgressData progressData)
         {
+            // Start retrieving the tree info in the background.
+            var treeTask = match.TreeType == TreeType.Undetermined ? GetPublicTreeAsync(guid, match, throttle, false) : Task.CompletedTask;
+
             // Retrieve the matches.
             var matches = await GetRawMatchesInCommonAsync(guid, match.TestGuid, minSharedCentimorgans, throttle);
             var result = matches.GroupBy(m => m.TestGuid).ToDictionary(g => g.Key, g => g.First().TestGuid);
+
+            // Make sure that we have finished retrieving the tree info.
+            await treeTask;
 
             progressData.Increment();
             return result;
         }
 
-        private async Task<(IEnumerable<Match>, bool)> GetMatchesInCommonPageAsync(string guid, string guidInCommon, int pageNumber, Throttle throttle)
+        private async Task<(IEnumerable<Match>, int)> GetMatchesInCommonPageAsync(string guid, string guidInCommon, int pageNumber, Throttle throttle)
         {
             if (guid == guidInCommon)
             {
-                return (Enumerable.Empty<Match>(), false);
+                return (Enumerable.Empty<Match>(), 0);
             }
 
             var nameUnavailableCount = 0;
@@ -260,18 +271,13 @@ namespace AncestryDnaClustering.Models
             while (true)
             {
                 await throttle.WaitAsync();
-                var throttleReleased = false;
-
                 try
                 {
-                    using (var testsResponse = await _dnaHomeClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchesv2?page={pageNumber}&relationguid={guidInCommon}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
+                    using (var testsResponse = await _dnaHomeClient.GetAsync($"dna/secure/tests/{guid}/matchesInCommon?filterBy=ALL&sortBy=RELATIONSHIP&page={pageNumber}&matchTestGuid={guidInCommon}"))
                     {
-                        throttle.Release();
-                        throttleReleased = true;
-
                         if (testsResponse.StatusCode == System.Net.HttpStatusCode.Gone)
                         {
-                            return (Enumerable.Empty<Match>(), false);
+                            return (Enumerable.Empty<Match>(), 0);
                         }
                         if (testsResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
                         {
@@ -279,20 +285,9 @@ namespace AncestryDnaClustering.Models
                             continue;
                         }
                         testsResponse.EnsureSuccessStatusCode();
-                        var matches = await testsResponse.Content.ReadAsAsync<MatchesV2>();
+                        var matches = await testsResponse.Content.ReadAsAsync<Matches>();
 
-                        var matchesInCommon = matches.MatchGroups.SelectMany(matchGroup => matchGroup.Matches)
-                            .Select(match => new Match
-                            {
-                                MatchTestAdminDisplayName = match.AdminDisplayName,
-                                MatchTestDisplayName = match.DisplayName,
-                                TestGuid = match.TestGuid,
-                                SharedCentimorgans = match.Relationship?.SharedCentimorgans ?? 0,
-                                SharedSegments = match.Relationship?.SharedSegments ?? 0,
-                                Starred = match.Starred,
-                                Note = match.Note,
-                            })
-                            .ToList();
+                        var matchesInCommon = matches.MatchGroups.SelectMany(matchGroup => matchGroup.Matches);
 
                         if (matchesInCommon.Any(match => match.Name == "name unavailable") && ++nameUnavailableCount < nameUnavailableMax)
                         {
@@ -300,7 +295,7 @@ namespace AncestryDnaClustering.Models
                             continue;
                         }
 
-                        return (matchesInCommon, matches.BookmarkData.moreMatchesAvailable); 
+                        return (matchesInCommon, matches.PageCount); 
                     }
                 }
                 catch (Exception ex)
@@ -313,10 +308,7 @@ namespace AncestryDnaClustering.Models
                 }
                 finally
                 {
-                    if (!throttleReleased)
-                    {
-                        throttle.Release();
-                    }
+                    throttle.Release();
                 }
             }
         }
@@ -332,61 +324,81 @@ namespace AncestryDnaClustering.Models
             public List<Match> Matches { get; set; }
         }
 
-        private class MatchesV2
+        private class TestSubject
         {
-            public List<MatchGroupV2> MatchGroups { get; set; }
-            public BookmarkDataV2 BookmarkData { get; set; }
-        }
-
-        private class BookmarkDataV2
-        {
-            public bool moreMatchesAvailable { get; set; }
-        }
-
-        private class MatchGroupV2
-        {
-            public List<MatchV2> Matches { get; set; }
-        }
-
-        private class MatchV2
-        {
-            public string AdminDisplayName { get; set; }
             public string DisplayName { get; set; }
-            public string TestGuid { get; set; }
-            public Relationship Relationship { get; set; }
-            public bool Starred { get; set; }
-            public string Note { get; set; }
+            public string UcdmId { get; set; }
         }
 
-        private class Relationship
+        private async Task GetPublicTreeAsync(string guid, Match match, Throttle throttle, bool doThrow)
         {
-            public double SharedCentimorgans { get; set; }
-            public int SharedSegments { get; set; }
+            var retryCount = 0;
+            var retryMax = 5;
+            while (true)
+            {
+                try
+                {
+                    await throttle.WaitAsync();
+                    using (var testsResponse = await _dnaHomeClient.GetAsync($"dna/secure/tests/{guid}/matches/{match.TestGuid}/treeDetails"))
+                    {
+                        testsResponse.EnsureSuccessStatusCode();
+                        var treeDetails = await testsResponse.Content.ReadAsAsync<TreeDetails>();
+                        if (treeDetails.MatchTestHasTree)
+                        {
+                            match.TreeType = TreeType.Public;
+                            match.TreeSize = treeDetails.MatchTreeNodeCount;
+                        }
+                        else if (treeDetails.PublicTreeInformationList?.Any(info => info.IsPublic) == true)
+                        {
+                            match.TreeType = TreeType.Unlinked;
+                        }
+                        else if (treeDetails.PublicTreeInformationList?.Any() == true && treeDetails.MatchTreeNodeCount > 0)
+                        {
+                            match.TreeType = TreeType.Private;
+                        }
+                        else
+                        {
+                            match.TreeType = TreeType.None;
+                        }
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (++retryCount >= retryMax)
+                    {
+                        if (doThrow)
+                        {
+                            throw;
+                        }
+                        return;
+                    }
+                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                }
+                finally
+                {
+                    throttle.Release();
+                }
+            }
         }
 
         private async Task GetLinkedTreesAsync(string guid, IEnumerable<Match> matches, Throttle throttle)
         {
-            if (!matches.Any(match => match.TreeType == TreeType.Undetermined))
+            if (!matches.Any())
             {
                 return;
             }
 
             while (true)
             {
-                await throttle.WaitAsync();
-                var throttleReleased = false;
-
                 try
                 {
-                    var matchesDictionary = matches.Where(match => match.TreeType == TreeType.Undetermined).ToDictionary(match => match.TestGuid);
+                    await throttle.WaitAsync();
+                    var matchesDictionary = matches.ToDictionary(match => match.TestGuid);
                     var url = $"/discoveryui-matchesservice/api/samples/{guid}/matchesv2/additionalInfo?ids=[{"%22" + string.Join("%22,%22", matchesDictionary.Keys) + "%22"}]&tree=true";
                     using (var testsResponse = await _dnaHomeClient.GetAsync(url))
                     {
-                        throttle.Release();
-                        throttleReleased = true;
-
                         testsResponse.EnsureSuccessStatusCode();
-                        var undeterminedCount = 0;
                         var treeInfos = await testsResponse.Content.ReadAsAsync<List<TreeInfoV2>>();
                         foreach (var treeInfo in treeInfos)
                         {
@@ -395,20 +407,12 @@ namespace AncestryDnaClustering.Models
                                 match.TreeSize = treeInfo.TreeSize ?? 0;
                                 match.TreeType = treeInfo.UnlinkedTree == true ? TreeType.Unlinked
                                     : treeInfo.PrivateTree == true ? TreeType.Private
-                                    : treeInfo.PublicTree == true && match.TreeSize > 0 ? TreeType.Public
+                                    : treeInfo.PublicTree == true && match.TreeSize > 0 ? TreeType.Public 
                                     : treeInfo.NoTrees == true ? TreeType.None
                                     : TreeType.Undetermined;
-                                if (match.TreeType == TreeType.Undetermined)
-                                {
-                                    ++undeterminedCount;
-                                }
                             }
                         }
-
-                        if (undeterminedCount == 0 || undeterminedCount == matchesDictionary.Count)
-                        {
-                            return;
-                        }
+                        return;
                     }
                 }
                 catch (Exception ex)
@@ -416,11 +420,47 @@ namespace AncestryDnaClustering.Models
                 }
                 finally
                 {
-                    if (!throttleReleased)
+                    throttle.Release();
+                }
+
+/*
+                var retryCount = 0;
+                var retryMax = 5;
+                try
+                {
+                    await throttle.WaitAsync();
+                    var matchesDictionary = matches.ToDictionary(match => match.TestGuid);
+                    using (var testsResponse = await _dnaHomeClient.PostAsJsonAsync($"dna/secure/tests/{guid}/treeAncestors", matchesDictionary.Keys))
                     {
-                        throttle.Release();
+                        testsResponse.EnsureSuccessStatusCode();
+                        var treeDetails = await testsResponse.Content.ReadAsAsync<Dictionary<string, LinkedTreeDetails>>();
+                        foreach (var kvp in treeDetails)
+                        {
+                            if (matchesDictionary.TryGetValue(kvp.Key, out var match))
+                            {
+                                match.TreeSize = kvp.Value.PersonCount;
+                                if (match.TreeSize > 0)
+                                {
+                                    match.TreeType = kvp.Value.PrivateTree ? TreeType.Private : TreeType.Public;
+                                }
+                            }
+                        }
+                        return;
                     }
                 }
+                catch (Exception ex)
+                {
+                    if (++retryCount >= retryMax)
+                    {
+                        throw;
+                    }
+                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                }
+                finally
+                {
+                    throttle.Release();
+                }
+*/
             }
         }
 
