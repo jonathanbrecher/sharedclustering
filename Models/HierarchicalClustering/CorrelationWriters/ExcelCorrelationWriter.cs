@@ -53,7 +53,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             var numOutputFiles = 1;
             if (leafNodes.Count > MaxColumns)
             {
-                numOutputFiles = leafNodes.Count / MaxColumnsPerSplit + 1;
+                numOutputFiles = (leafNodes.Count - 1) / MaxColumnsPerSplit + 1;
             }
 
             _progressData.Reset("Saving clusters", leafNodes.Count * numOutputFiles);
@@ -161,18 +161,21 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             _progressData.Increment();
                         }
 
-                        // Heatmap color scale
-                        var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + leafNodes.Count, firstMatrixDataColumn - 1 + matchColumns.Count);
-                        var threeColorScale = ws.ConditionalFormatting.AddThreeColorScale(correlationData);
-                        threeColorScale.LowValue.Type = eExcelConditionalFormattingValueObjectType.Num;
-                        threeColorScale.LowValue.Value = 0;
-                        threeColorScale.LowValue.Color = Color.Gainsboro;
-                        threeColorScale.MiddleValue.Type = eExcelConditionalFormattingValueObjectType.Num;
-                        threeColorScale.MiddleValue.Value = 1;
-                        threeColorScale.MiddleValue.Color = Color.Cornsilk;
-                        threeColorScale.HighValue.Type = eExcelConditionalFormattingValueObjectType.Num;
-                        threeColorScale.HighValue.Value = 2;
-                        threeColorScale.HighValue.Color = Color.DarkRed;
+                        if (leafNodes.Count > 0 && matchColumns.Count > 0)
+                        {
+                            // Heatmap color scale
+                            var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + leafNodes.Count, firstMatrixDataColumn - 1 + matchColumns.Count);
+                            var threeColorScale = ws.ConditionalFormatting.AddThreeColorScale(correlationData);
+                            threeColorScale.LowValue.Type = eExcelConditionalFormattingValueObjectType.Num;
+                            threeColorScale.LowValue.Value = 0;
+                            threeColorScale.LowValue.Color = Color.Gainsboro;
+                            threeColorScale.MiddleValue.Type = eExcelConditionalFormattingValueObjectType.Num;
+                            threeColorScale.MiddleValue.Value = 1;
+                            threeColorScale.MiddleValue.Color = Color.Cornsilk;
+                            threeColorScale.HighValue.Type = eExcelConditionalFormattingValueObjectType.Num;
+                            threeColorScale.HighValue.Value = 2;
+                            threeColorScale.HighValue.Color = Color.DarkRed;
+                        }
 
                         // Heatmap number format
                         ws.Cells[$"1:{matchColumns.Count}"].Style.Numberformat.Format = "General";
