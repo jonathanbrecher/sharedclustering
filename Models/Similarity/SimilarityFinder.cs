@@ -114,13 +114,14 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
                 return;
             }
 
+            _progressData.Reset($"Writing {results.Count} similar matches...", results.Count);
+
             foreach (var closestMatch in results)
             {
                 writer.WriteLine(closestMatch.OtherMatch, closestMatch.OverlapCount);
+                _progressData.Increment();
             }
             writer.SkipLine();
-
-            _progressData.Increment();
         }
     }
 }

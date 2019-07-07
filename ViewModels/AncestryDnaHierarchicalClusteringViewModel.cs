@@ -162,7 +162,7 @@ namespace AncestryDnaClustering.ViewModels
         // The maximum number of matches included per cluster file. If more than this many matches are
         // included in the complete cluster diagram, then the complete diagram will be split across multiple files.
         // Each file will include as many columns as matches specified here, plus a small number of additional
-        // header columns at the start of each row. This is necessarily because while Excel supports up to 16384 columns,
+        // header columns at the start of each row. This option is necessary because while Excel supports up to 16384 columns,
         // other spreadsheet programs such as Google Sheets or Open Office support only 1024 or even as few as 256 columns.
         private int _maxMatchesPerClusterFile;
         public int MaxMatchesPerClusterFile

@@ -246,7 +246,9 @@ namespace AncestryDnaClustering.ViewModels
                 if (!string.IsNullOrEmpty(SimilarityBasisIds))
                 {
                     var testIdsAsBasis = new HashSet<string>(Regex.Split(SimilarityBasisIds, @"[^a-zA-Z0-9-]+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
-                    var indexesAsBasis = new HashSet<int>(clusterableMatches.Where(match => testIdsAsBasis.Contains(match.Match.TestGuid)).Select(match => match.Index));
+                    var indexesAsBasis = testIdsAsBasis.Count() == 1
+                        ? new HashSet<int>(clusterableMatches.First(match => match.Match.TestGuid == testIdsAsBasis.First()).Coords)
+                        : new HashSet<int>(clusterableMatches.Where(match => testIdsAsBasis.Contains(match.Match.TestGuid)).Select(match => match.Index));
                     await SimilarityFinder.FindClosestBySimilarityAsync(clusterableMatches, indexesAsBasis, getSimilarityWriter);
                 }
                 else
