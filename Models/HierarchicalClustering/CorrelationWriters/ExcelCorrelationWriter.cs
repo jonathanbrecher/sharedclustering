@@ -23,17 +23,18 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
         private readonly int _minClusterSize;
         private readonly ProgressData _progressData;
 
-        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, string ancestryHostName, int minClusterSize, ProgressData progressData)
+        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, string ancestryHostName, int minClusterSize, int maxMatchesPerClusterFile, ProgressData progressData)
         {
             _correlationFilename = correlationFilename;
             _testTakerTestId = testTakerTestId;
             _ancestryHostName = ancestryHostName;
             _minClusterSize = minClusterSize;
+            MaxMatchesPerClusterFile = maxMatchesPerClusterFile;
             _progressData = progressData;
         }
 
         public int MaxColumns => 16000;
-        public int MaxColumnsPerSplit => 10000;
+        public int MaxMatchesPerClusterFile { get; }
 
         public async Task<List<string>> OutputCorrelationAsync(List<ClusterNode> nodes, Dictionary<int, IClusterableMatch> matchesByIndex, Dictionary<int, int> indexClusterNumbers)
         {
@@ -55,7 +56,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             var numOutputFiles = 1;
             if (leafNodes.Count > MaxColumns)
             {
-                numOutputFiles = (leafNodes.Count - 1) / MaxColumnsPerSplit + 1;
+                numOutputFiles = (leafNodes.Count - 1) / MaxMatchesPerClusterFile + 1;
             }
 
             _progressData.Reset("Saving clusters", leafNodes.Count * numOutputFiles);
@@ -132,7 +133,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         var firstMatrixDataColumn = col;
 
                         // Column headers for each match
-                        var matchColumns = nonDistantMatches.Skip(fileNum * MaxColumnsPerSplit).Take(MaxColumnsPerSplit).ToList();
+                        var matchColumns = nonDistantMatches.Skip(fileNum * MaxMatchesPerClusterFile).Take(MaxMatchesPerClusterFile).ToList();
                         foreach (var nonDistantMatch in matchColumns)
                         {
                             ws.Cells[row, col++].Value = nonDistantMatch.Match.Name;
@@ -151,7 +152,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             // Correlation data
                             foreach (var coordAndIndex in leafNode.GetCoordsArray(orderedIndexes)
                                 .Zip(orderedIndexes, (c, i) => new { Coord = c, Index = i })
-                                .Skip(fileNum * MaxColumnsPerSplit).Take(MaxColumnsPerSplit))
+                                .Skip(fileNum * MaxMatchesPerClusterFile).Take(MaxMatchesPerClusterFile))
                             {
                                 if (coordAndIndex.Coord != 0)
                                 {

@@ -43,6 +43,7 @@ namespace AncestryDnaClustering.ViewModels
             Filename = Settings.Default.Filename;
             MinCentimorgansToCluster = Settings.Default.MinCentimorgansToCluster;
             MinCentimorgansInSharedMatches = Settings.Default.MinCentimorgansInSharedMatches;
+            MaxMatchesPerClusterFile = Settings.Default.MaxMatchesPerClusterFile;
             MaxGrayPercentage = Settings.Default.MaxGrayPercentage;
             FilterToGuids = Settings.Default.FilterToGuids;
             AncestryHostName = Settings.Default.AncestryHostName;
@@ -154,6 +155,24 @@ namespace AncestryDnaClustering.ViewModels
                     ClusterTypeVeryClose = (MinCentimorgansToCluster == 90 && MinCentimorgansInSharedMatches == 90);
                     ClusterTypeOver20 = (MinCentimorgansToCluster == 20 && MinCentimorgansInSharedMatches == 20);
                     ClusterTypeComplete = (MinCentimorgansToCluster <= 6 && MinCentimorgansInSharedMatches <= 6);
+                }
+            }
+        }
+
+        // The maximum number of matches included per cluster file. If more than this many matches are
+        // included in the complete cluster diagram, then the complete diagram will be split across multiple files.
+        // Each file will include as many columns as matches specified here, plus a small number of additional
+        // header columns at the start of each row. This is necessarily because while Excel supports up to 16384 columns,
+        // other spreadsheet programs such as Google Sheets or Open Office support only 1024 or even as few as 256 columns.
+        private int _maxMatchesPerClusterFile;
+        public int MaxMatchesPerClusterFile
+        {
+            get => _maxMatchesPerClusterFile;
+            set
+            {
+                if (SetFieldValue(ref _maxMatchesPerClusterFile, value, nameof(MaxMatchesPerClusterFile)))
+                {
+                    Settings.Default.MaxMatchesPerClusterFile = MaxMatchesPerClusterFile;
                 }
             }
         }
@@ -348,7 +367,7 @@ namespace AncestryDnaClustering.ViewModels
                     _ => new OverlapWeightedEuclideanDistanceSquared(),
                     new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
                     new HalfMatchPrimaryClusterFinder(),
-                    new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, AncestryHostName, _minClusterSize, ProgressData),
+                    new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, AncestryHostName, _minClusterSize, MaxMatchesPerClusterFile, ProgressData),
                     ProgressData);
                 var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 

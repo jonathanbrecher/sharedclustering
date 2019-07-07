@@ -466,5 +466,17 @@ namespace AncestryDnaClustering.Properties {
                 this["AncestryHostName"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10000")]
+        public int MaxMatchesPerClusterFile {
+            get {
+                return ((int)(this["MaxMatchesPerClusterFile"]));
+            }
+            set {
+                this["MaxMatchesPerClusterFile"] = value;
+            }
+        }
     }
 }

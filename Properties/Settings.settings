@@ -113,5 +113,8 @@
     <Setting Name="AncestryHostName" Type="System.String" Scope="User">
       <Value Profile="(Default)">www.ancestry.com</Value>
     </Setting>
+    <Setting Name="MaxMatchesPerClusterFile" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">10000</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
