@@ -8,8 +8,8 @@ namespace AncestryDnaClustering.Models
     {
         private readonly SemaphoreSlim _semaphoreInternal = new SemaphoreSlim(1);
         private readonly SemaphoreSlim _semaphore;
-        private readonly TimeSpan _timeUnit = TimeSpan.FromMilliseconds(150);
-        private readonly int _maxCountPerTimeUnit = 1;
+        private readonly TimeSpan _timeUnit = TimeSpan.FromMinutes(2.0 / 1000 * 1.1);
+        private readonly int _maxCountPerTimeUnit = 2;
         private DateTimeOffset _timeUnitStart;
         private DateTimeOffset _timeUnitEnd;
         private int _countThisTimeUnit;
@@ -42,6 +42,7 @@ namespace AncestryDnaClustering.Models
                         await Task.Delay(delay);
                     }
                     ResetTimeUnit();
+                    _countThisTimeUnit = 1;
                 }
             }
             finally

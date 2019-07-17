@@ -22,11 +22,11 @@ namespace AncestryDnaClustering.Models
         {
             foreach (var query in new[] { $"{{\"password\":\"{password}\",\"username\":\"{username}\"}}", $"username={username}&password={password}" })
             {
-                var queryString = new StringContent(query);
-                queryString.Headers.ContentType = new MediaTypeHeaderValue(query[0] == '{' ? "application/json" : "application/x-www-form-urlencoded");
-
                 foreach (var url in new[] { "account/signin/frame/authenticate", "account/signin" })
                 {
+                    var queryString = new StringContent(query);
+                    queryString.Headers.ContentType = new MediaTypeHeaderValue(query[0] == '{' ? "application/json" : "application/x-www-form-urlencoded");
+
                     if (await LoginAsync(url, queryString))
                     {
                         foreach (Cookie cookie in _cookies.GetCookies(new Uri("https://www.ancestry.com")))

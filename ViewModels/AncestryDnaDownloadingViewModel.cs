@@ -230,9 +230,15 @@ namespace AncestryDnaClustering.ViewModels
 
             try
             {
-                Tests = (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password)) 
-                    ? await _testsRetriever.GetTestsAsync()
-                    : null;
+                if (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password))
+                {
+                    Tests = await _testsRetriever.GetTestsAsync();
+                }
+                else
+                {
+                    MessageBox.Show($"Unable to sign in to Ancestry", "Sign in failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Tests = null;
+                }
             }
             catch (Exception ex)
             {
