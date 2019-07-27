@@ -45,7 +45,11 @@ namespace AncestryDnaClustering.ViewModels
             var matches = clusterableMatches.Where(match => _toExtend.Contains(match.Match.TestGuid)).ToList();
 
             // Make sure there are no more than 100 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
-            var throttle = new Throttle(10);
+            var throttle = new Throttle(100);
+
+            // Don't process more than 50 matches at once. This lets the matches finish processing completely
+            // rather than opening requests for all of the matches at onces.
+            var matchThrottle = new Throttle(50);
 
             // Now download the shared matches for each match.
             // This takes much longer than downloading the list of matches themselves..
@@ -55,10 +59,9 @@ namespace AncestryDnaClustering.ViewModels
 
             var icwTasks = matches.Select(async match =>
             {
-                var result = await _matchesRetriever.GetMatchesInCommonAsync(guid, match.Match, 6, throttle, match.Index, _progressData);
-                var coords = new HashSet<int>(result.Keys
-                    .Where(testGuid => matchIndexes.ContainsKey(testGuid))
-                    .Select(testGuid => matchIndexes[testGuid]))
+                await matchThrottle.WaitAsync();
+                var result = await _matchesRetriever.GetMatchesInCommonAsync(guid, match.Match, 6, throttle, match.Index, matchIndexes, _progressData);
+                var coords = new HashSet<int>(result)
                 {
                     match.Index
                 };

@@ -29,7 +29,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             _testTakerTestId = testTakerTestId;
             _ancestryHostName = ancestryHostName;
             _minClusterSize = minClusterSize;
-            MaxMatchesPerClusterFile = maxMatchesPerClusterFile;
+            MaxMatchesPerClusterFile = Math.Min(MaxColumns, maxMatchesPerClusterFile);
             _progressData = progressData;
         }
 
@@ -54,7 +54,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             // Excel has a limit of 16,384 columns.
             // If there are more than 16,000 matches, split into files containing at most 10,000 columns.
             var numOutputFiles = 1;
-            if (leafNodes.Count > MaxColumns)
+            if (leafNodes.Count > MaxMatchesPerClusterFile)
             {
                 numOutputFiles = (leafNodes.Count - 1) / MaxMatchesPerClusterFile + 1;
             }

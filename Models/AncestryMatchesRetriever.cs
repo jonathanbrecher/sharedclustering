@@ -236,14 +236,19 @@ namespace AncestryDnaClustering.Models
             return matches;
         }
 
-        public async Task<Dictionary<string, string>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, Throttle throttle, int index, ProgressData progressData)
+        public async Task<List<int>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, Throttle throttle, int index, Dictionary<string, int> matchIndexes, ProgressData progressData)
         {
             // Retrieve the matches.
             var matches = await GetRawMatchesInCommonAsync(guid, match.TestGuid, minSharedCentimorgans, throttle);
             var result = matches.GroupBy(m => m.TestGuid).ToDictionary(g => g.Key, g => g.First().TestGuid);
 
             progressData.Increment();
-            return result;
+            return result.Keys
+                .Select(matchName =>
+                    matchIndexes.TryGetValue(matchName, out var matchIndex) ? matchIndex : (int?)null).Where(i => i != null)
+                        .Select(i => i.Value)
+                        .Concat(new[] { matchIndexes[match.TestGuid] })
+                        .ToList();
         }
 
         private async Task<(IEnumerable<Match>, bool)> GetMatchesInCommonPageAsync(string guid, string guidInCommon, int pageNumber, Throttle throttle)

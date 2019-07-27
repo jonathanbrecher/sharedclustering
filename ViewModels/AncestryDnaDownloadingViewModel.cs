@@ -371,30 +371,34 @@ namespace AncestryDnaClustering.ViewModels
                 // This takes much longer than downloading the list of matches themselves..
                 ProgressData.Reset($"Downloading shared matches for {matches.Count} matches...", matches.Count);
 
+                // Don't process more than 50 matches at once. This lets the matches finish processing completely
+                // rather than opening requests for all of the matches at onces.
+                var matchThrottle = new Throttle(50);
+
                 var counter = 0;
 
-                var icwDictionary = matches.ToDictionary(
+                var icwTasksDictionary = matches.ToDictionary(
                     match => match.TestGuid,
-                    match =>
+                    async match =>
                     {
-                        var index = Interlocked.Increment(ref counter);
-                        var result = _matchesRetriever.GetMatchesInCommonAsync(guid, match, MinSharedMatchesCentimorgansToRetrieve, throttle, index, ProgressData);
-                        return result;
+                        await matchThrottle.WaitAsync();
+
+                        try
+                        {
+                            var index = Interlocked.Increment(ref counter);
+                            return await _matchesRetriever.GetMatchesInCommonAsync(guid, match, MinSharedMatchesCentimorgansToRetrieve, throttle, index, matchIndexes, ProgressData);
+                        }
+                        finally
+                        {
+                            matchThrottle.Release();
+                        }
                     });
-                await Task.WhenAll(icwDictionary.Values);
+                await Task.WhenAll(icwTasksDictionary.Values);
 
                 // Save the downloaded data to disk.
                 ProgressData.Reset("Saving data...");
 
-                var icw = icwDictionary.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Result.Keys
-                        .Select(matchName =>
-                            matchIndexes.TryGetValue(matchName, out var matchIndex) ? matchIndex : (int?)null).Where(index => index != null)
-                                .Select(index => index.Value)
-                                .Concat(new[] { matchIndexes[kvp.Key] })
-                                .ToList()
-                            );
+                var icw = icwTasksDictionary.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Result);
 
                 var output = new Serialized { TestTakerTestId = guid, Matches = matches, MatchIndexes = matchIndexes, Icw = icw };
                 FileUtils.WriteAsJson(fileName, output, false);
@@ -404,8 +408,9 @@ namespace AncestryDnaClustering.ViewModels
                 var averageSharedMatches = matchesWithSharedMatches.Sum(match => match.Value.Count - 1) / (double)matchesWithSharedMatches.Count;
                 ProgressData.Reset(DateTime.Now - startTime, $"Done. Downloaded {matches.Count} matches ({matchesWithSharedMatches.Count} with shared matches, averaging {averageSharedMatches:0.#} shared matches)");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                FileUtils.LogException(ex, true);
                 ProgressData.Reset();
             }
             finally
