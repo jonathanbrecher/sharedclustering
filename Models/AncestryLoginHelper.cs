@@ -20,20 +20,26 @@ namespace AncestryDnaClustering.Models
 
         public async Task<bool> LoginAsync(string username, string password)
         {
-            foreach (var query in new[] { $"{{\"password\":\"{password}\",\"username\":\"{username}\"}}", $"username={username}&password={password}" })
+            foreach (var expect100Continue in new[] { false, true })
             {
-                foreach (var url in new[] { "account/signin/frame/authenticate", "account/signin" })
-                {
-                    var queryString = new StringContent(query);
-                    queryString.Headers.ContentType = new MediaTypeHeaderValue(query[0] == '{' ? "application/json" : "application/x-www-form-urlencoded");
+                // The default value of True "should" be right
+                ServicePointManager.Expect100Continue = expect100Continue;
 
-                    if (await LoginAsync(url, queryString))
+                foreach (var query in new[] { $"{{\"password\":\"{password}\",\"username\":\"{username}\"}}"/*, $"username={username}&password={password}"*/ })
+                {
+                    foreach (var url in new[] { "account/signin/frame/authenticate", "account/signin" })
                     {
-                        foreach (Cookie cookie in _cookies.GetCookies(new Uri("https://www.ancestry.com")))
+                        var queryString = new StringContent(query);
+                        queryString.Headers.ContentType = new MediaTypeHeaderValue(query[0] == '{' ? "application/json" : "application/x-www-form-urlencoded");
+
+                        if (await LoginAsync(url, queryString))
                         {
-                            _cookies.Add(new Uri("https://www.ancestry.com"), new Cookie(cookie.Name, cookie.Value, cookie.Path, "ancestry.com"));
+                            foreach (Cookie cookie in _cookies.GetCookies(new Uri("https://www.ancestry.com")))
+                            {
+                                _cookies.Add(new Uri("https://www.ancestry.com"), new Cookie(cookie.Name, cookie.Value, cookie.Path, "ancestry.com"));
+                            }
+                            return true;
                         }
-                        return true;
                     }
                 }
             }
@@ -49,9 +55,9 @@ namespace AncestryDnaClustering.Models
                 {
                     return false;
                 }
-                loginResponse.EnsureSuccessStatusCode();
                 try
                 {
+                    loginResponse.EnsureSuccessStatusCode();
                     var result = await loginResponse.Content.ReadAsAsync<LoginResult>();
                     if (result.Status == "invalidCredentials")
                     {
