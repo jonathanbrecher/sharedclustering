@@ -60,7 +60,7 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
 
         public string Save()
         {
-            FileUtils.WriteAllLines(_fileName, _stringBuilder.ToString(), false);
+            FileUtils.WriteAllLines(_fileName, _stringBuilder.ToString(), false, false);
             return _fileName;
         }
     }

@@ -60,13 +60,23 @@ namespace AncestryDnaClustering.Models
             }
         }
 
-        public static void WriteAllLines(string fileName, string lines, bool doThrow)
+        public static void WriteAllLines(string fileName, string lines, bool append, bool doThrow)
         {
             while (true)
             {
                 try
                 {
-                    File.WriteAllText(fileName, lines);
+                    string prefix = string.Empty;
+                    try
+                    {
+                        if (append)
+                        {
+                            prefix = File.ReadAllText(fileName) + Environment.NewLine + "---" + Environment.NewLine;
+                        }
+                    }
+                    catch (Exception) { }
+
+                    File.WriteAllText(fileName, prefix + lines);
                     return;
                 }
                 catch (Exception ex)
@@ -147,7 +157,7 @@ namespace AncestryDnaClustering.Models
                 try
                 {
                     var json = JsonConvert.SerializeObject(data);
-                    WriteAllLines(fileName, json, true);
+                    WriteAllLines(fileName, json, false, true);
                     return;
                 }
                 catch (Exception ex)
@@ -210,10 +220,15 @@ namespace AncestryDnaClustering.Models
                 MessageBoxImage.Warning) == MessageBoxResult.Yes;
         }
 
+        private static DateTimeOffset _lastExceptionTime = DateTimeOffset.MinValue;
+
         public static void LogException(Exception ex, bool showMessage)
         {
             var logfile = Path.Combine(Path.GetTempPath(), "SharedClusteringLog.txt");
-            WriteAllLines(logfile, ex?.ToString(), false);
+            var append = DateTimeOffset.Now < _lastExceptionTime + TimeSpan.FromMinutes(1);
+            WriteAllLines(logfile, ex?.ToString(), append, false);
+            _lastExceptionTime = DateTimeOffset.Now;
+
             if (!showMessage)
             {
                 return;

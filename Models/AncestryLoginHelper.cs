@@ -74,14 +74,6 @@ namespace AncestryDnaClustering.Models
             return true;
         }
 
-        private bool LoginFailure()
-        {
-            MessageBox.Show("Invalid username or password" +
-                $"{Environment.NewLine}{Environment.NewLine}" +
-                "Your username or password is incorrect. Please try again.", "Invalid username or password", MessageBoxButton.OK, MessageBoxImage.Error);
-            return false;
-        }
-
         private class LoginResult
         {
             public string Status { get; set; }
