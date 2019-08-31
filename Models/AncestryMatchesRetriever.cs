@@ -199,7 +199,8 @@ namespace AncestryDnaClustering.Models
                 {
                     if (++retryCount >= retryMax)
                     {
-                        throw;
+                        FileUtils.LogException(ex, true);
+                        return Enumerable.Empty<Match>();
                     }
                     await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                 }
@@ -312,7 +313,8 @@ namespace AncestryDnaClustering.Models
                 {
                     if (++retryCount >= retryMax)
                     {
-                        throw;
+                        FileUtils.LogException(ex, true);
+                        return (Enumerable.Empty<Match>(), false);
                     }
                     await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                 }
@@ -398,8 +400,9 @@ namespace AncestryDnaClustering.Models
                             if (matchesDictionary.TryGetValue(treeInfo.TestGuid, out var match))
                             {
                                 match.TreeSize = treeInfo.TreeSize ?? 0;
-                                match.TreeType = treeInfo.UnlinkedTree == true ? TreeType.Unlinked
-                                    : treeInfo.PrivateTree == true ? TreeType.Private
+                                match.TreeType = 
+                                      treeInfo.PrivateTree == true ? TreeType.Private // might also be unlinked
+                                    : treeInfo.UnlinkedTree == true ? TreeType.Unlinked
                                     : treeInfo.PublicTree == true && match.TreeSize > 0 ? TreeType.Public
                                     : treeInfo.NoTrees == true ? TreeType.None
                                     : TreeType.Undetermined;
