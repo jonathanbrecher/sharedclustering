@@ -257,7 +257,7 @@ namespace AncestryDnaClustering.ViewModels
                             .GroupBy(coord => coord)
                             .Where(g => g.Count() >= matchesAsBasis.Count / 2 && clusterableMatches.First(clusterableMatch => clusterableMatch.Index == g.Key).Match.SharedCentimorgans < 600)
                             .Select(g => g.Key)
-                        : matchesAsBasis.Count() == 1 
+                        : matchesAsBasis.Count() == 1  && testIdsAsBasis.Count() == 1
                         ? matchesAsBasis.First().Coords 
                         : matchesAsBasis.Select(match => match.Index));
                     await SimilarityFinder.FindClosestBySimilarityAsync(clusterableMatches, indexesAsBasis, getSimilarityWriter);

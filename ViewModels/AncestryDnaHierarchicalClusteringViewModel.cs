@@ -41,8 +41,8 @@ namespace AncestryDnaClustering.ViewModels
 
             MinClusterSize = Settings.Default.MinClusterSize;
             Filename = Settings.Default.Filename;
-            MinCentimorgansToCluster = Settings.Default.MinCentimorgansToCluster;
             MinCentimorgansInSharedMatches = Settings.Default.MinCentimorgansInSharedMatches;
+            MinCentimorgansToCluster = Settings.Default.MinCentimorgansToCluster;
             MaxMatchesPerClusterFile = Settings.Default.MaxMatchesPerClusterFile;
             MaxGrayPercentage = Settings.Default.MaxGrayPercentage;
             FilterToGuids = Settings.Default.FilterToGuids;
@@ -349,7 +349,11 @@ namespace AncestryDnaClustering.ViewModels
 
                 var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
                 var clusterableCoords = clusterableMatches
-                    .SelectMany(match => match.Coords.Where(coord => coord != match.Index))
+                    .Where(match => match.Match.SharedCentimorgans >= MinCentimorgansToCluster 
+                        && (testIdsToFilter.Count == 0 || testIdsToFilter.Contains(match.Match.TestGuid)))
+                    .SelectMany(match => testIdsToFilter.Count == 0
+                        ? match.Coords.Where(coord => coord != match.Index)
+                        : new[] { match.Index })
                     .Distinct()
                     .Where(coord => matchesByIndex.ContainsKey(coord))
                     .ToList();
