@@ -60,7 +60,7 @@ namespace AncestryDnaClustering.ViewModels
             var icwTasks = matches.Select(async match =>
             {
                 await matchThrottle.WaitAsync();
-                var result = await _matchesRetriever.GetMatchesInCommonAsync(guid, match.Match, 6, throttle, match.Index, matchIndexes, _progressData);
+                var result = await _matchesRetriever.GetMatchesInCommonAsync(guid, match.Match, 6, throttle, matchIndexes, _progressData);
                 var coords = new HashSet<int>(result)
                 {
                     match.Index

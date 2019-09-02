@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Deployment.Application;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Windows.Input;
+using AncestryDnaClustering.Models;
 using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
 
@@ -14,6 +18,17 @@ namespace AncestryDnaClustering.ViewModels
     {
         public AncestryDnaToolsViewModel()
         {
+            // Ancestry's security works by setting some cookies in the browser when someone signs in.
+            // The CookieContainer captures those cookies when they are set, and adds them to subsequent requests.
+            var cookies = new CookieContainer();
+            var handler = new HttpClientHandler { CookieContainer = cookies };
+            var ancestryClient = new HttpClient(handler) { BaseAddress = new Uri("https://www.ancestry.com"), Timeout = TimeSpan.FromMinutes(5) };
+
+            var loginHelper = new AncestryLoginHelper(ancestryClient, cookies);
+            var testsRetriever = new AncestryTestsRetriever(ancestryClient);
+            var matchesRetriever = new AncestryMatchesRetriever(ancestryClient);
+            var endogamyProber = new EndogamyProber(matchesRetriever);
+
             var serializedMatchesReaders = new List<ISerializedMatchesReader>
             {
                 new DnaGedcomAncestryMatchesReader(),
@@ -30,7 +45,7 @@ namespace AncestryDnaClustering.ViewModels
             Tabs = new List<object>
             {
                 new IntroductionViewModel(),
-                new AncestryDnaDownloadingViewModel(OpenInClusterTab),
+                new AncestryDnaDownloadingViewModel(loginHelper, testsRetriever, matchesRetriever, endogamyProber, OpenInClusterTab),
                 new AncestryDnaHierarchicalClusteringViewModel(matchesLoader),
                 new AncestryDnaSimilarityViewModel(matchesLoader),
             };

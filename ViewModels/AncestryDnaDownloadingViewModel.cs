@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,24 +19,26 @@ namespace AncestryDnaClustering.ViewModels
         private readonly AncestryLoginHelper _loginHelper;
         private readonly AncestryTestsRetriever _testsRetriever;
         private readonly AncestryMatchesRetriever _matchesRetriever;
+        private readonly EndogamyProber _endogamyProber;
 
         public string Header { get; } = "Download";
 
         public ProgressData ProgressData { get; } = new ProgressData();
 
-        public AncestryDnaDownloadingViewModel(Action<string> continueInClusterTab)
+        public AncestryDnaDownloadingViewModel(
+            AncestryLoginHelper loginHelper,
+            AncestryTestsRetriever testsRetriever,
+            AncestryMatchesRetriever matchesRetriever,
+            EndogamyProber endogamyProber,
+            Action<string> continueInClusterTab)
         {
-            // Ancestry's security works by setting some cookies in the browser when someone signs in.
-            // The CookieContainer captures those cookies when they are set, and adds them to subsequent requests.
-            var cookies = new CookieContainer();
-            var handler = new HttpClientHandler { CookieContainer = cookies };
-            var ancestryClient = new HttpClient(handler) { BaseAddress = new Uri("https://www.ancestry.com"), Timeout = TimeSpan.FromMinutes(5) };
-
-            _loginHelper = new AncestryLoginHelper(ancestryClient, cookies);
-            _testsRetriever = new AncestryTestsRetriever(ancestryClient);
-            _matchesRetriever = new AncestryMatchesRetriever(ancestryClient);
+            _loginHelper = loginHelper;
+            _testsRetriever = testsRetriever;
+            _matchesRetriever = matchesRetriever;
+            _endogamyProber = endogamyProber;
 
             SignInCommand = new RelayCommand<PasswordBox>(async password => await SignInAsync(password));
+            CheckEndogamyCommand = new RelayCommand(async () => await CheckEndogamyAsync());
             GetDnaMatchesCommand = new RelayCommand(async () => await GetDnaMatchesAsync());
             ContinueInClusterTabCommand = new RelayCommand(() => continueInClusterTab(LastFileDownloaded));
 
@@ -54,6 +54,7 @@ namespace AncestryDnaClustering.ViewModels
 
         public ICommand SignInCommand { get; }
         public ICommand GetDnaMatchesCommand { get; }
+        public ICommand CheckEndogamyCommand { get; }
         public ICommand ContinueInClusterTabCommand { get; }
 
         // The user name for the account to use. This value is saved and will be restored when the application is relaunched.
@@ -116,6 +117,7 @@ namespace AncestryDnaClustering.ViewModels
                 {
                     Settings.Default.SelectedTestId = SelectedTest.Key;
                     CheckCanGetDnaMatches();
+                    CheckCanCheckEndogamy();
 
                     // When the selected test is changed, for convenience report the number of matches in that test.
                     // Stop any previous task that was downloading match counts from a previous test.
@@ -136,6 +138,7 @@ namespace AncestryDnaClustering.ViewModels
                 MatchCounts = null;
                 _matchCountsData = await _matchesRetriever.GetMatchCounts(guid);
                 CheckCanGetDnaMatches();
+                CheckCanCheckEndogamy();
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     MatchCounts = $"{_matchCountsData.ThirdCousins} third cousins, {_matchCountsData.FourthCousins} fourth cousins, {_matchCountsData.TotalMatches} total matches";
@@ -314,6 +317,32 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
+        private bool _canCheckEndogamy;
+        public bool CanCheckEndogamy
+        {
+            get => _canCheckEndogamy;
+            set => SetFieldValue(ref _canCheckEndogamy, value, nameof(CanCheckEndogamy));
+        }
+
+        private bool CheckCanCheckEndogamy() => CanCheckEndogamy = Tests?.Count > 0 && _matchCountsData?.TotalMatches > 0;
+
+        private async Task CheckEndogamyAsync()
+        {
+            try
+            {
+                CanCheckEndogamy = false;
+                Mouse.OverrideCursor = Cursors.Wait;
+                var throttle = new Throttle(50);
+                var numMatchesToTest = 10;
+                await _endogamyProber.ProbeAsync(SelectedTest.Key, SelectedTest.Value, _matchCountsData.FourthCousins, numMatchesToTest, throttle, ProgressData.SuppressProgress);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+                CheckCanCheckEndogamy();
+            }
+        }
+
         private async Task GetDnaMatchesAsync()
         {
             Settings.Default.Save();
@@ -386,7 +415,7 @@ namespace AncestryDnaClustering.ViewModels
                         try
                         {
                             var index = Interlocked.Increment(ref counter);
-                            return await _matchesRetriever.GetMatchesInCommonAsync(guid, match, MinSharedMatchesCentimorgansToRetrieve, throttle, index, matchIndexes, ProgressData);
+                            return await _matchesRetriever.GetMatchesInCommonAsync(guid, match, MinSharedMatchesCentimorgansToRetrieve, throttle, matchIndexes, ProgressData);
                         }
                         finally
                         {

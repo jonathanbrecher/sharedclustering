@@ -11,7 +11,7 @@ namespace AncestryDnaClustering.Models
     public class AncestryMatchesRetriever
     {
         HttpClient _dnaHomeClient;
-        const int _matchesPerPage = 100;
+        public int MatchesPerPage { get; } = 200;
 
         public AncestryMatchesRetriever(HttpClient dnaHomeClient)
         {
@@ -27,7 +27,7 @@ namespace AncestryDnaClustering.Models
                 try
                 {
                     var startPage = 1;
-                    var numPages = (numMatches + _matchesPerPage) / _matchesPerPage - startPage + 1;
+                    var numPages = (numMatches + MatchesPerPage) / MatchesPerPage - startPage + 1;
 
                     progressData.Reset("Downloading matches...", numPages * 2);
 
@@ -134,10 +134,10 @@ namespace AncestryDnaClustering.Models
                 }
             }
 
-            return (midPage - 1) * _matchesPerPage + pageMatches.Count(match => criteria(match));
+            return (midPage - 1) * MatchesPerPage + pageMatches.Count(match => criteria(match));
         }
 
-        private async Task<IEnumerable<Match>> GetMatchesPageAsync(string guid, int pageNumber, bool includeTreeInfo, Throttle throttle, ProgressData progressData)
+        public async Task<IEnumerable<Match>> GetMatchesPageAsync(string guid, int pageNumber, bool includeTreeInfo, Throttle throttle, ProgressData progressData)
         {
             var nameUnavailableCount = 0;
             var nameUnavailableMax = 60;
@@ -214,11 +214,10 @@ namespace AncestryDnaClustering.Models
             }
         }
 
-        private async Task<List<Match>> GetRawMatchesInCommonAsync(string guid, string guidInCommon, double minSharedCentimorgans, Throttle throttle)
+        public async Task<List<Match>> GetRawMatchesInCommonAsync(string guid, string guidInCommon, int maxPage, double minSharedCentimorgans, Throttle throttle)
         {
             var matches = new List<Match>();
-            const int maxPage = 10000;
-            for (var pageNumber = 1; pageNumber < maxPage; ++pageNumber)
+            for (var pageNumber = 1; pageNumber <= maxPage; ++pageNumber)
             {
                 var originalCount = matches.Count;
                 var (pageMatches, moreMatchesAvailable) = await GetMatchesInCommonPageAsync(guid, guidInCommon, pageNumber, throttle);
@@ -229,7 +228,7 @@ namespace AncestryDnaClustering.Models
                 if (!moreMatchesAvailable
                     || originalCount == matches.Count 
                     || matches.Last().SharedCentimorgans < minSharedCentimorgans
-                    || matches.Count < _matchesPerPage)
+                    || matches.Count < MatchesPerPage)
                 {
                     break;
                 }
@@ -237,10 +236,11 @@ namespace AncestryDnaClustering.Models
             return matches;
         }
 
-        public async Task<List<int>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, Throttle throttle, int index, Dictionary<string, int> matchIndexes, ProgressData progressData)
+        public async Task<List<int>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, Throttle throttle, Dictionary<string, int> matchIndexes, ProgressData progressData)
         {
             // Retrieve the matches.
-            var matches = await GetRawMatchesInCommonAsync(guid, match.TestGuid, minSharedCentimorgans, throttle);
+            const int maxPage = 10000;
+            var matches = await GetRawMatchesInCommonAsync(guid, match.TestGuid, maxPage, minSharedCentimorgans, throttle);
             var result = matches.GroupBy(m => m.TestGuid).ToDictionary(g => g.Key, g => g.First().TestGuid);
 
             progressData.Increment();

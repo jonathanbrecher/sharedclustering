@@ -30,6 +30,8 @@
                     <ColumnDefinition MaxWidth="240"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry user name: "/>
@@ -50,7 +52,7 @@
                           ItemsSource="{Binding Tests}"
                           SelectedItem="{Binding SelectedTest}"
                           DisplayMemberPath="Key"/>
-                <TextBlock Grid.Row="4" Grid.Column="4" VerticalAlignment="Center" Text="{Binding MatchCounts}"/>
+                <TextBlock Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="3" VerticalAlignment="Center" Text="{Binding MatchCounts}"/>
 
                 <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Top" Text="Download completeness: "/>
                 <RadioButton Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
@@ -86,6 +88,11 @@
                         </TextBlock>
                     </RadioButton.Content>
                 </RadioButton>
+                <Button Grid.Row="10" Grid.Column="6"
+                    Height="23" Width="120"
+                    Content="Check endogamy" 
+                    Command="{Binding CheckEndogamyCommand}"
+                    IsEnabled="{Binding CanCheckEndogamy}"/>
                 </Grid>
 
             <Expander Margin="10"
@@ -105,7 +112,7 @@
                     <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans to retrieve: "/>
                     <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding MinCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
                     <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans of shared matches: "/>
-                        <TextBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding MinSharedMatchesCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                    <TextBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding MinSharedMatchesCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
                 </Grid>
             </Expander>
 

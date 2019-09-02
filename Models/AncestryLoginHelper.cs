@@ -36,7 +36,7 @@ namespace AncestryDnaClustering.Models
                         {
                             foreach (Cookie cookie in _cookies.GetCookies(new Uri("https://www.ancestry.com")))
                             {
-                                _cookies.Add(new Uri("https://www.ancestry.com"), new Cookie(cookie.Name, cookie.Value, cookie.Path, "ancestry.com"));
+                                _cookies.Add(new Uri("https://www.ancestry.com"), new Cookie(cookie.Name, cookie.Value, cookie.Path, ".ancestry.com"));
                             }
                             return true;
                         }
