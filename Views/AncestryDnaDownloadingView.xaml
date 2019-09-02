@@ -141,15 +141,23 @@
                         Content="Get DNA Matches" 
                         Command="{Binding GetDnaMatchesCommand}"
                         IsEnabled="{Binding CanGetDnaMatches}"/>
-                <StackPanel Grid.Row="8" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center"
-                            Visibility="{Binding ContinueInClusterTabVisible, Converter={StaticResource BooleanToVisibility}}">
-                    <TextBlock VerticalAlignment="Center" Text="Last file downloaded:"/>
-                    <TextBox Margin="10,0,0,0" IsReadOnly="True" Background="Transparent" BorderThickness="0" VerticalAlignment="Center"
+                <Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center"
+                        Visibility="{Binding ContinueInClusterTabVisible, Converter={StaticResource BooleanToVisibility}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="Last file downloaded:"/>
+                    <TextBox Grid.Column="2" IsReadOnly="True" Background="Transparent" BorderThickness="0" VerticalAlignment="Center"
+                             TextWrapping="Wrap"
                              Text="{Binding LastFileDownloaded}"/>
-                    <Button Height="23" Width="150" Margin="10,0,0,0"
+                    <Button Grid.Column="4" Height="23" Width="150"
                             Content="Continue in Cluster tab" 
                             Command="{Binding ContinueInClusterTabCommand}"/>
-                </StackPanel>
+                </Grid>
             </Grid>
         </StackPanel>
         <!--<Rectangle Fill="Black" Opacity="0.25"/>
