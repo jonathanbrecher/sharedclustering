@@ -229,7 +229,7 @@ namespace AncestryDnaClustering.Models
             WriteAllLines(logfile, ex?.ToString(), append, false);
             _lastExceptionTime = DateTimeOffset.Now;
 
-            if (!showMessage)
+            if (append || !showMessage)
             {
                 return;
             }

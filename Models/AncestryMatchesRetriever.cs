@@ -200,6 +200,7 @@ namespace AncestryDnaClustering.Models
                     if (++retryCount >= retryMax)
                     {
                         FileUtils.LogException(ex, true);
+                        await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                         return Enumerable.Empty<Match>();
                     }
                     await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
@@ -314,6 +315,7 @@ namespace AncestryDnaClustering.Models
                     if (++retryCount >= retryMax)
                     {
                         FileUtils.LogException(ex, true);
+                        await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                         return (Enumerable.Empty<Match>(), false);
                     }
                     await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
