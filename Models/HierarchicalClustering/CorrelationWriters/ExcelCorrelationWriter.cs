@@ -51,16 +51,6 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             // All nodes, in order. These will become rows/columns in the Excel file.
             var leafNodes = nodes.First().GetOrderedLeafNodes().ToList();
 
-            // Excel has a limit of 16,384 columns.
-            // If there are more than 16,000 matches, split into files containing at most 10,000 columns.
-            var numOutputFiles = 1;
-            if (leafNodes.Count > MaxMatchesPerClusterFile)
-            {
-                numOutputFiles = (leafNodes.Count - 1) / MaxMatchesPerClusterFile + 1;
-            }
-
-            _progressData.Reset("Saving clusters", leafNodes.Count * numOutputFiles);
-
             // Ancestry never shows matches lower than 20 cM as shared matches.
             // The distant matches will be included as rows in the Excel file, but not as columns.
             // That means that correlation diagrams that include distant matches will be rectangular (tall and narrow)
@@ -76,6 +66,16 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             var nonDistantMatches = matches
                 .Where(match => match.Match.SharedCentimorgans >= lowestClusterableCentimorgans)
                 .ToList();
+
+            // Excel has a limit of 16,384 columns.
+            // If there are more than 16,000 matches, split into files containing at most 10,000 columns.
+            var numOutputFiles = 1;
+            if (nonDistantMatches.Count > MaxMatchesPerClusterFile)
+            {
+                numOutputFiles = (nonDistantMatches.Count - 1) / MaxMatchesPerClusterFile + 1;
+            }
+
+            _progressData.Reset("Saving clusters", leafNodes.Count * numOutputFiles);
 
             var orderedIndexes = nonDistantMatches
                 .Select(match => match.Index)
