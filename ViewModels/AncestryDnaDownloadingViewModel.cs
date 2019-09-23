@@ -231,21 +231,44 @@ namespace AncestryDnaClustering.ViewModels
         {
             Settings.Default.Save();
 
+            // Try primary site, and capture error if any.
+            var errorMessage = await SignInAsync(password, "www.ancestry.com");
+            if (errorMessage == null)
+            {
+                return;
+            }
+
+            // If not able to sign into the main Ancestry site, try some backups.
+            foreach (var alternateHost in new[] { "www.ancestry.com.au", "www.ancestry.co.uk" })
+            {
+                if (await SignInAsync(password, alternateHost) == null)
+                {
+                    MessageBox.Show($"Using backup login at {alternateHost}", "Sign in success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+            }
+
+            // Show error message from primary login failure if none of the backups worked.
+            MessageBox.Show(errorMessage, "Sign in failure", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private async Task<string> SignInAsync(PasswordBox password, string hostOverride)
+        {
             try
             {
-                if (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password))
+                if (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password, hostOverride))
                 {
                     Tests = await _testsRetriever.GetTestsAsync();
+                    return null;
                 }
                 else
                 {
-                    MessageBox.Show($"Unable to sign in to Ancestry", "Sign in failure", MessageBoxButton.OK, MessageBoxImage.Error);
-                    Tests = null;
+                    return $"Unable to sign in to Ancestry";
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Unable to sign in to Ancestry {Environment.NewLine}{Environment.NewLine}{ex.Message}", "Sign in failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                return $"Unable to sign in to Ancestry {Environment.NewLine}{Environment.NewLine}{ex.Message}";
             }
         }
 

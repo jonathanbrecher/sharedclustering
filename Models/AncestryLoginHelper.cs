@@ -18,8 +18,13 @@ namespace AncestryDnaClustering.Models
             _cookies = cookies;
         }
 
-        public async Task<bool> LoginAsync(string username, string password)
+        public async Task<bool> LoginAsync(string username, string password, string hostOverride)
         {
+            if (hostOverride != null)
+            {
+                _ancestryClient.BaseAddress = new Uri($"https://{hostOverride}");
+            }
+
             foreach (var expect100Continue in new[] { false, true })
             {
                 // The default value of True "should" be right
@@ -34,10 +39,21 @@ namespace AncestryDnaClustering.Models
 
                         if (await LoginAsync(url, queryString))
                         {
-                            foreach (Cookie cookie in _cookies.GetCookies(new Uri("https://www.ancestry.com")))
+                            try
                             {
-                                _cookies.Add(new Uri("https://www.ancestry.com"), new Cookie(cookie.Name, cookie.Value, cookie.Path, ".ancestry.com"));
+                                var host = _ancestryClient.BaseAddress.Host;
+                                var uri = new Uri($"https://{host}");
+                                var domain = uri.Authority.Replace("www.", "");
+                                foreach (Cookie cookie in _cookies.GetCookies(uri))
+                                {
+                                    _cookies.Add(uri, new Cookie(cookie.Name, cookie.Value, cookie.Path, $".{domain}"));
+                                }
                             }
+                            catch (Exception)
+                            {
+                                // Not fatal if we can't copy the cookies
+                            }
+
                             return true;
                         }
                     }
