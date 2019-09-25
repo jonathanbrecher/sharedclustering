@@ -66,7 +66,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 // For the immediate family, populate the matrix based only on direct shared matches.
                 var immediateFamilyTasks = immediateFamily.Select(match => Task.Run(() =>
                 {
-                    ExtendMatrixDirect(matrix, match, maxIndex, 1.0f);
+                    ExtendMatrixDirect(matrix, match, maxIndex, maxIndex, 1.0f);
                     _progressData.Increment();
                 }));
                 await Task.WhenAll(immediateFamilyTasks);
@@ -74,7 +74,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 // For the other clusterable matches, populate the matrix based on both the direct and indirect matches.
                 var clusterableMatchesTasks = clusterableMatches.Select(match => Task.Run(() =>
                 {
-                    ExtendMatrixDirect(matrix, match, maxIndex, 1.0f);
+                    ExtendMatrixDirect(matrix, match, maxIndex, maxIndex, 1.0f);
                     ExtendMatrixIndirect(matrix, match, appearances, maxIndex);
                     _progressData.Increment();
                 }));
@@ -153,11 +153,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
 
         // A direct match is when match B appears on the shared match list of match A.
         // When the shared match list of match A contains match B, then matrix[A][B] is incremented by a given amount.
-        private static void ExtendMatrixDirect(ConcurrentDictionary<int, float[]> matrix, IClusterableMatch match, int maxIndex, float increment)
+        private static void ExtendMatrixDirect(ConcurrentDictionary<int, float[]> matrix, IClusterableMatch match, int maxIndex, int maxSharedIndex, float increment)
         {
             if (match.Index <= maxIndex)
             {
-                var row = matrix.GetOrAdd(match.Index, _ => new float[maxIndex + 1]);
+                var row = matrix.GetOrAdd(match.Index, _ => new float[maxSharedIndex + 1]);
                 foreach (var coord2 in match.Coords.Where(coord2 => coord2 < row.Length))
                 {
                     row[coord2] += increment;
@@ -170,9 +170,10 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
             List<IClusterableMatch> clusterableMatches,
             int maxIndex)
         {
+            var maxSharedIndex = matrix.Max(row => row.Value.Length) - 1;
             foreach (var match in clusterableMatches)
             {
-                ExtendMatrixDirect(matrix, match, maxIndex, 1.0f);
+                ExtendMatrixDirect(matrix, match, maxIndex, maxSharedIndex, 1.0f);
             }
         }
     }

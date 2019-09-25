@@ -21,14 +21,16 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
         private readonly string _testTakerTestId;
         private readonly string _ancestryHostName;
         private readonly int _minClusterSize;
+        private readonly double _lowestClusterableCentimorgans;
         private readonly ProgressData _progressData;
 
-        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, string ancestryHostName, int minClusterSize, int maxMatchesPerClusterFile, ProgressData progressData)
+        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, string ancestryHostName, int minClusterSize, int maxMatchesPerClusterFile, double lowestClusterableCentimorgans, ProgressData progressData)
         {
             _correlationFilename = correlationFilename;
             _testTakerTestId = testTakerTestId;
             _ancestryHostName = ancestryHostName;
             _minClusterSize = minClusterSize;
+            _lowestClusterableCentimorgans = lowestClusterableCentimorgans;
             MaxMatchesPerClusterFile = Math.Min(MaxColumns, maxMatchesPerClusterFile);
             _progressData = progressData;
         }
@@ -62,6 +64,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             var lowestClusterableCentimorgans = matches
                 .SelectMany(match => match.Coords.Where(coord => coord != match.Index && matchesByIndex.ContainsKey(coord)))
                 .Distinct()
+                .Where(coord => matchesByIndex[coord].Match.SharedCentimorgans >= _lowestClusterableCentimorgans)
                 .Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
             var nonDistantMatches = matches
                 .Where(match => match.Match.SharedCentimorgans >= lowestClusterableCentimorgans)

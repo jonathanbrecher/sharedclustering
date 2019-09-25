@@ -364,14 +364,14 @@ namespace AncestryDnaClustering.ViewModels
                     return;
                 }
 
-                var lowestClusterableCentimorgans = clusterableCoords.Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
+                var lowestClusterableCentimorgans = Math.Max(clusterableCoords.Min(coord => matchesByIndex[coord].Match.SharedCentimorgans), 20);
 
                 var hierarchicalClustering = new HierarchicalClustering(
                     MinClusterSize,
                     _ => new OverlapWeightedEuclideanDistanceSquared(),
                     new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
                     new HalfMatchPrimaryClusterFinder(),
-                    new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, AncestryHostName, _minClusterSize, MaxMatchesPerClusterFile, ProgressData),
+                    new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, AncestryHostName, _minClusterSize, MaxMatchesPerClusterFile, lowestClusterableCentimorgans, ProgressData),
                     ProgressData);
                 var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 
