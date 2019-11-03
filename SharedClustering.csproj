@@ -36,7 +36,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>58</ApplicationRevision>
+    <ApplicationRevision>59</ApplicationRevision>
     <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -116,6 +116,7 @@
     <Compile Include="Models\ColumnWriters\CountWriter.cs" />
     <Compile Include="Models\ColumnWriters\GenericObjectWriter.cs" />
     <Compile Include="Models\EndogamyProber.cs" />
+    <Compile Include="Models\HierarchicalClustering\CorrelationWriters\ExcelOutputWriter.cs" />
     <Compile Include="Models\Similarity\SimilarityFinder.cs" />
     <Compile Include="Models\Similarity\ExcelSimilarityWriter.cs" />
     <Compile Include="Models\Similarity\ISimilarityWriter.cs" />
@@ -172,6 +173,7 @@
     <Compile Include="Models\SavedData\SharedClusteringMatchesReader.cs" />
     <Compile Include="Models\SavedData\TreeType.cs" />
     <Compile Include="Models\Throttle.cs" />
+    <Compile Include="ViewModels\AncestryDnaExportViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaSimilarityViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaHierarchicalClusteringViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaDownloadingViewModel.cs" />
@@ -183,6 +185,10 @@
     <Compile Include="Views\PercentageNullZeroConverter.cs" />
     <Compile Include="Views\WatermarkAdorner.cs" />
     <Compile Include="Views\WatermarkService.cs" />
+    <Page Include="Views\AncestryDnaExportView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\AncestryDnaSimilarityView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

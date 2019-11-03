@@ -48,6 +48,7 @@ namespace AncestryDnaClustering.ViewModels
                 new AncestryDnaDownloadingViewModel(loginHelper, testsRetriever, matchesRetriever, endogamyProber, OpenInClusterTab),
                 new AncestryDnaHierarchicalClusteringViewModel(matchesLoader),
                 new AncestryDnaSimilarityViewModel(matchesLoader),
+                new AncestryDnaExportViewModel(matchesLoader),
             };
             SelectedTabIndex = Settings.Default.SelectedTabIndex;
         }

@@ -1,0 +1,60 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:viewmodels="clr-namespace:AncestryDnaClustering.ViewModels"
+                    xmlns:views="clr-namespace:AncestryDnaClustering.Views">
+
+    <DataTemplate DataType="{x:Type viewmodels:AncestryDnaExportViewModel}">
+        <StackPanel Orientation="Vertical">
+            <Grid Margin="10" HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry host name: "/>
+                <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Left" Width="250" Text="{Binding AncestryHostName}"/>
+
+            </Grid>
+
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="0"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="0"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.Resources>
+                    <views:PercentageNullZeroConverter x:Key="PercentageNullZeroConverter"/>
+                </Grid.Resources>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding ProgressData.Description}"/>
+                <ProgressBar Grid.Row="2" Grid.Column="0"
+                             HorizontalAlignment="Stretch"
+                             Maximum="{Binding ProgressData.Maximum}"
+                             Value="{Binding ProgressData.Value}"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding ProgressData.Percent, Converter={StaticResource PercentageNullZeroConverter}}" MinWidth="50"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding ProgressData.TimeLeftString}"/>
+                <Button Grid.Row="6" Grid.Column="0"
+                        Height="23" Width="220"
+                        Content="Export saved matches (no clusters)" 
+                        Command="{Binding ExportCommand}"/>
+            </Grid>
+        </StackPanel>
+    </DataTemplate>
+
+</ResourceDictionary>

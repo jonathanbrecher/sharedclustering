@@ -11,6 +11,7 @@
                 <ResourceDictionary Source="AncestryDnaDownloadingView.xaml" />
                 <ResourceDictionary Source="AncestryDnaHierarchicalClusteringView.xaml" />
                 <ResourceDictionary Source="AncestryDnaSimilarityView.xaml" />
+                <ResourceDictionary Source="AncestryDnaExportView.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
