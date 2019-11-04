@@ -110,6 +110,7 @@
     <Compile Include="Models\AncestryDnaClusteringModel.cs" />
     <Compile Include="Models\AncestryLoginHelper.cs" />
     <Compile Include="Models\AncestryMatchesRetriever.cs" />
+    <Compile Include="Models\AncestryNotesUpdater.cs" />
     <Compile Include="Models\AncestrySavedDataExtender.cs" />
     <Compile Include="Models\AncestryTestsRetriever.cs" />
     <Compile Include="Models\ColumnWriters\ColumnWritersCollection.cs" />
@@ -174,9 +175,11 @@
     <Compile Include="Models\SavedData\TreeType.cs" />
     <Compile Include="Models\Throttle.cs" />
     <Compile Include="ViewModels\AncestryDnaExportViewModel.cs" />
+    <Compile Include="ViewModels\AncestryDnaSignInViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaSimilarityViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaHierarchicalClusteringViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaDownloadingViewModel.cs" />
+    <Compile Include="ViewModels\AncestryDnaUploadNotesViewModel.cs" />
     <Compile Include="ViewModels\ObservableObject.cs" />
     <Compile Include="ViewModels\IntroductionViewModel.cs" />
     <Compile Include="ViewModels\ProgressData.cs" />
@@ -190,6 +193,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\AncestryDnaSimilarityView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\AncestryDnaUploadNotesView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

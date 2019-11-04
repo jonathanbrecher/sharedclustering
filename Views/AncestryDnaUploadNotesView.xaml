@@ -1,0 +1,94 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:viewmodels="clr-namespace:AncestryDnaClustering.ViewModels"
+                    xmlns:views="clr-namespace:AncestryDnaClustering.Views">
+
+    <DataTemplate DataType="{x:Type viewmodels:AncestryDnaUploadNotesViewModel}">
+        <Grid>
+            <Grid.Resources>
+                <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+            </Grid.Resources>
+            <StackPanel Orientation="Vertical"
+                    Grid.IsSharedSizeScope="True">
+                <Grid Margin="10" HorizontalAlignment="Stretch">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="A"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition MaxWidth="240"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry user name: "/>
+                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding SignInViewModel.AncestryUserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Password: "/>
+                    <PasswordBox Grid.Row="2" Grid.Column="2" x:Name="PasswordBox"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="Test: "/>
+                    <Button Grid.Row="0" Grid.Column="4" Grid.RowSpan="3"
+                        Height="23" Width="120"
+                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Content="Sign In" 
+                        Command="{Binding SignInViewModel.SignInCommand}"
+                        CommandParameter="{Binding ElementName=PasswordBox}"
+                        IsEnabled="{Binding SignInViewModel.CanSignIn}"/>
+
+                    <ComboBox Grid.Row="4" Grid.Column="2"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding SignInViewModel.Tests}"
+                    SelectedItem="{Binding SignInViewModel.SelectedTest}"
+                    DisplayMemberPath="Key"/>
+                </Grid>
+
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.Resources>
+                        <views:PercentageNullZeroConverter x:Key="PercentageNullZeroConverter"/>
+                    </Grid.Resources>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding ProgressData.Description}"/>
+                    <ProgressBar Grid.Row="2" Grid.Column="0"
+                             HorizontalAlignment="Stretch"
+                             Maximum="{Binding ProgressData.Maximum}"
+                             Value="{Binding ProgressData.Value}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding ProgressData.Percent, Converter={StaticResource PercentageNullZeroConverter}}" MinWidth="50"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding ProgressData.TimeLeftString}"/>
+                    <Button Grid.Row="6" Grid.Column="0"
+                        Height="23" Width="120"
+                        Content="Upload Notes" 
+                        Command="{Binding UploadNotesCommand}"
+                        IsEnabled="{Binding CanUploadNotes}"/>
+                </Grid>
+            </StackPanel>
+        </Grid>
+</DataTemplate>
+    
+</ResourceDictionary>

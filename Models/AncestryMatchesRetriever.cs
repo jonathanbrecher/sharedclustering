@@ -215,6 +215,24 @@ namespace AncestryDnaClustering.Models
             }
         }
 
+        public async Task<Match> GetMatchAsync(string guid, string testGuid, Throttle throttle, ProgressData progressData)
+        {
+            await throttle.WaitAsync();
+
+            try
+            {
+                using (var testsResponse = await _dnaHomeClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}/details"))
+                {
+                    return testsResponse.IsSuccessStatusCode ? await testsResponse.Content.ReadAsAsync<Match>() : null;
+                }
+            }
+            finally
+            {
+                progressData.Increment();
+                throttle.Release();
+            }
+        }
+
         public async Task<List<Match>> GetRawMatchesInCommonAsync(string guid, string guidInCommon, int maxPage, double minSharedCentimorgans, Throttle throttle)
         {
             var matches = new List<Match>();
@@ -431,6 +449,24 @@ namespace AncestryDnaClustering.Models
                         throttle.Release();
                     }
                 }
+            }
+        }
+
+        public async Task UpdateNotesAsync(string guid, string testGuid, string note, Throttle throttle)
+        {
+            await throttle.WaitAsync();
+
+            try
+            {
+                var url = $"/discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}";
+                using (var testsResponse = await _dnaHomeClient.PutAsJsonAsync(url, new { note }))
+                {
+                    testsResponse.EnsureSuccessStatusCode();
+                }
+            }
+            finally
+            {
+                throttle.Release();
             }
         }
 

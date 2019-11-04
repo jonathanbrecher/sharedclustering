@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using AncestryDnaClustering.Models;
 using AncestryDnaClustering.Models.SavedData;
@@ -16,33 +13,30 @@ namespace AncestryDnaClustering.ViewModels
 {
     internal class AncestryDnaDownloadingViewModel : ObservableObject
     {
-        private readonly AncestryLoginHelper _loginHelper;
-        private readonly AncestryTestsRetriever _testsRetriever;
         private readonly AncestryMatchesRetriever _matchesRetriever;
         private readonly EndogamyProber _endogamyProber;
 
+        public AncestryDnaSignInViewModel SignInViewModel { get; }
         public string Header { get; } = "Download";
 
         public ProgressData ProgressData { get; } = new ProgressData();
 
         public AncestryDnaDownloadingViewModel(
-            AncestryLoginHelper loginHelper,
-            AncestryTestsRetriever testsRetriever,
+            AncestryDnaSignInViewModel signInViewModel,
             AncestryMatchesRetriever matchesRetriever,
             EndogamyProber endogamyProber,
             Action<string> continueInClusterTab)
         {
-            _loginHelper = loginHelper;
-            _testsRetriever = testsRetriever;
+            SignInViewModel = signInViewModel;
             _matchesRetriever = matchesRetriever;
             _endogamyProber = endogamyProber;
 
-            SignInCommand = new RelayCommand<PasswordBox>(async password => await SignInAsync(password));
+            SignInViewModel.OnSelectedTestChanged += SelectedTestChanged;
+
             CheckEndogamyCommand = new RelayCommand(async () => await CheckEndogamyAsync());
             GetDnaMatchesCommand = new RelayCommand(async () => await GetDnaMatchesAsync());
             ContinueInClusterTabCommand = new RelayCommand(() => continueInClusterTab(LastFileDownloaded));
 
-            AncestryUserName = Settings.Default.AncestryUserName;
             MinCentimorgansToRetrieve = Settings.Default.MinCentimorgansToRetrieve;
             MinSharedMatchesCentimorgansToRetrieve = Settings.Default.MinSharedMatchesCentimorgansToRetrieve;
             ShowAdvancedDownloadOptions = Settings.Default.ShowAdvancedDownloadOptions;
@@ -52,80 +46,20 @@ namespace AncestryDnaClustering.ViewModels
             LastFileDownloaded = Settings.Default.LastFileDownloaded;
         }
 
-        public ICommand SignInCommand { get; }
         public ICommand GetDnaMatchesCommand { get; }
         public ICommand CheckEndogamyCommand { get; }
         public ICommand ContinueInClusterTabCommand { get; }
 
-        // The user name for the account to use. This value is saved and will be restored when the application is relaunched.
-        // For security, the password is not saved.
-        private string _ancestryUserName;
-        public string AncestryUserName
+        private void SelectedTestChanged(object sender, EventArgs e)
         {
-            get => _ancestryUserName;
-            set
-            {
-                if (SetFieldValue(ref _ancestryUserName, value, nameof(AncestryUserName)))
-                {
-                    Settings.Default.AncestryUserName = AncestryUserName;
-                    CanSignIn = !string.IsNullOrWhiteSpace(AncestryUserName);
-                }
-            }
-        }
+            CheckCanGetDnaMatches();
+            CheckCanCheckEndogamy();
 
-        // A non-empty username is needed.
-        private bool _canSignIn;
-        public bool CanSignIn
-        {
-            get => _canSignIn;
-            set => SetFieldValue(ref _canSignIn, value, nameof(CanSignIn));
-        }
-
-        // All of the tests (test ID and test taker name) available to the signed-in account.
-        private Dictionary<string, string> _tests;
-        public Dictionary<string, string> Tests
-        {
-            get => _tests;
-            set
-            {
-                if (SetFieldValue(ref _tests, value, nameof(Tests)))
-                {
-                    if (Tests?.Count > 0)
-                    {
-                        // The selected test is the first one that matches the last-used value, otherwise the first one.
-                        // The tests are ordered in the same order as in the Ancestry web site, with test taker's own test listed first.
-                        SelectedTest = Tests?.Any(test => test.Key == Settings.Default.SelectedTestId) == true
-                               ? Tests.FirstOrDefault(test => test.Key == Settings.Default.SelectedTestId)
-                               : Tests.First();
-                    }
-                    else
-                    {
-                        SelectedTest = new KeyValuePair<string, string>();
-                    }
-                }
-            }
-        }
-
-        // The test whose results will be downloaded.
-        private KeyValuePair<string, string> _selectedTest;
-        public KeyValuePair<string, string> SelectedTest
-        {
-            get => _selectedTest;
-            set
-            {
-                if (SetFieldValue(ref _selectedTest, value, nameof(SelectedTest)))
-                {
-                    Settings.Default.SelectedTestId = SelectedTest.Key;
-                    CheckCanGetDnaMatches();
-                    CheckCanCheckEndogamy();
-
-                    // When the selected test is changed, for convenience report the number of matches in that test.
-                    // Stop any previous task that was downloading match counts from a previous test.
-                    _matchCountsCancellationTokenSource.Cancel();
-                    _matchCountsCancellationTokenSource = new CancellationTokenSource();
-                    GetMatchCounts(SelectedTest.Value, _matchCountsCancellationTokenSource.Token);
-                }
-            }
+            // When the selected test is changed, for convenience report the number of matches in that test.
+            // Stop any previous task that was downloading match counts from a previous test.
+            _matchCountsCancellationTokenSource.Cancel();
+            _matchCountsCancellationTokenSource = new CancellationTokenSource();
+            GetMatchCounts(SignInViewModel.SelectedTest.Value, _matchCountsCancellationTokenSource.Token);
         }
 
         private MatchCounts _matchCountsData;
@@ -151,7 +85,7 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
-        private bool CheckCanGetDnaMatches() => CanGetDnaMatches = Tests?.Count > 0 && MinCentimorgansToRetrieve > 0 && _matchCountsData?.TotalMatches > 0;
+        private bool CheckCanGetDnaMatches() => CanGetDnaMatches = SignInViewModel.Tests?.Count > 0 && MinCentimorgansToRetrieve > 0 && _matchCountsData?.TotalMatches > 0;
 
         // A user-visible string that describes how many matches are available in the currently-selected test.
         private string _matchCounts;
@@ -224,51 +158,6 @@ namespace AncestryDnaClustering.ViewModels
                         MinSharedMatchesCentimorgansToRetrieve = 50;
                     }
                 }
-            }
-        }
-
-        private async Task SignInAsync(PasswordBox password)
-        {
-            Settings.Default.Save();
-
-            // Try primary site, and capture error if any.
-            var errorMessage = await SignInAsync(password, "www.ancestry.com");
-            if (errorMessage == null)
-            {
-                return;
-            }
-
-            // If not able to sign into the main Ancestry site, try some backups.
-            foreach (var alternateHost in new[] { "www.ancestry.com.au", "www.ancestry.co.uk" })
-            {
-                if (await SignInAsync(password, alternateHost) == null)
-                {
-                    MessageBox.Show($"Using backup login at {alternateHost}", "Sign in success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
-            }
-
-            // Show error message from primary login failure if none of the backups worked.
-            MessageBox.Show(errorMessage, "Sign in failure", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-
-        private async Task<string> SignInAsync(PasswordBox password, string hostOverride)
-        {
-            try
-            {
-                if (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password, hostOverride))
-                {
-                    Tests = await _testsRetriever.GetTestsAsync();
-                    return null;
-                }
-                else
-                {
-                    return $"Unable to sign in to Ancestry";
-                }
-            }
-            catch (Exception ex)
-            {
-                return $"Unable to sign in to Ancestry {Environment.NewLine}{Environment.NewLine}{ex.Message}";
             }
         }
 
@@ -347,7 +236,7 @@ namespace AncestryDnaClustering.ViewModels
             set => SetFieldValue(ref _canCheckEndogamy, value, nameof(CanCheckEndogamy));
         }
 
-        private bool CheckCanCheckEndogamy() => CanCheckEndogamy = Tests?.Count > 0 && _matchCountsData?.TotalMatches > 0;
+        private bool CheckCanCheckEndogamy() => CanCheckEndogamy = SignInViewModel.Tests?.Count > 0 && _matchCountsData?.TotalMatches > 0;
 
         private async Task CheckEndogamyAsync()
         {
@@ -357,7 +246,7 @@ namespace AncestryDnaClustering.ViewModels
                 Mouse.OverrideCursor = Cursors.Wait;
                 var throttle = new Throttle(50);
                 var numMatchesToTest = 10;
-                await _endogamyProber.ProbeAsync(SelectedTest.Key, SelectedTest.Value, _matchCountsData.FourthCousins, numMatchesToTest, throttle, ProgressData.SuppressProgress);
+                await _endogamyProber.ProbeAsync(SignInViewModel.SelectedTest.Key, SignInViewModel.SelectedTest.Value, _matchCountsData.FourthCousins, numMatchesToTest, throttle, ProgressData.SuppressProgress);
             }
             finally
             {
@@ -372,7 +261,7 @@ namespace AncestryDnaClustering.ViewModels
 
             var startTime = DateTime.Now;
 
-            var fileName = $"{SelectedTest.Key} Ancestry Shared Clustering.txt";
+            var fileName = $"{SignInViewModel.SelectedTest.Key} Ancestry Shared Clustering.txt";
             var saveFileDialog = new SaveFileDialog
             {
                 InitialDirectory = AppDomain.CurrentDomain.BaseDirectory,
@@ -394,7 +283,7 @@ namespace AncestryDnaClustering.ViewModels
                 CanGetDnaMatches = false;
                 LastFileDownloaded = null;
 
-                var guid = SelectedTest.Value;
+                var guid = SignInViewModel.SelectedTest.Value;
 
                 // Make sure there are no more than 50 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
                 var throttle = new Throttle(50);

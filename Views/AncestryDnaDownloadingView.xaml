@@ -35,7 +35,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry user name: "/>
-                <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding AncestryUserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding SignInViewModel.AncestryUserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Password: "/>
                 <PasswordBox Grid.Row="2" Grid.Column="2" x:Name="PasswordBox"/>
                 <TextBlock Grid.Row="4" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="Test: "/>
@@ -43,14 +43,14 @@
                         Height="23" Width="120"
                         HorizontalAlignment="Left" VerticalAlignment="Center"
                         Content="Sign In" 
-                        Command="{Binding SignInCommand}"
+                        Command="{Binding SignInViewModel.SignInCommand}"
                         CommandParameter="{Binding ElementName=PasswordBox}"
-                        IsEnabled="{Binding CanSignIn}"/>
+                        IsEnabled="{Binding SignInViewModel.CanSignIn}"/>
 
                 <ComboBox Grid.Row="4" Grid.Column="2"
                           HorizontalAlignment="Stretch"
-                          ItemsSource="{Binding Tests}"
-                          SelectedItem="{Binding SelectedTest}"
+                          ItemsSource="{Binding SignInViewModel.Tests}"
+                          SelectedItem="{Binding SignInViewModel.SelectedTest}"
                           DisplayMemberPath="Key"/>
                 <TextBlock Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="3" VerticalAlignment="Center" Text="{Binding MatchCounts}"/>
 
