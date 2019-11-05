@@ -18,7 +18,7 @@ namespace AncestryDnaClustering.Models
             _dnaHomeClient = dnaHomeClient;
         }
 
-        public async Task<List<Match>> GetMatchesAsync(string guid, int numMatches, bool includeTreeInfo, Throttle throttle, ProgressData progressData)
+        public async Task<List<Match>> GetMatchesAsync(string guid, int numMatches, bool includeAdditionalInfo, Throttle throttle, ProgressData progressData)
         {
             var retryCount = 0;
             var retryMax = 5;
@@ -32,7 +32,7 @@ namespace AncestryDnaClustering.Models
                     progressData.Reset("Downloading matches...", numPages * 2);
 
                     var matchesTasks = Enumerable.Range(startPage, numPages)
-                        .Select(pageNumber => GetMatchesPageAsync(guid, pageNumber, includeTreeInfo, throttle, progressData));
+                        .Select(pageNumber => GetMatchesPageAsync(guid, pageNumber, includeAdditionalInfo, throttle, progressData));
                     var matchesGroups = await Task.WhenAll(matchesTasks);
                     return matchesGroups.SelectMany(matchesGroup => matchesGroup).Take(numMatches).ToList();
                 }
@@ -137,7 +137,7 @@ namespace AncestryDnaClustering.Models
             return (midPage - 1) * MatchesPerPage + pageMatches.Count(match => criteria(match));
         }
 
-        public async Task<IEnumerable<Match>> GetMatchesPageAsync(string guid, int pageNumber, bool includeTreeInfo, Throttle throttle, ProgressData progressData)
+        public async Task<IEnumerable<Match>> GetMatchesPageAsync(string guid, int pageNumber, bool includeAdditionalInfo, Throttle throttle, ProgressData progressData)
         {
             var nameUnavailableCount = 0;
             var nameUnavailableMax = 60;
@@ -179,11 +179,11 @@ namespace AncestryDnaClustering.Models
                         }
 
                         progressData.Increment();
-                        if (includeTreeInfo)
+                        if (includeAdditionalInfo)
                         {
                             try
                             {
-                                await GetLinkedTreesAsync(guid, result, throttle);
+                                await GetAdditionalInfoAsync(guid, result, throttle);
                             }
                             catch
                             {
@@ -257,10 +257,14 @@ namespace AncestryDnaClustering.Models
 
         public async Task<List<int>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, Throttle throttle, Dictionary<string, int> matchIndexes, ProgressData progressData)
         {
+            var commonAncestorsTask = match.HasCommonAncestors ? GetCommonAncestorsAsync(guid, match.TestGuid, throttle) : Task.FromResult((List<string>)null);
+
             // Retrieve the matches.
             const int maxPage = 10000;
             var matches = await GetRawMatchesInCommonAsync(guid, match.TestGuid, maxPage, minSharedCentimorgans, throttle);
             var result = matches.GroupBy(m => m.TestGuid).ToDictionary(g => g.Key, g => g.First().TestGuid);
+
+            match.CommonAncestors = await commonAncestorsTask;
 
             progressData.Increment();
             return result.Keys
@@ -325,7 +329,7 @@ namespace AncestryDnaClustering.Models
                             continue;
                         }
 
-                        return (matchesInCommon, matches.BookmarkData.moreMatchesAvailable); 
+                        return (matchesInCommon, matches.BookmarkData.MoreMatchesAvailable); 
                     }
                 }
                 catch (Exception ex)
@@ -367,7 +371,8 @@ namespace AncestryDnaClustering.Models
 
         private class BookmarkDataV2
         {
-            public bool moreMatchesAvailable { get; set; }
+            public int LastMatchesServicePageIdx { get; set; }
+            public bool MoreMatchesAvailable { get; set; }
         }
 
         private class MatchGroupV2
@@ -391,13 +396,8 @@ namespace AncestryDnaClustering.Models
             public int SharedSegments { get; set; }
         }
 
-        private async Task GetLinkedTreesAsync(string guid, IEnumerable<Match> matches, Throttle throttle)
+        private async Task GetAdditionalInfoAsync(string guid, IEnumerable<Match> matches, Throttle throttle)
         {
-            if (!matches.Any(match => match.TreeType == TreeType.Undetermined))
-            {
-                return;
-            }
-
             while (true)
             {
                 await throttle.WaitAsync();
@@ -405,8 +405,8 @@ namespace AncestryDnaClustering.Models
 
                 try
                 {
-                    var matchesDictionary = matches.Where(match => match.TreeType == TreeType.Undetermined).ToDictionary(match => match.TestGuid);
-                    var url = $"/discoveryui-matchesservice/api/samples/{guid}/matchesv2/additionalInfo?ids=[{"%22" + string.Join("%22,%22", matchesDictionary.Keys) + "%22"}]&tree=true";
+                    var matchesDictionary = matches.ToDictionary(match => match.TestGuid);
+                    var url = $"/discoveryui-matchesservice/api/samples/{guid}/matchesv2/additionalInfo?ids=[{"%22" + string.Join("%22,%22", matchesDictionary.Keys) + "%22"}]&ancestors=true&tree=true";
                     using (var testsResponse = await _dnaHomeClient.GetAsync(url))
                     {
                         throttle.Release();
@@ -414,29 +414,85 @@ namespace AncestryDnaClustering.Models
 
                         testsResponse.EnsureSuccessStatusCode();
                         var undeterminedCount = 0;
-                        var treeInfos = await testsResponse.Content.ReadAsAsync<List<TreeInfoV2>>();
-                        foreach (var treeInfo in treeInfos)
+                        var additionalInfos = await testsResponse.Content.ReadAsAsync<List<AdditionalInfo>>();
+                        foreach (var additionalInfo in additionalInfos)
                         {
-                            if (matchesDictionary.TryGetValue(treeInfo.TestGuid, out var match))
+                            if (matchesDictionary.TryGetValue(additionalInfo.TestGuid, out var match))
                             {
-                                match.TreeSize = treeInfo.TreeSize ?? 0;
+                                match.TreeSize = additionalInfo.TreeSize ?? 0;
                                 match.TreeType = 
-                                      treeInfo.PrivateTree == true ? TreeType.Private // might also be unlinked
-                                    : treeInfo.UnlinkedTree == true ? TreeType.Unlinked
-                                    : treeInfo.PublicTree == true && match.TreeSize > 0 ? TreeType.Public
-                                    : treeInfo.NoTrees == true ? TreeType.None
+                                      additionalInfo.PrivateTree == true ? TreeType.Private // might also be unlinked
+                                    : additionalInfo.UnlinkedTree == true ? TreeType.Unlinked
+                                    : additionalInfo.PublicTree == true && match.TreeSize > 0 ? TreeType.Public
+                                    : additionalInfo.NoTrees == true ? TreeType.None
                                     : TreeType.Undetermined;
                                 if (match.TreeType == TreeType.Undetermined)
                                 {
                                     ++undeterminedCount;
                                 }
+                                match.HasCommonAncestors = additionalInfo.CommonAncestors ?? false;
                             }
                         }
 
-                        if (undeterminedCount == 0 || undeterminedCount == matchesDictionary.Count)
-                        {
-                            return;
-                        }
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+                finally
+                {
+                    if (!throttleReleased)
+                    {
+                        throttle.Release();
+                    }
+                }
+            }
+        }
+
+        private class Ancestors
+        {
+            public List<AncestorCouple> AncestorCouples { get; set; }
+        }
+
+        private class AncestorCouple
+        {
+            public Ancestor Father { get; set; }
+            public Ancestor Mother { get; set; }
+        }
+
+        private class Ancestor
+        {
+            public PersonData PersonData { get; set; }
+        }
+
+        private class PersonData
+        {
+            public string DisplayName { get; set; }
+            public bool Potential { get; set; }
+        }
+
+        private async Task<List<string>> GetCommonAncestorsAsync(string guid, string testGuid, Throttle throttle)
+        {
+            while (true)
+            {
+                await throttle.WaitAsync();
+                var throttleReleased = false;
+
+                try
+                {
+                    var url = $"/discoveryui-matchesservice/api/compare/{guid}/with/{testGuid}/commonancestors/";
+                    using (var testsResponse = await _dnaHomeClient.GetAsync(url))
+                    {
+                        throttle.Release();
+                        throttleReleased = true;
+
+                        testsResponse.EnsureSuccessStatusCode();
+                        var ancestorCouples = await testsResponse.Content.ReadAsAsync<Ancestors>();
+                        return ancestorCouples.AncestorCouples.SelectMany(couple => new[] { couple.Father, couple.Mother })
+                            .Select(ancestor => ancestor?.PersonData?.DisplayName)
+                            .Where(name => !string.IsNullOrEmpty(name))
+                            .ToList();
                     }
                 }
                 catch (Exception ex)
@@ -478,7 +534,7 @@ namespace AncestryDnaClustering.Models
             public bool PrivateTree { get; set; }
         }
 
-        private class TreeInfoV2
+        private class AdditionalInfo
         {
             public bool? NoTrees { get; set; }
             public bool? PrivateTree { get; set; }
@@ -488,6 +544,7 @@ namespace AncestryDnaClustering.Models
             public int? TreeSize { get; set; }
             public bool? TreeUnavailable { get; set; }
             public bool? UnlinkedTree { get; set; }
+            public bool? CommonAncestors { get; set; }
         }
 
         private class LinkedTreeDetails

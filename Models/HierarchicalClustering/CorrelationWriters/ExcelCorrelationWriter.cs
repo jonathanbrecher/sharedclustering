@@ -123,6 +123,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                             matches.Any(match => !string.IsNullOrEmpty(match.Match.TreeUrl)) ? new TreeUrlWriter(_testTakerTestId) : null,
                             matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined) ? new TreeTypeWriter() : null,
                             matches.Any(match => match.Match.TreeSize > 0) ? new TreeSizeWriter() : null,
+                            matches.Any(match => match.Match.CommonAncestors?.Count > 0) ? new CommonAncestorsWriter() : null,
                             matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
                             matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
                             new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter, _minClusterSize),

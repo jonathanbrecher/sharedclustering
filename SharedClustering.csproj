@@ -116,6 +116,7 @@
     <Compile Include="Models\ColumnWriters\ColumnWritersCollection.cs" />
     <Compile Include="Models\ColumnWriters\CountWriter.cs" />
     <Compile Include="Models\ColumnWriters\GenericObjectWriter.cs" />
+    <Compile Include="Models\ColumnWriters\CommonAncestorsWriter.cs" />
     <Compile Include="Models\EndogamyProber.cs" />
     <Compile Include="Models\HierarchicalClustering\CorrelationWriters\ExcelOutputWriter.cs" />
     <Compile Include="Models\Similarity\SimilarityFinder.cs" />

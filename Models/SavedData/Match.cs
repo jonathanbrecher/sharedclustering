@@ -1,4 +1,6 @@
-﻿namespace AncestryDnaClustering.Models.SavedData
+﻿using System.Collections.Generic;
+
+namespace AncestryDnaClustering.Models.SavedData
 {
     public class Match
     {
@@ -11,6 +13,8 @@
         public TreeType TreeType { get; set; }
         public string TreeUrl { get; set; }
         public int TreeSize { get; set; }
+        public bool HasCommonAncestors { get; set; }
+        public List<string> CommonAncestors { get; set; }
         public bool Starred { get; set; }
         public bool HasHint { get; set; }
         public string Note { get; set; }
