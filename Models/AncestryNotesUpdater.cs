@@ -24,6 +24,7 @@ namespace AncestryDnaClustering.Models
         {
             var openFileDialog = new OpenFileDialog
             {
+                Title = "Select file with Ancestry notes to upload",
                 InitialDirectory = string.IsNullOrEmpty(fileName) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(fileName),
                 FileName = fileName,
                 Filter = "Excel Workbook (*.xlsx)|*.xlsx",
@@ -179,6 +180,7 @@ namespace AncestryDnaClustering.Models
 
             var saveFileDialog = new SaveFileDialog
             {
+                Title = "Save a record of updated notes",
                 InitialDirectory = AppDomain.CurrentDomain.BaseDirectory,
                 FileName = $"Ancestry Notes Changes {DateTime.Now.ToString("yyyy-MM-dd")}.xlsx",
                 DefaultExt = ".xlsx",
