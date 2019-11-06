@@ -34,20 +34,18 @@ namespace AncestryDnaClustering.Models
 
         public async Task UpdateNotesAsync(string guid, string matchFile, Throttle throttle, ProgressData progressData)
         {
-            var notes = ReadMatchFile(matchFile, progressData);
+            var notes = ReadMatchFile(matchFile, progressData).ToList();
 
-            notes = await FilterModifiedNodesAsync(guid, notes, throttle, progressData);
+            notes = (await FilterModifiedNodesAsync(guid, notes, throttle, progressData)).ToList();
 
-            var notesList = notes.ToList();
-
-            if (notesList.Count == 0)
+            if (notes.Count == 0)
             {
                 MessageBox.Show("No changed notes were found.", "No changed notes", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            var toChangeCount = notesList.Count(note => !string.IsNullOrEmpty(note.NewNotes));
-            var toRemoveCount = notesList.Count - toChangeCount;
+            var toChangeCount = notes.Count(note => !string.IsNullOrEmpty(note.NewNotes));
+            var toRemoveCount = notes.Count - toChangeCount;
             var message = "Found "
                 + (toChangeCount > 0 && toRemoveCount > 0
                 ? $"{toChangeCount} notes to change and {toRemoveCount} notes to remove."
@@ -64,7 +62,7 @@ namespace AncestryDnaClustering.Models
                 return;
             }
 
-            progressData.Reset("Updating notes", notesList.Count);
+            progressData.Reset("Updating notes", notes.Count);
 
             var updateTasks = notes.Select(async note =>
             {
@@ -74,7 +72,7 @@ namespace AncestryDnaClustering.Models
 
             await Task.WhenAll(updateTasks);
 
-            await SaveUpdatedNotesToFileAsync(notesList, progressData);
+            await SaveUpdatedNotesToFileAsync(notes, progressData);
         }
 
         private class NotesData
@@ -121,7 +119,7 @@ namespace AncestryDnaClustering.Models
                             break;
                         }
                     }
-                    else if (cellValue.Equals("Notes", StringComparison.OrdinalIgnoreCase))
+                    else if (cellValue.Equals("Notes", StringComparison.OrdinalIgnoreCase) || cellValue.Equals("Note", StringComparison.OrdinalIgnoreCase))
                     {
                         notesColumn = cell.End.Column;
                         if (nameColumn > 0 && testIdColumn > 0)
@@ -131,7 +129,7 @@ namespace AncestryDnaClustering.Models
                     }
                 }
 
-                if (nameColumn + testIdColumn + notesColumn == 0)
+                if (nameColumn == 0 || testIdColumn == 0 || notesColumn == 0)
                 {
                     throw new Exception("Could not identify column headers.");
                 }
@@ -174,8 +172,9 @@ namespace AncestryDnaClustering.Models
             }
         }
 
-        private async Task<IEnumerable<NotesData>> FilterModifiedNodesAsync(string guid, IEnumerable<NotesData> notes, Throttle throttle, ProgressData progressData)
+        private async Task<IEnumerable<NotesData>> FilterModifiedNodesAsync(string guid, List<NotesData> notes, Throttle throttle, ProgressData progressData)
         {
+            progressData.Reset("Filtering notes", notes.Count);
             var tasks = notes.Select(async note =>
             {
                 var match = await _matchesRetriever.GetMatchAsync(guid, note.TestId, throttle, progressData);
