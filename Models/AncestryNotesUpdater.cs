@@ -98,24 +98,36 @@ namespace AncestryDnaClustering.Models
                 var notesColumn = 0;
 
                 // Find the columns that have interesting data (don't assume specific column numbers)
-                for (var col = 1; col < 1000; ++col)
+                foreach (var cell in ws.Cells.Where(c => c.Start.Row == 1))
                 {
-                    var cellValue = ws.Cells[1, col].GetValue<string>();
+                    var cellValue = cell.GetValue<string>();
                     if (cellValue == null)
                     {
                         continue;
                     }
                     if (cellValue.Equals("Name", StringComparison.OrdinalIgnoreCase))
                     {
-                        nameColumn = col;
+                        nameColumn = cell.End.Column;
+                        if (testIdColumn > 0 && notesColumn > 0)
+                        {
+                            break;
+                        }
                     }
                     else if (cellValue.Equals("Test ID", StringComparison.OrdinalIgnoreCase))
                     {
-                        testIdColumn = col;
+                        testIdColumn = cell.End.Column;
+                        if (nameColumn > 0 && notesColumn > 0)
+                        {
+                            break;
+                        }
                     }
                     else if (cellValue.Equals("Notes", StringComparison.OrdinalIgnoreCase))
                     {
-                        notesColumn = col;
+                        notesColumn = cell.End.Column;
+                        if (nameColumn > 0 && testIdColumn > 0)
+                        {
+                            break;
+                        }
                     }
                 }
 
