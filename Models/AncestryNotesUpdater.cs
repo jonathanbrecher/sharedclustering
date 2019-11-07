@@ -1,4 +1,5 @@
-﻿using AncestryDnaClustering.ViewModels;
+﻿using AncestryDnaClustering.Models.SavedData;
+using AncestryDnaClustering.ViewModels;
 using Microsoft.Win32;
 using OfficeOpenXml;
 using System;
@@ -35,6 +36,8 @@ namespace AncestryDnaClustering.Models
         public async Task UpdateNotesAsync(string guid, string matchFile, Throttle throttle, ProgressData progressData)
         {
             var notes = ReadMatchFile(matchFile, progressData).ToList();
+
+            await MaybeUpdateFilesAsync(notes);
 
             notes = (await FilterModifiedNodesAsync(guid, notes, throttle, progressData)).ToList();
 
@@ -169,6 +172,51 @@ namespace AncestryDnaClustering.Models
                         NewNotes = notes,
                     };
                 }
+            }
+        }
+
+        private async Task MaybeUpdateFilesAsync(List<NotesData> notes)
+        {
+            if (MessageBox.Show(
+                "Do you also want to update data files that you already downloaded from Ancestry and have saved locally?",
+                "Also update local saved data files",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            MessageBox.Show(
+                "Select each file to update, Cancel to continue to updating the Ancestry web site.",
+                "Also update local saved data files",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+            while (true)
+            {
+                var openFileDialog = new OpenFileDialog
+                {
+                    Title = "Select local file with Ancestry data to update",
+                    InitialDirectory = AppDomain.CurrentDomain.BaseDirectory,
+                    Filter = "Shared Clustering downloaded data (*.txt)|*.txt",
+                };
+                if (openFileDialog.ShowDialog() != true || string.IsNullOrEmpty(openFileDialog.FileName))
+                {
+                    return;
+                }
+
+                var notesById = notes.ToDictionary(note => note.TestId);
+                var serialized = await Task.Run(() => FileUtils.ReadAsJson<Serialized>(openFileDialog.FileName, false, false));
+
+                foreach (var match in serialized.Matches)
+                {
+                    if (notesById.TryGetValue(match.TestGuid, out var note))
+                    {
+                        match.Note = note.NewNotes;
+                    }
+                }
+
+                FileUtils.WriteAsJson(openFileDialog.FileName, serialized, false);
             }
         }
 
