@@ -52,12 +52,14 @@ namespace AncestryDnaClustering.Models
             // Make sure there are no more than 10 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
             var throttle = new Throttle(10);
 
+            var highestMatchesTask = GetMatchesPageAsync(guid, 1, false, throttle, ProgressData.SuppressProgress);
             var thirdCousinsTask = CountThirdCousinsAsync(guid, throttle, ProgressData.SuppressProgress);
             var matchesTask = CountMatchesAsync(guid, throttle, ProgressData.SuppressProgress);
             await Task.WhenAll(thirdCousinsTask, matchesTask);
 
             return new MatchCounts
             {
+                HighestCentimorgans = (await highestMatchesTask).FirstOrDefault()?.SharedCentimorgans ?? 4000,
                 ThirdCousins = await thirdCousinsTask,
                 FourthCousins = (await matchesTask).fourthCousins,
                 TotalMatches = (await matchesTask).totalMatches,
@@ -255,13 +257,15 @@ namespace AncestryDnaClustering.Models
             return matches;
         }
 
-        public async Task<List<int>> GetMatchesInCommonAsync(string guid, Match match, double minSharedCentimorgans, Throttle throttle, Dictionary<string, int> matchIndexes, ProgressData progressData)
+        public bool WillGetMatchesInCommon(Match match, bool noSharedMatches) => !noSharedMatches || match.HasCommonAncestors;
+
+        public async Task<List<int>> GetMatchesInCommonAsync(string guid, Match match, bool noSharedMatches, double minSharedCentimorgans, Throttle throttle, Dictionary<string, int> matchIndexes, ProgressData progressData)
         {
             var commonAncestorsTask = match.HasCommonAncestors ? GetCommonAncestorsAsync(guid, match.TestGuid, throttle) : Task.FromResult((List<string>)null);
 
             // Retrieve the matches.
             const int maxPage = 10000;
-            var matches = await GetRawMatchesInCommonAsync(guid, match.TestGuid, maxPage, minSharedCentimorgans, throttle);
+            var matches = noSharedMatches ? new List<Match>() : await GetRawMatchesInCommonAsync(guid, match.TestGuid, maxPage, minSharedCentimorgans, throttle);
             var result = matches.GroupBy(m => m.TestGuid).ToDictionary(g => g.Key, g => g.First().TestGuid);
 
             match.CommonAncestors = await commonAncestorsTask;

@@ -108,11 +108,21 @@
                         <ColumnDefinition Width="Auto" SharedSizeGroup="A"/>
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans to retrieve: "/>
-                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding MinCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
-                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Lowest centimorgans of shared matches: "/>
-                    <TextBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding MinSharedMatchesCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                               Text="Lowest centimorgans to retrieve: "/>
+                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch"
+                             Text="{Binding MinCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" 
+                               Text="Lowest centimorgans of shared matches: "/>
+                    <TextBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" 
+                             Text="{Binding MinSharedMatchesCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                               Text="No shared matches will be downloaded. Clustering will not be possible."
+                               Visibility="{Binding NoSharedMatches, Converter={StaticResource BooleanToVisibility}}"
+                               Foreground="Red"/>
                 </Grid>
             </Expander>
 

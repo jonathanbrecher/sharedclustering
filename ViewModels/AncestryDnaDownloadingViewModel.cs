@@ -73,6 +73,7 @@ namespace AncestryDnaClustering.ViewModels
                 _matchCountsData = await _matchesRetriever.GetMatchCounts(guid);
                 CheckCanGetDnaMatches();
                 CheckCanCheckEndogamy();
+                CheckNoSharedMatches();
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     MatchCounts = $"{_matchCountsData.ThirdCousins} third cousins, {_matchCountsData.FourthCousins} fourth cousins, {_matchCountsData.TotalMatches} total matches";
@@ -212,6 +213,7 @@ namespace AncestryDnaClustering.ViewModels
                 if (SetFieldValue(ref _minSharedMatchesCentimorgansToRetrieve, value, nameof(MinSharedMatchesCentimorgansToRetrieve)))
                 {
                     Settings.Default.MinSharedMatchesCentimorgansToRetrieve = MinSharedMatchesCentimorgansToRetrieve;
+                    CheckNoSharedMatches();
 
                     if (DownloadTypeFast && MinSharedMatchesCentimorgansToRetrieve != 20)
                     {
@@ -228,6 +230,16 @@ namespace AncestryDnaClustering.ViewModels
                 }
             }
         }
+
+        private bool _noSharedMatches;
+        public bool NoSharedMatches
+        {
+            get => _noSharedMatches;
+            set => SetFieldValue(ref _noSharedMatches, value, nameof(NoSharedMatches));
+        }
+
+        private void CheckNoSharedMatches()
+            => NoSharedMatches = MinSharedMatchesCentimorgansToRetrieve > (_matchCountsData?.HighestCentimorgans ?? 4000);
 
         private bool _canCheckEndogamy;
         public bool CanCheckEndogamy
@@ -308,9 +320,14 @@ namespace AncestryDnaClustering.ViewModels
                     .Select((match, index) => new { match.TestGuid, Index = index })
                     .ToDictionary(pair => pair.TestGuid, pair => pair.Index);
 
+                // Some matches might not need more data downloaded
+                var matchesNeedingMoreDataDownloaded = matches
+                    .Where(match => _matchesRetriever.WillGetMatchesInCommon(match, NoSharedMatches))
+                    .ToList();
+
                 // Now download the shared matches for each match.
                 // This takes much longer than downloading the list of matches themselves..
-                ProgressData.Reset($"Downloading shared matches for {matches.Count} matches...", matches.Count);
+                ProgressData.Reset($"Downloading {(NoSharedMatches ? "per-match data" : "shared matches")} for {matches.Count} matches...", matchesNeedingMoreDataDownloaded.Count);
 
                 // Don't process more than 50 matches at once. This lets the matches finish processing completely
                 // rather than opening requests for all of the matches at onces.
@@ -318,7 +335,7 @@ namespace AncestryDnaClustering.ViewModels
 
                 var counter = 0;
 
-                var icwTasksDictionary = matches.ToDictionary(
+                var icwTasksDictionary = matchesNeedingMoreDataDownloaded.ToDictionary(
                     match => match.TestGuid,
                     async match =>
                     {
@@ -327,7 +344,7 @@ namespace AncestryDnaClustering.ViewModels
                         try
                         {
                             var index = Interlocked.Increment(ref counter);
-                            return await _matchesRetriever.GetMatchesInCommonAsync(guid, match, MinSharedMatchesCentimorgansToRetrieve, throttle, matchIndexes, ProgressData);
+                            return await _matchesRetriever.GetMatchesInCommonAsync(guid, match, NoSharedMatches, MinSharedMatchesCentimorgansToRetrieve, throttle, matchIndexes, ProgressData);
                         }
                         finally
                         {
@@ -346,7 +363,7 @@ namespace AncestryDnaClustering.ViewModels
                 LastFileDownloaded = fileName;
 
                 var matchesWithSharedMatches = output.Icw.Where(match => match.Value.Count > 1).ToList();
-                var averageSharedMatches = matchesWithSharedMatches.Sum(match => match.Value.Count - 1) / (double)matchesWithSharedMatches.Count;
+                var averageSharedMatches = matchesWithSharedMatches.Count == 0 ? 0 : matchesWithSharedMatches.Sum(match => match.Value.Count - 1) / (double)matchesWithSharedMatches.Count;
                 ProgressData.Reset(DateTime.Now - startTime, $"Done. Downloaded {matches.Count} matches ({matchesWithSharedMatches.Count} with shared matches, averaging {averageSharedMatches:0.#} shared matches)");
             }
             catch (Exception ex)
