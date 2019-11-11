@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AncestryDnaClustering.Models;
@@ -50,11 +51,17 @@ namespace AncestryDnaClustering.ViewModels
         {
             var saveFileDialog = new SaveFileDialog
             {
-                InitialDirectory = AppDomain.CurrentDomain.BaseDirectory,
+                InitialDirectory = FileUtils.GetDefaultDirectory(null),
                 DefaultExt = ".xlsx",
                 Filter = "Excel Workbook|*.xlsx",
             };
-            return saveFileDialog.ShowDialog() == true ? saveFileDialog.FileName : null;
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                Settings.Default.LastUsedDirectory = Path.GetDirectoryName(saveFileDialog.FileName);
+                Settings.Default.Save();
+                return saveFileDialog.FileName;
+            }
+            return null;
         }
 
         private async Task ExportAsync()

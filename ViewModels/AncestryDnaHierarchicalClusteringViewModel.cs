@@ -242,7 +242,7 @@ namespace AncestryDnaClustering.ViewModels
         {
             var saveFileDialog = new SaveFileDialog
             {
-                InitialDirectory = string.IsNullOrEmpty(CorrelationFilename) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(CorrelationFilename),
+                InitialDirectory = FileUtils.GetDefaultDirectory(CorrelationFilename),
                 FileName = CorrelationFilename,
                 DefaultExt = ".xlsx",
                 Filter = "Excel Workbook|*.xlsx",
@@ -250,6 +250,8 @@ namespace AncestryDnaClustering.ViewModels
             if (saveFileDialog.ShowDialog() == true)
             {
                 CorrelationFilename = saveFileDialog.FileName;
+                Settings.Default.LastUsedDirectory = Path.GetDirectoryName(saveFileDialog.FileName);
+                Settings.Default.Save();
             }
         }
 

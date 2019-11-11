@@ -1,4 +1,5 @@
 ﻿using AncestryDnaClustering.Models.SavedData;
+using AncestryDnaClustering.Properties;
 using AncestryDnaClustering.ViewModels;
 using Microsoft.Win32;
 using OfficeOpenXml;
@@ -26,11 +27,17 @@ namespace AncestryDnaClustering.Models
             var openFileDialog = new OpenFileDialog
             {
                 Title = "Select file with Ancestry notes to upload",
-                InitialDirectory = string.IsNullOrEmpty(fileName) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(fileName),
+                InitialDirectory = FileUtils.GetDefaultDirectory(fileName),
                 FileName = fileName,
                 Filter = "Excel Workbook (*.xlsx)|*.xlsx",
             };
-            return openFileDialog.ShowDialog() == true ? openFileDialog.FileName : null;
+            if (openFileDialog.ShowDialog() == true)
+            {
+                Settings.Default.LastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+                Settings.Default.Save();
+                return openFileDialog.FileName;
+            }
+            return null;
         }
 
         public async Task UpdateNotesAsync(string guid, string matchFile, Throttle throttle, ProgressData progressData)
@@ -197,13 +204,16 @@ namespace AncestryDnaClustering.Models
                 var openFileDialog = new OpenFileDialog
                 {
                     Title = "Select local file with Ancestry data to update",
-                    InitialDirectory = AppDomain.CurrentDomain.BaseDirectory,
+                    InitialDirectory = FileUtils.GetDefaultDirectory(null),
                     Filter = "Shared Clustering downloaded data (*.txt)|*.txt",
                 };
                 if (openFileDialog.ShowDialog() != true || string.IsNullOrEmpty(openFileDialog.FileName))
                 {
                     return;
                 }
+
+                Settings.Default.LastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+                Settings.Default.Save();
 
                 var notesById = notes.ToDictionary(note => note.TestId);
                 var serialized = await Task.Run(() => FileUtils.ReadAsJson<Serialized>(openFileDialog.FileName, false, false));
@@ -240,7 +250,7 @@ namespace AncestryDnaClustering.Models
             var saveFileDialog = new SaveFileDialog
             {
                 Title = "Save a record of updated notes",
-                InitialDirectory = AppDomain.CurrentDomain.BaseDirectory,
+                InitialDirectory = FileUtils.GetDefaultDirectory(null),
                 FileName = $"Ancestry Notes Changes {DateTime.Now.ToString("yyyy-MM-dd")}.xlsx",
                 DefaultExt = ".xlsx",
                 Filter = "Excel Workbook (*.xlsx)|*.xlsx",
@@ -249,6 +259,8 @@ namespace AncestryDnaClustering.Models
             {
                 return;
             }
+            Settings.Default.LastUsedDirectory = Path.GetDirectoryName(saveFileDialog.FileName);
+            Settings.Default.Save();
             var fileName = saveFileDialog.FileName;
 
             using (var p = new ExcelPackage())

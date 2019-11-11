@@ -276,13 +276,15 @@ namespace AncestryDnaClustering.ViewModels
             var fileName = $"{SignInViewModel.SelectedTest.Key} Ancestry Shared Clustering.txt";
             var saveFileDialog = new SaveFileDialog
             {
-                InitialDirectory = AppDomain.CurrentDomain.BaseDirectory,
+                InitialDirectory = FileUtils.GetDefaultDirectory(null),
                 FileName = fileName,
                 DefaultExt = ".txt",
                 Filter = "Text|*.txt",
             };
             if (saveFileDialog.ShowDialog() == true)
             {
+                Settings.Default.LastUsedDirectory = Path.GetDirectoryName(saveFileDialog.FileName);
+                Settings.Default.Save();
                 fileName = saveFileDialog.FileName;
             }
             else

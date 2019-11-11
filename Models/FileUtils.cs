@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
+using AncestryDnaClustering.Properties;
 using Newtonsoft.Json;
 using OfficeOpenXml;
 
@@ -269,6 +270,21 @@ namespace AncestryDnaClustering.Models
                     }
                 }
             }
+        }
+
+        public static string GetDefaultDirectory(string defaultFileName)
+        {
+            if (!string.IsNullOrEmpty(defaultFileName))
+            {
+                return Path.GetDirectoryName(defaultFileName);
+            }
+
+            if (!string.IsNullOrEmpty(Settings.Default.LastUsedDirectory))
+            {
+                return Settings.Default.LastUsedDirectory;
+            }
+
+            return AppDomain.CurrentDomain.BaseDirectory;
         }
 
         public static void LaunchFile(string fileName)

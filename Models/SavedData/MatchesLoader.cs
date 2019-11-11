@@ -25,7 +25,7 @@ namespace AncestryDnaClustering.Models.SavedData
         {
             var openFileDialog = new OpenFileDialog
             {
-                InitialDirectory = string.IsNullOrEmpty(fileName) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(fileName),
+                InitialDirectory = FileUtils.GetDefaultDirectory(fileName),
                 FileName = fileName,
                 Filter = "DNAGedcom icw_ or AutoCluster files (*.csv)|*.csv|AutoCluster files (*.xlsx)|*.xlsx|Shared Clustering downloaded data (*.txt)|*.txt;*.json|All files (*.*)|*.*",
                 FilterIndex = Settings.Default.MatchesLoaderFilterIndex,
@@ -33,6 +33,7 @@ namespace AncestryDnaClustering.Models.SavedData
             if (openFileDialog.ShowDialog() == true)
             {
                 Settings.Default.MatchesLoaderFilterIndex = openFileDialog.FilterIndex;
+                Settings.Default.LastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
                 Settings.Default.Save();
 
                 return openFileDialog.FileName;
