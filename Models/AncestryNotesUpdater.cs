@@ -141,7 +141,7 @@ namespace AncestryDnaClustering.Models
 
                 if (nameColumn == 0 || testIdColumn == 0 || notesColumn == 0)
                 {
-                    throw new Exception("Could not identify column headers.");
+                    throw new Exception($"Could not identify column headers from first sheet ({ws.Name}) in {matchFile}.");
                 }
 
                 var maxRow = 1;
