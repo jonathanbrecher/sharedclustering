@@ -79,17 +79,6 @@ namespace AncestryDnaClustering.Models.SavedData
                 return (null, null);
             }
 
-            var minCentimorgans = input.Matches.Min(match => match.SharedCentimorgans);
-            if (minCentimorgansToCluster <= minCentimorgans && minCentimorgansInSharedMatches <= minCentimorgans)
-            {
-                return (input.TestTakerTestId,
-                    input.Matches
-                    .Select(match => input.MatchIndexes.TryGetValue(match.TestGuid, out var index) ? new ClusterableMatch(index, match, new[] { index }) : (IClusterableMatch)null)
-                    .Where(match => match != null)
-                    .OrderBy(match => match.Index)
-                    .ToList());
-            }
-
             return await Task.Run(() =>
             {
                 var strongMatches = input.Matches.Where(match => match.SharedCentimorgans >= minCentimorgansToCluster).ToList();

@@ -272,11 +272,11 @@ namespace AncestryDnaClustering.Models
 
             progressData.Increment();
             return result.Keys
-                .Select(matchName =>
-                    matchIndexes.TryGetValue(matchName, out var matchIndex) ? matchIndex : (int?)null).Where(i => i != null)
-                        .Select(i => i.Value)
-                        .Concat(new[] { matchIndexes[match.TestGuid] })
-                        .ToList();
+                .Select(matchName => matchIndexes.TryGetValue(matchName, out var matchIndex) ? matchIndex : (int?)null)
+                .Where(i => i != null)
+                .Select(i => i.Value)
+                .Concat(new[] { matchIndexes[match.TestGuid] })
+                .ToList();
         }
 
         private async Task<(IEnumerable<Match>, bool)> GetMatchesInCommonPageAsync(string guid, string guidInCommon, int pageNumber, Throttle throttle)

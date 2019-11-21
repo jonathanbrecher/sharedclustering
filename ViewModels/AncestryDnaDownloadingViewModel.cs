@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -359,6 +360,12 @@ namespace AncestryDnaClustering.ViewModels
                 ProgressData.Reset("Saving data...");
 
                 var icw = icwTasksDictionary.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Result);
+
+                // Make sure that each match at least matches itself
+                foreach (var matchIndex in matchIndexes.Where(kvp => !icw.ContainsKey(kvp.Key)))
+                {
+                    icw[matchIndex.Key] = new List<int> { matchIndex.Value };
+                }
 
                 var output = new Serialized { TestTakerTestId = guid, Matches = matches, MatchIndexes = matchIndexes, Icw = icw };
                 FileUtils.WriteAsJson(fileName, output, false);
