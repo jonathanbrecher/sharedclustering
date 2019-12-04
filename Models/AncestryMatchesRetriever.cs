@@ -60,6 +60,7 @@ namespace AncestryDnaClustering.Models
             return new MatchCounts
             {
                 HighestCentimorgans = (await highestMatchesTask).FirstOrDefault()?.SharedCentimorgans ?? 4000,
+                TwoHundredthCentimorgans = (await highestMatchesTask).LastOrDefault()?.SharedCentimorgans ?? 50,
                 ThirdCousins = await thirdCousinsTask,
                 FourthCousins = (await matchesTask).fourthCousins,
                 TotalMatches = (await matchesTask).totalMatches,

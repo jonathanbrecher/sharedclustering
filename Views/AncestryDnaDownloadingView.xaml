@@ -84,7 +84,7 @@
                         <TextBlock TextWrapping="Wrap">
                             <Run Text="Endogamy special, for use with heavy endogamy"/>
                             <LineBreak/>
-                            <Run Text="All matches, but only shared matches over 50 cM &#x2014; can take 24 hours or longer"/>
+                            <Run Text="All matches, but only top 200 shared matches &#x2014; can take 24 hours or longer"/>
                         </TextBlock>
                     </RadioButton.Content>
                 </RadioButton>
