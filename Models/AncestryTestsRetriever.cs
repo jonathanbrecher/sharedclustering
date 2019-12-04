@@ -10,18 +10,18 @@ namespace AncestryDnaClustering.Models
 {
     internal class AncestryTestsRetriever
     {
-        private HttpClient _ancestryClient;
+        private AncestryLoginHelper _ancestryLoginHelper;
 
-        public AncestryTestsRetriever(HttpClient ancestryClient)
+        public AncestryTestsRetriever(AncestryLoginHelper ancestryLoginHelper)
         {
-            _ancestryClient = ancestryClient;
+            _ancestryLoginHelper = ancestryLoginHelper;
         }
 
         // Download the list of tests available to this user account.
         // As in the web site the tests are sorted with the user's own test, followed by the other tests alphabetically.
         public async Task<Dictionary<string, string>> GetTestsAsync()
         {
-            using (var testsResponse = await _ancestryClient.GetAsync("discoveryui-matchesservice/api/samples/"))
+            using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync("discoveryui-matchesservice/api/samples/"))
             {
                 if (testsResponse.StatusCode == HttpStatusCode.Unauthorized)
                 {

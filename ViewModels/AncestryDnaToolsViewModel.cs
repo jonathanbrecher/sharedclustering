@@ -22,11 +22,12 @@ namespace AncestryDnaClustering.ViewModels
             // The CookieContainer captures those cookies when they are set, and adds them to subsequent requests.
             var cookies = new CookieContainer();
             var handler = new HttpClientHandler { CookieContainer = cookies };
-            var ancestryClient = new HttpClient(handler) { BaseAddress = new Uri("https://www.ancestry.com"), Timeout = TimeSpan.FromMinutes(5) };
+            var ancestryClients = new[] { "https://www.ancestry.com", "https://www.ancestry.com.au", "https://www.ancestry.co.uk" }
+                .ToDictionary(url => url, url => new HttpClient(handler) { BaseAddress = new Uri(url), Timeout = TimeSpan.FromMinutes(5) });
 
-            var loginHelper = new AncestryLoginHelper(ancestryClient, cookies);
-            var testsRetriever = new AncestryTestsRetriever(ancestryClient);
-            var matchesRetriever = new AncestryMatchesRetriever(ancestryClient);
+            var loginHelper = new AncestryLoginHelper(ancestryClients, cookies);
+            var testsRetriever = new AncestryTestsRetriever(loginHelper);
+            var matchesRetriever = new AncestryMatchesRetriever(loginHelper);
             var endogamyProber = new EndogamyProber(matchesRetriever);
 
             var serializedMatchesReaders = new List<ISerializedMatchesReader>

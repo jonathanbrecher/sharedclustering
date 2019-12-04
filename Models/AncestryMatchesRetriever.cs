@@ -8,14 +8,14 @@ using AncestryDnaClustering.ViewModels;
 
 namespace AncestryDnaClustering.Models
 {
-    public class AncestryMatchesRetriever
+    internal class AncestryMatchesRetriever
     {
-        HttpClient _dnaHomeClient;
+        private AncestryLoginHelper _ancestryLoginHelper;
         public int MatchesPerPage { get; } = 200;
 
-        public AncestryMatchesRetriever(HttpClient dnaHomeClient)
+        public AncestryMatchesRetriever(AncestryLoginHelper ancestryLoginHelper)
         {
-            _dnaHomeClient = dnaHomeClient;
+            _ancestryLoginHelper = ancestryLoginHelper;
         }
 
         public async Task<List<Match>> GetMatchesAsync(string guid, int numMatches, bool includeAdditionalInfo, Throttle throttle, ProgressData progressData)
@@ -82,7 +82,7 @@ namespace AncestryDnaClustering.Models
         {
             try
             {
-                using (var testsResponse = await _dnaHomeClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchlist/counts"))
+                using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchlist/counts"))
                 {
                     testsResponse.EnsureSuccessStatusCode();
                     var matchesCounts = await testsResponse.Content.ReadAsAsync<MatchesCounts>();
@@ -152,7 +152,7 @@ namespace AncestryDnaClustering.Models
 
                 try
                 {
-                    using (var testsResponse = await _dnaHomeClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchesv2?page={pageNumber}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
+                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchesv2?page={pageNumber}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
                     {
                         throttle.Release();
                         throttleReleased = true;
@@ -223,7 +223,7 @@ namespace AncestryDnaClustering.Models
 
             try
             {
-                using (var testsResponse = await _dnaHomeClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}/details"))
+                using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}/details"))
                 {
                     return testsResponse.IsSuccessStatusCode ? await testsResponse.Content.ReadAsAsync<Match>() : null;
                 }
@@ -297,7 +297,7 @@ namespace AncestryDnaClustering.Models
 
                 try
                 {
-                    using (var testsResponse = await _dnaHomeClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchesv2?page={pageNumber}&relationguid={guidInCommon}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
+                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchesv2?page={pageNumber}&relationguid={guidInCommon}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
                     {
                         throttle.Release();
                         throttleReleased = true;
@@ -411,7 +411,7 @@ namespace AncestryDnaClustering.Models
                 {
                     var matchesDictionary = matches.ToDictionary(match => match.TestGuid);
                     var url = $"/discoveryui-matchesservice/api/samples/{guid}/matchesv2/additionalInfo?ids=[{"%22" + string.Join("%22,%22", matchesDictionary.Keys) + "%22"}]&ancestors=true&tree=true";
-                    using (var testsResponse = await _dnaHomeClient.GetAsync(url))
+                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync(url))
                     {
                         throttle.Release();
                         throttleReleased = true;
@@ -486,7 +486,7 @@ namespace AncestryDnaClustering.Models
                 try
                 {
                     var url = $"/discoveryui-matchesservice/api/compare/{guid}/with/{testGuid}/commonancestors/";
-                    using (var testsResponse = await _dnaHomeClient.GetAsync(url))
+                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync(url))
                     {
                         throttle.Release();
                         throttleReleased = true;
@@ -519,7 +519,7 @@ namespace AncestryDnaClustering.Models
             try
             {
                 var url = $"/discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}";
-                using (var testsResponse = await _dnaHomeClient.PutAsJsonAsync(url, new { note }))
+                using (var testsResponse = await _ancestryLoginHelper.AncestryClient.PutAsJsonAsync(url, new { note }))
                 {
                     testsResponse.EnsureSuccessStatusCode();
                 }

@@ -98,14 +98,15 @@ namespace AncestryDnaClustering.ViewModels
             Settings.Default.Save();
 
             // Try primary site, and capture error if any.
-            var errorMessage = await SignInAsync(password, "www.ancestry.com");
+            var primaryHost = _loginHelper.Hosts.First();
+            var errorMessage = await SignInAsync(password, primaryHost);
             if (errorMessage == null)
             {
                 return;
             }
 
             // If not able to sign into the main Ancestry site, try some backups.
-            foreach (var alternateHost in new[] { "www.ancestry.com.au", "www.ancestry.co.uk" })
+            foreach (var alternateHost in _loginHelper.Hosts.Skip(1))
             {
                 if (await SignInAsync(password, alternateHost) == null)
                 {

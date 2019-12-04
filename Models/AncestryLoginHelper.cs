@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -9,20 +10,23 @@ namespace AncestryDnaClustering.Models
 {
     internal class AncestryLoginHelper
     {
-        private HttpClient _ancestryClient;
+        private Dictionary<string, HttpClient> _ancestryClients;
         private CookieContainer _cookies;
 
-        public AncestryLoginHelper(HttpClient ancestryClient, CookieContainer cookies)
+        public AncestryLoginHelper(Dictionary<string, HttpClient> ancestryClients, CookieContainer cookies)
         {
-            _ancestryClient = ancestryClient;
+            _ancestryClients = ancestryClients;
             _cookies = cookies;
         }
 
-        public async Task<bool> LoginAsync(string username, string password, string hostOverride)
+        public IEnumerable<string> Hosts => _ancestryClients.Keys;
+        public HttpClient AncestryClient { get; private set; }
+
+        public async Task<bool> LoginAsync(string username, string password, string host)
         {
-            if (hostOverride != null)
+            if (!_ancestryClients.TryGetValue(host, out var ancestryClient))
             {
-                _ancestryClient.BaseAddress = new Uri($"https://{hostOverride}");
+                return false;
             }
 
             foreach (var expect100Continue in new[] { false, true })
@@ -37,11 +41,10 @@ namespace AncestryDnaClustering.Models
                         var queryString = new StringContent(query);
                         queryString.Headers.ContentType = new MediaTypeHeaderValue(query[0] == '{' ? "application/json" : "application/x-www-form-urlencoded");
 
-                        if (await LoginAsync(url, queryString))
+                        if (await LoginAsync(url, queryString, ancestryClient))
                         {
                             try
                             {
-                                var host = _ancestryClient.BaseAddress.Host;
                                 var uri = new Uri($"https://{host}");
                                 var domain = uri.Authority.Replace("www.", "");
                                 foreach (Cookie cookie in _cookies.GetCookies(uri))
@@ -54,6 +57,7 @@ namespace AncestryDnaClustering.Models
                                 // Not fatal if we can't copy the cookies
                             }
 
+                            AncestryClient = ancestryClient;
                             return true;
                         }
                     }
@@ -63,9 +67,9 @@ namespace AncestryDnaClustering.Models
             return false;
         }
 
-        public async Task<bool> LoginAsync(string requestUri, StringContent queryString)
+        public async Task<bool> LoginAsync(string requestUri, StringContent queryString, HttpClient ancestryClient)
         {
-            using (var loginResponse = await _ancestryClient.PostAsync(requestUri, queryString))
+            using (var loginResponse = await ancestryClient.PostAsync(requestUri, queryString))
             {
                 if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
                 {
