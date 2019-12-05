@@ -77,7 +77,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
 
             var nodes = await ClusterAsync(clusterableMatchesToCorrelateList, immediateFamily, matrix, _progressData);
 
-            var primaryClusters = _primaryClusterFinder.GetPrimaryClusters(nodes.First())
+            var primaryClusters = _primaryClusterFinder.GetPrimaryClusters(nodes.FirstOrDefault())
                 .Where(cluster => cluster.NumChildren >= _minClusterSize)
                 .ToList();
 
@@ -85,7 +85,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 .SelectMany((cluster, clusterNum) => cluster.GetOrderedLeafNodes().Select(leafNode => new { LeafNode = leafNode, ClusterNum = clusterNum + 1 }))
                 .ToDictionary(pair => pair.LeafNode.Index, pair => pair.ClusterNum);
 
-            if (maxIndex < clusterableMatches.Max(match => match.Index))
+            if (nodes.Count > 0 && maxIndex < clusterableMatches.Max(match => match.Index))
             {
                 var leafNodes = nodes.First().GetOrderedLeafNodes().ToList();
 

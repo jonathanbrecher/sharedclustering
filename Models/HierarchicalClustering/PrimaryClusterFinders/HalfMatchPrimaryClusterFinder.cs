@@ -11,6 +11,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.PrimaryClusterFind
     {
         public IEnumerable<Node> GetPrimaryClusters(Node node)
         {
+            if (node == null)
+            {
+                return Enumerable.Empty<Node>();
+            }
+
             if (!(node is ClusterNode clusterNode))
             {
                 return new[] { node };
