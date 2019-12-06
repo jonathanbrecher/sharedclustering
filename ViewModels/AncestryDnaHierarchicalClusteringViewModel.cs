@@ -72,7 +72,7 @@ namespace AncestryDnaClustering.ViewModels
                 if (SetFieldValue(ref _filename, value, nameof(Filename)))
                 {
                     Settings.Default.Filename = Filename;
-                    CanProcessSavedData = File.Exists(Filename) && MinCentimorgansToCluster > 0;
+                    UpdateCanProcessSavedData();
                 }
             }
         }
@@ -105,6 +105,8 @@ namespace AncestryDnaClustering.ViewModels
             set => SetFieldValue(ref _canProcessSavedData, value, nameof(CanProcessSavedData));
         }
 
+        private void UpdateCanProcessSavedData() => CanProcessSavedData = File.Exists(Filename) && MinCentimorgansToCluster > 0;
+
         // The size of the smallest valid cluster. This defaults to 3, which probably shouldn't be changed.
         private int _minClusterSize;
         public int MinClusterSize
@@ -132,7 +134,7 @@ namespace AncestryDnaClustering.ViewModels
                 if (SetFieldValue(ref _minCentimorgansToCluster, value, nameof(MinCentimorgansToCluster)))
                 {
                     Settings.Default.MinCentimorgansToCluster = MinCentimorgansToCluster;
-                    CanProcessSavedData = File.Exists(Filename) && MinCentimorgansToCluster > 0;
+                    UpdateCanProcessSavedData();
                     ClusterTypeVeryClose = MinCentimorgansToCluster == 90 && MinCentimorgansInSharedMatches == 90;
                     ClusterTypeOver20 = MinCentimorgansToCluster == 20 && MinCentimorgansInSharedMatches == 20;
                     ClusterTypeComplete = MinCentimorgansToCluster <= 6 && MinCentimorgansInSharedMatches <= 6;
@@ -356,6 +358,8 @@ namespace AncestryDnaClustering.ViewModels
 
             try
             {
+                CanProcessSavedData = false;
+
                 var (testTakerTestId, clusterableMatches) = await _matchesLoader.LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches, ProgressData);
                 if (clusterableMatches == null || clusterableMatches.Count == 0)
                 {
@@ -414,6 +418,7 @@ namespace AncestryDnaClustering.ViewModels
             finally
             {
                 ProgressData.Reset(DateTime.Now - startTime, "Done");
+                UpdateCanProcessSavedData();
             }
         }
     }
