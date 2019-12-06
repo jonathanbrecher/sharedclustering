@@ -25,7 +25,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Saved data file: "/>
+                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Saved data file: "/>
                 <TextBox Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Stretch"
                          Text="{Binding Filename, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <Button Grid.Row="0" Grid.Column="4"
@@ -87,6 +87,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="10"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="220"/>
@@ -123,8 +125,13 @@
                         </TextBox>
                     </AdornerDecorator>
 
-                    <TextBlock Grid.Row="10" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry host name: "/>
-                    <TextBox Grid.Row="10" Grid.Column="2" HorizontalAlignment="Left" Width="250" Text="{Binding AncestryHostName}"/>
+                    <TextBlock Grid.Row="10" Grid.Column="0" VerticalAlignment="Center" Text="Exclude clusters with greater than: "/>
+                    <StackPanel Grid.Row="10" Grid.Column="2" Orientation="Horizontal">
+                        <TextBox HorizontalAlignment="Left" Width="50" Text="{Binding ExcludeClustersGreaterThan, TargetNullValue=''}"/>
+                        <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Text="members"/>
+                    </StackPanel>
+                    <TextBlock Grid.Row="12" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry host name: "/>
+                    <TextBox Grid.Row="12" Grid.Column="2" HorizontalAlignment="Left" Width="250" Text="{Binding AncestryHostName}"/>
                 </Grid>
             </Expander>
 

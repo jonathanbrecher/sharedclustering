@@ -47,6 +47,7 @@ namespace AncestryDnaClustering.ViewModels
             MaxGrayPercentage = Settings.Default.MaxGrayPercentage;
             FilterToGuids = Settings.Default.FilterToGuids;
             AncestryHostName = Settings.Default.AncestryHostName;
+            ExcludeClustersGreaterThan = Settings.Default.ExcludeClustersGreaterThan > 0 ? Settings.Default.ExcludeClustersGreaterThan : (int?)null;
             CorrelationFilename = Settings.Default.CorrelationFilename;
             ShowAdvancedClusteringOptions = Settings.Default.ShowAdvancedClusteringOptions;
             ClusterTypeVeryClose = Settings.Default.ClusterTypeVeryClose;
@@ -223,6 +224,20 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
+        // The Ancestry host name to be used in links within the cluster diagram.
+        private int? _excludeClustersGreaterThan;
+        public int? ExcludeClustersGreaterThan
+        {
+            get => _excludeClustersGreaterThan;
+            set
+            {
+                if (SetFieldValue(ref _excludeClustersGreaterThan, value, nameof(ExcludeClustersGreaterThan)))
+                {
+                    Settings.Default.ExcludeClustersGreaterThan = ExcludeClustersGreaterThan ?? 0;
+                }
+            }
+        }
+
         // The file name (full path name) where the final cluster diagram should be saved.
         private string _correlationFilename;
         public string CorrelationFilename
@@ -375,6 +390,17 @@ namespace AncestryDnaClustering.ViewModels
                     new HalfMatchPrimaryClusterFinder(),
                     new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, AncestryHostName, _minClusterSize, MaxMatchesPerClusterFile, lowestClusterableCentimorgans, ProgressData),
                     ProgressData);
+
+                if (ExcludeClustersGreaterThan != null)
+                {
+                    clusterableMatches = hierarchicalClustering.ExcludeLargeClusters(clusterableMatches, ExcludeClustersGreaterThan.Value);
+                    if (clusterableMatches.Count == 0)
+                    {
+                        MessageBox.Show($"All matches excluded as being clusters with more than {ExcludeClustersGreaterThan} members", "All matches excluded", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
+                }
+
                 var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 
                 if (OpenClusterFileWhenComplete)

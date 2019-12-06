@@ -411,5 +411,41 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 .ToList();
             return neighbors;
         }
+
+        public List<IClusterableMatch> ExcludeLargeClusters(List<IClusterableMatch> clusterableMatches, int maxClusterSize)
+        {
+            // Tentatively exclude matches who have more shared matches than maxClusterSize.
+            // This typically excludes too many matches. For example, it will almost always exclude very close matches such as parents/children
+            var matchesToExclude = clusterableMatches.Where(match => match.Count > maxClusterSize).ToList();
+
+            // Restrict the excluded matches to those matches that have more than maxClusterSize shared matches that will also be excluded.
+            while (true)
+            {
+                var matchIndexesToExclude = new HashSet<int>(matchesToExclude.Select(match => match.Index));
+
+                // Also include matches where at least 3/4 of their shared matches are excluded
+                var partiallyExcludedMatches = clusterableMatches
+                    .Except(matchesToExclude)
+                    .Where(match => match.Coords.Intersect(matchIndexesToExclude).Count() > match.Count / 2);
+
+                var matchesToExcludeUpdated = matchesToExclude
+                    .Where(match =>
+                    {
+                        var intersectionSize = match.Coords.Intersect(matchIndexesToExclude).Count();
+                        return intersectionSize > maxClusterSize || intersectionSize > match.Count / 2;
+                    })
+                    .Concat(partiallyExcludedMatches)
+                    .ToList();
+
+                if (matchesToExclude.Count == matchesToExcludeUpdated.Count)
+                {
+                    break;
+                }
+
+                matchesToExclude = matchesToExcludeUpdated;
+            }
+
+            return clusterableMatches.Except(matchesToExclude).ToList();
+        }
     }
 }

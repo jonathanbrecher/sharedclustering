@@ -490,5 +490,17 @@ namespace AncestryDnaClustering.Properties {
                 this["LastUsedDirectory"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ExcludeClustersGreaterThan {
+            get {
+                return ((int)(this["ExcludeClustersGreaterThan"]));
+            }
+            set {
+                this["ExcludeClustersGreaterThan"] = value;
+            }
+        }
     }
 }
