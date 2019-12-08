@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
+using System.Linq;
 using OfficeOpenXml;
 
 namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
@@ -14,11 +14,12 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
             _ws = ws;
             _writers = writers;
 
-            if (!string.IsNullOrEmpty(testTakerTestId))
+            const string hyperlinkStyleName = "HyperLink";  // Language-dependent
+            if (!string.IsNullOrEmpty(testTakerTestId) && !p.Workbook.Styles.NamedStyles.Any(style => style.Name == hyperlinkStyleName))
             {
                 // Google Sheets does not support HyperlinkBase
                 // p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/");
-                var namedStyle = p.Workbook.Styles.CreateNamedStyle("HyperLink");   // Language-dependent
+                var namedStyle = p.Workbook.Styles.CreateNamedStyle(hyperlinkStyleName);
                 namedStyle.Style.Font.UnderLine = true;
                 namedStyle.Style.Font.Color.SetColor(Color.Blue);
             }

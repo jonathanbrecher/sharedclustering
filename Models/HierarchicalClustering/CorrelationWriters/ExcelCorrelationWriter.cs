@@ -23,6 +23,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
         private readonly int _minClusterSize;
         private readonly double _lowestClusterableCentimorgans;
         private readonly ProgressData _progressData;
+        private ExcelPackage _p = null;
 
         public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, string ancestryHostName, int minClusterSize, int maxMatchesPerClusterFile, double lowestClusterableCentimorgans, ProgressData progressData)
         {
@@ -35,10 +36,37 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             _progressData = progressData;
         }
 
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _p?.Dispose();
+                _p = null;
+            }
+        }
+
+        public IDisposable BeginWriting()
+        {
+            _p = new ExcelPackage();
+            return _p;
+        }
+
+        private bool FileIsOpen() => _p != null;
+
         public int MaxColumns => 16000;
         public int MaxMatchesPerClusterFile { get; }
 
-        public async Task<List<string>> OutputCorrelationAsync(List<ClusterNode> nodes, Dictionary<int, IClusterableMatch> matchesByIndex, Dictionary<int, int> indexClusterNumbers)
+        public async Task<List<string>> OutputCorrelationAsync(
+            List<ClusterNode> nodes, 
+            Dictionary<int, IClusterableMatch> matchesByIndex, 
+            Dictionary<int, int> indexClusterNumbers,
+            string worksheetName)
         {
             if (string.IsNullOrEmpty(_correlationFilename))
             {
@@ -92,120 +120,158 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                 .Select(match => match.Index)
                 );
 
+            // Fixed columns
+            var clusterNumberWriter = new ClusterNumberWriter(indexClusterNumbers);
+            var writers = new IColumnWriter[]
+            {
+                clusterNumberWriter,
+                new NameWriter(false),
+                matches.Any(match => !string.IsNullOrEmpty(match.Match.TestGuid)) ? new TestIdWriter() : null,
+                !string.IsNullOrEmpty(_testTakerTestId) ? new LinkWriter(_testTakerTestId, _ancestryHostName) : null,
+                new SharedCentimorgansWriter(),
+                matches.Any(match => match.Match.SharedSegments > 0) ? new SharedSegmentsWriter() : null,
+                matches.Any(match => match.Match.LongestBlock > 0) ? new LongestBlockWriter() : null,
+                matches.Any(match => !string.IsNullOrEmpty(match.Match.TreeUrl)) ? new TreeUrlWriter(_testTakerTestId) : null,
+                matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined) ? new TreeTypeWriter() : null,
+                matches.Any(match => match.Match.TreeSize > 0) ? new TreeSizeWriter() : null,
+                matches.Any(match => match.Match.CommonAncestors?.Count > 0) ? new CommonAncestorsWriter() : null,
+                matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
+                matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
+                new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter, _minClusterSize),
+                new NoteWriter(),
+            }.Where(writer => writer != null).ToArray();
+
+            if (!FileIsOpen())
+            {
+                return await OutputFiles(worksheetName, matchesByIndex, leafNodes, nonDistantMatches, orderedIndexes, writers, numOutputFiles);
+            }
+            else
+            {
+                await OutputWorksheet(worksheetName, matchesByIndex, leafNodes, nonDistantMatches, orderedIndexes, writers, 0);
+                return new List<string>{ _correlationFilename };
+            }
+        }
+
+        private async Task<List<string>> OutputFiles(
+            string worksheetName,
+            Dictionary<int, IClusterableMatch> matchesByIndex,
+            List<LeafNode> leafNodes,
+            List<IClusterableMatch> nonDistantMatches,
+            List<int> orderedIndexes,
+            IColumnWriter[] writers,
+            int numOutputFiles)
+        {
             var files = new List<string>();
 
             for (var fileNum = 0; fileNum < numOutputFiles; ++fileNum)
-            { 
-                using (var p = new ExcelPackage())
+            {
+                using (var p = BeginWriting())
                 {
-                    await Task.Run(() =>
-                    {
-                        var ws = p.Workbook.Worksheets.Add("heatmap");
-
-                        // Start at the top left of the sheet
-                        var row = 1;
-                        var col = 1;
-
-                        // Rotate the entire top row by 90 degrees
-                        ws.Row(row).Style.TextRotation = 90;
-
-                        // Fixed columns
-                        var clusterNumberWriter = new ClusterNumberWriter(indexClusterNumbers);
-                        var writers = new IColumnWriter[]
-                        {
-                            clusterNumberWriter,
-                            new NameWriter(false),
-                            matches.Any(match => !string.IsNullOrEmpty(match.Match.TestGuid)) ? new TestIdWriter() : null,
-                            !string.IsNullOrEmpty(_testTakerTestId) ? new LinkWriter(_testTakerTestId, _ancestryHostName) : null,
-                            new SharedCentimorgansWriter(),
-                            matches.Any(match => match.Match.SharedSegments > 0) ? new SharedSegmentsWriter() : null,
-                            matches.Any(match => match.Match.LongestBlock > 0) ? new LongestBlockWriter() : null,
-                            matches.Any(match => !string.IsNullOrEmpty(match.Match.TreeUrl)) ? new TreeUrlWriter(_testTakerTestId) : null,
-                            matches.Any(match => match.Match.TreeType != SavedData.TreeType.Undetermined) ? new TreeTypeWriter() : null,
-                            matches.Any(match => match.Match.TreeSize > 0) ? new TreeSizeWriter() : null,
-                            matches.Any(match => match.Match.CommonAncestors?.Count > 0) ? new CommonAncestorsWriter() : null,
-                            matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
-                            matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
-                            new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter, _minClusterSize),
-                            new NoteWriter(),
-                        }.Where(writer => writer != null).ToArray();
-                        var columnWriters = new ColumnWritersCollection(p, ws, writers, _testTakerTestId);
-
-                        col = columnWriters.WriteHeaders(row, col);
-
-                        var firstMatrixDataRow = row + 1;
-                        var firstMatrixDataColumn = col;
-
-                        // Column headers for each match
-                        var matchColumns = nonDistantMatches.Skip(fileNum * MaxMatchesPerClusterFile).Take(MaxMatchesPerClusterFile).ToList();
-                        foreach (var nonDistantMatch in matchColumns)
-                        {
-                            ws.Cells[row, col++].Value = nonDistantMatch.Match.Name;
-                        }
-
-                        // One row for each match
-                        foreach (var leafNode in leafNodes)
-                        {
-                            var match = matchesByIndex[leafNode.Index];
-                            row++;
-
-                            // Row headers
-                            col = 1;
-                            col = columnWriters.WriteColumns(row, col, match, leafNode);
-
-                            // Correlation data
-                            foreach (var coordAndIndex in leafNode.GetCoordsArray(orderedIndexes)
-                                .Zip(orderedIndexes, (c, i) => new { Coord = c, Index = i })
-                                .Skip(fileNum * MaxMatchesPerClusterFile).Take(MaxMatchesPerClusterFile))
-                            {
-                                if (coordAndIndex.Coord != 0)
-                                {
-                                    ws.Cells[row, col].Value = coordAndIndex.Coord;
-                                }
-                                col++;
-                            }
-
-                            _progressData.Increment();
-                        }
-
-                        if (leafNodes.Count > 0 && matchColumns.Count > 0)
-                        {
-                            // Heatmap color scale
-                            var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + leafNodes.Count, firstMatrixDataColumn - 1 + matchColumns.Count);
-                            var threeColorScale = ws.ConditionalFormatting.AddThreeColorScale(correlationData);
-                            threeColorScale.LowValue.Type = eExcelConditionalFormattingValueObjectType.Num;
-                            threeColorScale.LowValue.Value = 0;
-                            threeColorScale.LowValue.Color = Color.Gainsboro;
-                            threeColorScale.MiddleValue.Type = eExcelConditionalFormattingValueObjectType.Num;
-                            threeColorScale.MiddleValue.Value = 1;
-                            threeColorScale.MiddleValue.Color = Color.Cornsilk;
-                            threeColorScale.HighValue.Type = eExcelConditionalFormattingValueObjectType.Num;
-                            threeColorScale.HighValue.Value = 2;
-                            threeColorScale.HighValue.Color = Color.DarkRed;
-                        }
-
-                        // Heatmap number format
-                        ws.Cells[$"1:{matchColumns.Count}"].Style.Numberformat.Format = "General";
-
-                        col = 1;
-                        col = columnWriters.FormatColumns(row, col);
-
-                        // Freeze the column and row headers
-                        ws.View.FreezePanes(firstMatrixDataRow, firstMatrixDataColumn);
-                    });
-
-                    var fileName = _correlationFilename;
-                    if (fileNum > 0)
-                    {
-                        fileName = FileUtils.AddSuffixToFilename(fileName, (fileNum + 1).ToString());
-                    }
-
-                    FileUtils.Save(p, fileName);
-
-                    files.Add(fileName);
+                    await OutputWorksheet(worksheetName, matchesByIndex, leafNodes, nonDistantMatches, orderedIndexes, writers, fileNum);
+                    files.Add(SaveFile(fileNum));
                 }
+                _p = null;
             }
             return files;
+        }
+
+        public string SaveFile(int fileNum)
+        {
+            var fileName = _correlationFilename;
+            if (fileNum > 0)
+            {
+                fileName = FileUtils.AddSuffixToFilename(fileName, (fileNum + 1).ToString());
+            }
+
+            FileUtils.Save(_p, fileName);
+
+            return fileName;
+        }
+
+        private Task OutputWorksheet(
+            string worksheetName,
+            Dictionary<int, IClusterableMatch> matchesByIndex,
+            List<LeafNode> leafNodes,
+            List<IClusterableMatch> nonDistantMatches,
+            List<int> orderedIndexes,
+            IColumnWriter[] writers,
+            int fileNum)
+        {
+            return Task.Run(() =>
+            {
+                var ws = _p.Workbook.Worksheets.Add(worksheetName);
+
+                // Start at the top left of the sheet
+                var row = 1;
+                var col = 1;
+
+                // Rotate the entire top row by 90 degrees
+                ws.Row(row).Style.TextRotation = 90;
+
+                var columnWriters = new ColumnWritersCollection(_p, ws, writers, _testTakerTestId);
+
+                col = columnWriters.WriteHeaders(row, col);
+
+                var firstMatrixDataRow = row + 1;
+                var firstMatrixDataColumn = col;
+
+                // Column headers for each match
+                var matchColumns = nonDistantMatches.Skip(fileNum * MaxMatchesPerClusterFile).Take(MaxMatchesPerClusterFile).ToList();
+                foreach (var nonDistantMatch in matchColumns)
+                {
+                    ws.Cells[row, col++].Value = nonDistantMatch.Match.Name;
+                }
+
+                // One row for each match
+                foreach (var leafNode in leafNodes)
+                {
+                    var match = matchesByIndex[leafNode.Index];
+                    row++;
+
+                    // Row headers
+                    col = 1;
+                    col = columnWriters.WriteColumns(row, col, match, leafNode);
+
+                    // Correlation data
+                    foreach (var coordAndIndex in leafNode.GetCoordsArray(orderedIndexes)
+                        .Zip(orderedIndexes, (c, i) => new { Coord = c, Index = i })
+                        .Skip(fileNum * MaxMatchesPerClusterFile).Take(MaxMatchesPerClusterFile))
+                    {
+                        if (coordAndIndex.Coord != 0)
+                        {
+                            ws.Cells[row, col].Value = coordAndIndex.Coord;
+                        }
+                        col++;
+                    }
+
+                    _progressData.Increment();
+                }
+
+                if (leafNodes.Count > 0 && matchColumns.Count > 0)
+                {
+                    // Heatmap color scale
+                    var correlationData = new ExcelAddress(firstMatrixDataRow, firstMatrixDataColumn, firstMatrixDataRow - 1 + leafNodes.Count, firstMatrixDataColumn - 1 + matchColumns.Count);
+                    var threeColorScale = ws.ConditionalFormatting.AddThreeColorScale(correlationData);
+                    threeColorScale.LowValue.Type = eExcelConditionalFormattingValueObjectType.Num;
+                    threeColorScale.LowValue.Value = 0;
+                    threeColorScale.LowValue.Color = Color.Gainsboro;
+                    threeColorScale.MiddleValue.Type = eExcelConditionalFormattingValueObjectType.Num;
+                    threeColorScale.MiddleValue.Value = 1;
+                    threeColorScale.MiddleValue.Color = Color.Cornsilk;
+                    threeColorScale.HighValue.Type = eExcelConditionalFormattingValueObjectType.Num;
+                    threeColorScale.HighValue.Value = 2;
+                    threeColorScale.HighValue.Color = Color.DarkRed;
+                }
+
+                // Heatmap number format
+                ws.Cells[$"1:{matchColumns.Count}"].Style.Numberformat.Format = "General";
+
+                col = 1;
+                col = columnWriters.FormatColumns(row, col);
+
+                // Freeze the column and row headers
+                ws.View.FreezePanes(firstMatrixDataRow, firstMatrixDataColumn);
+            });
         }
     }
 }

@@ -405,7 +405,7 @@ namespace AncestryDnaClustering.ViewModels
                     }
                 }
 
-                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
+                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster, "heatmap");
 
                 if (OpenClusterFileWhenComplete)
                 {

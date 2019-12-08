@@ -37,7 +37,13 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             _progressData = progressData;
         }
 
-        public async Task<List<string>> ClusterAsync(List<IClusterableMatch> clusterableMatches, Dictionary<int, IClusterableMatch> matchesByIndex, HashSet<string> testIdsToFilter, double lowestClusterableCentimorgans, double minCentimorgansToCluster)
+        public async Task<List<string>> ClusterAsync(
+            List<IClusterableMatch> clusterableMatches,
+            Dictionary<int, IClusterableMatch> matchesByIndex,
+            HashSet<string> testIdsToFilter,
+            double lowestClusterableCentimorgans,
+            double minCentimorgansToCluster,
+            string worksheetName)
         {
             var minCentimorgansToClusterTruncated = Math.Max(lowestClusterableCentimorgans, minCentimorgansToCluster);
             var maxIndex = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= minCentimorgansToClusterTruncated).Max(match => match.Index);
@@ -96,9 +102,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 await Recluster(nodes, extendedClusters, immediateFamily, matchesByIndex, matrix);
             }
 
-            var files = await _correlationWriter.OutputCorrelationAsync(nodes, matchesByIndex, indexClusterNumbers);
-
-            return files;
+            return await _correlationWriter.OutputCorrelationAsync(nodes, matchesByIndex, indexClusterNumbers, worksheetName);
         }
 
         private async Task<List<ClusterNode>> ClusterAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, List<IClusterableMatch> immediateFamily, IReadOnlyDictionary<int, float[]> matrix, ProgressData progressData)
