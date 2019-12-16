@@ -377,7 +377,7 @@ namespace AncestryDnaClustering.ViewModels
 
                 var matchesWithSharedMatches = output.Icw.Where(match => match.Value.Count > 1).ToList();
                 var averageSharedMatches = matchesWithSharedMatches.Count == 0 ? 0 : matchesWithSharedMatches.Sum(match => match.Value.Count - 1) / (double)matchesWithSharedMatches.Count;
-                ProgressData.Reset(DateTime.Now - startTime, $"Done. Downloaded {matches.Count} matches ({matchesWithSharedMatches.Count} with shared matches, averaging {averageSharedMatches:0.#} shared matches)");
+                ProgressData.Reset(DateTime.Now - startTime, $"Done. Downloaded {matches.Count} matches over {MinCentimorgansToRetrieve} cM ({matchesWithSharedMatches.Count} with shared matches, averaging {averageSharedMatches:0.#} shared matches over {MinSharedMatchesCentimorgansToRetrieve} cM)");
             }
             catch (Exception ex)
             {

@@ -198,10 +198,7 @@ namespace AncestryDnaClustering.ViewModels
 
             // Update the bound properties explicitly on the Dispatcher thread so that this method can be called from a background task.
             // Application.Current might be null when the application is in the process of quitting.
-            Application.Current?.Dispatcher.Invoke(() =>
-            {
-                Value = Value + 1;
-            });
+            Application.Current?.Dispatcher.Invoke(() => Value += 1);
         }
     }
 }
