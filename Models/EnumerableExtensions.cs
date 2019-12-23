@@ -66,9 +66,9 @@ namespace AncestryDnaClustering.Models
                         ++set[item];
                     }
 
-                    // Remove smallest item from set
+                    // Remove smallest item from set (unless it's the only entry in the set)
                     ++resultCount;
-                    if (resultCount - first.Value >= count)
+                    if (resultCount - first.Value >= count && set.Count() > 1)
                     {
                         set.Remove(first.Key);
                         resultCount -= first.Value;
