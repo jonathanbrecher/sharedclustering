@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using AncestryDnaClustering.Models.HierarchicalClustering.Distance;
 
 namespace AncestryDnaClustering.Models.HierarchicalClustering
@@ -31,6 +32,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
         public abstract IEnumerable<ClusterNode> GetOrderedClusterNodes();
 
         public abstract IEnumerable<LeafNode> GetOrderedLeafNodes();
+
+        public HashSet<int> GetOrderedLeafNodesIndexes() => new HashSet<int>(GetOrderedLeafNodes().Select(leafNode => leafNode.Index));
 
         public IEnumerable<ClusterNode> GetParents()
         {

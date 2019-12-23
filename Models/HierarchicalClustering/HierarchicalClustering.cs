@@ -206,7 +206,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 var bestParentCluster = parentClusters
                     .Where(primaryClusters.Contains)
                     .GroupBy(c => c)
-                    .Select(g => new { ParentCluster = g.Key, OverlapCount = g.Key.GetOrderedLeafNodes().Select(n => n.Index).Intersect(match.Coords).Count() })
+                    .Select(g => new { ParentCluster = g.Key, OverlapCount = g.Key.GetOrderedLeafNodesIndexes().Intersect(match.Coords).Count() })
                     .Where(pair => pair.OverlapCount >= _minClusterSize)
                     .OrderByDescending(pair => pair.OverlapCount)
                     .Select(pair => pair.ParentCluster)
@@ -235,6 +235,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
 
             await Task.Run(async () =>
             {
+                // Collect isolated nodes off to the side as we find them
+                var isolatedNodes = new List<Node>();
+
                 while (nodes.Count > 1)
                 {
                     // This is a little verbose, but optimized for performance -- O(N) overall.
@@ -254,11 +257,44 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                         }
                     }
 
+                    var foundNodesToCluster = secondNode != null;
+
                     ClusterNode clusterNode;
-                    if (secondNode == null)
+                    if (!foundNodesToCluster)
                     {
-                        var nodesLargestFirst = nodes.OrderByDescending(node => node.GetOrderedLeafNodes().Count()).Take(2).ToList();
-                        clusterNode = new ClusterNode(nodesLargestFirst[0], nodesLargestFirst[1], double.PositiveInfinity, distanceMetric);
+                        // Some of the nodes might have no neighbors because they are fully isolated.
+                        // In other words, none of the leaf nodes in the cluster has any shared matches outside of the cluster.
+                        // This might happen for a very distant cluster with no sharing in closer relatives,
+                        // or for example a split between maternal and paternal relatives.
+                        var isIsolatedNodes = nodes.ToLookup(node =>
+                        {
+                            var leafNodeIndexes = node.GetOrderedLeafNodesIndexes();
+                            return node.GetOrderedLeafNodes().All(leafNode => leafNodeIndexes.IsSupersetOf(leafNode.Coords.Keys));
+                        });
+                        var newIsolatedNodes = isIsolatedNodes[true].ToList();
+                        if (newIsolatedNodes.Count > 0)
+                        {
+                            // Segregate the isolated nodes, since there is nothing that will make them un-isolated.
+                            isolatedNodes.AddRange(newIsolatedNodes);
+                            nodes = isIsolatedNodes[false].ToList();
+
+                            // If there are fewer than 2 nodes remaining after segregating the isolated nodes, we're done.
+                            if (nodes.Count <= 1)
+                            {
+                                break;
+                            }
+                        }
+
+                        // All of the remaining nodes have at least one shared match in some other cluster.
+                        // Make a larger cluster by joining the smallest cluster with the other node that has the greatest overlap with it.
+                        var smallestNode = nodes.OrderBy(node => node.NumChildren).First();
+                        var smallestNodeLeafNodes = new HashSet<int>(smallestNode.GetOrderedLeafNodesIndexes());
+                        var otherNode = nodes
+                            .Where(node => node != smallestNode)
+                            .OrderByDescending(node => smallestNodeLeafNodes.Intersect(node.GetOrderedLeafNodesIndexes()).Count())
+                            .ThenBy(node => node.NumChildren)
+                            .First();
+                        clusterNode = new ClusterNode(otherNode, smallestNode, double.PositiveInfinity, distanceMetric);
                     }
                     else
                     {
@@ -331,6 +367,24 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                     nodes.Add(clusterNode);
 
                     progressData.Increment();
+                }
+
+                // If any isolated nodes were found, add them to the end in order of decreasing size.
+                if (isolatedNodes.Count > 0)
+                {
+                    var nodesLargestFirst = isolatedNodes.OrderByDescending(n => n.NumChildren).ToList();
+                    var node = nodesLargestFirst.First();
+                    foreach (var otherNode in nodesLargestFirst.Skip(1))
+                    {
+                        node = new ClusterNode(node, otherNode, double.PositiveInfinity, distanceMetric);
+                    }
+
+                    if (nodes.Count > 0)
+                    {
+                        node = new ClusterNode(nodes.Last(), node, double.PositiveInfinity, distanceMetric);
+                        nodes.Remove(nodes.Last());
+                    }
+                    nodes.Add(node);
                 }
             });
 
