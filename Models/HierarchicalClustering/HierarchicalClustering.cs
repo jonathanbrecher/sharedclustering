@@ -304,38 +304,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                         clusterNode = new ClusterNode(first, second, neighborToCluster.DistanceSquared, distanceMetric);
                     }
 
-                    var nodesWithRemovedNeighbors = new HashSet<LeafNode>();
-                    var nodesToRemove = new List<LeafNode>();
+                    var nodesToRemove = GetNodesToRemove(clusterNode);
 
-                    // If joining clusters with more than one node, then the interior nodes are no longer available for further clustering.
-                    if (clusterNode.First.FirstLeaf != clusterNode.First.SecondLeaf)
-                    {
-                        nodesToRemove.Add(clusterNode.First.SecondLeaf);
-                    }
-                    if (clusterNode.Second.FirstLeaf != clusterNode.Second.SecondLeaf)
-                    {
-                        nodesToRemove.Add(clusterNode.Second.FirstLeaf);
-                    }
-
-                    // If at least one node is unavailable for further clustering, then remove those nodes from the lists of neighbors.
-                    if (nodesToRemove.Count > 0)
-                    {
-                        // Find the exposed leaf nodes that might have the the unavailable nodes as potential neighbors.
-                        var leafNodesWithNeighbors = nodes.Select(node => node.FirstLeaf)
-                            .Concat(nodes.Where(node => node.SecondLeaf != node.FirstLeaf).Select(node => node.SecondLeaf))
-                            .Where(leafNode => leafNode.NeighborsByDistance?.Count > 0);
-
-                        var removeNeighborsTasks = leafNodesWithNeighbors
-                        .Where(node => nodesToRemove.Any(nodeToRemove => nodeToRemove.Index < node.Index))    
-                        .Select(node => Task.Run(() =>
-                            {
-                                var numNeighborsRemoved = node.NeighborsByDistance.RemoveAll(neighbor => nodesToRemove.Contains(neighbor.Node));
-                                return numNeighborsRemoved > 0 ? node : null;
-                            }));
-
-                        var affectedNodes = await Task.WhenAll(removeNeighborsTasks);
-                        nodesWithRemovedNeighbors.UnionWith(affectedNodes.Where(node => node != null));
-                    }
+                    var nodesWithRemovedNeighbors = new HashSet<LeafNode>(await RemoveNodesAsync(nodes, nodesToRemove.ToList()));
 
                     nodes.Remove(clusterNode.First);
                     nodes.Remove(clusterNode.Second);
@@ -350,19 +321,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                         nodesWithRemovedNeighbors.Add(clusterNode.SecondLeaf);
                     }
 
-                    var nodesWithLastNeighborRemoved = nodesWithRemovedNeighbors.Where(node => node.NeighborsByDistance.Count == 0).ToList();
-                    if (nodesWithLastNeighborRemoved.Count > 0)
-                    {
-                        var recalculateTasks = nodesWithLastNeighborRemoved.Select(leafNode => Task.Run(() =>
-                        {
-                            var highestParent = leafNode.GetHighestParent();
-                            var leafNodes = nodes.Select(node => node.FirstLeaf)
-                               .Concat(nodes.Where(node => node.SecondLeaf != node.FirstLeaf).Select(node => node.SecondLeaf))
-                               .Where(node => node != highestParent.FirstLeaf && node != highestParent.SecondLeaf);
-                            leafNode.NeighborsByDistance = GetNeighborsByDistance(leafNodes, leafNode, distanceMetric);
-                        }));
-                        await Task.WhenAll(recalculateTasks);
-                    }
+                    await RecalculateNeighborsAsync(nodes, nodesWithRemovedNeighbors, distanceMetric);
 
                     nodes.Add(clusterNode);
 
@@ -391,6 +350,60 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             progressData.Reset("Done");
 
             return nodes.OfType<ClusterNode>().ToList();
+        }
+
+        private static IEnumerable<LeafNode> GetNodesToRemove(ClusterNode clusterNode)
+        {
+            // If joining clusters with more than one node, then the interior nodes are no longer available for further clustering.
+            if (clusterNode.First.FirstLeaf != clusterNode.First.SecondLeaf)
+            {
+                yield return clusterNode.First.SecondLeaf;
+            }
+            if (clusterNode.Second.FirstLeaf != clusterNode.Second.SecondLeaf)
+            {
+                yield return clusterNode.Second.FirstLeaf;
+            }
+        }
+
+        private static async Task<IEnumerable<LeafNode>> RemoveNodesAsync(ICollection<Node> nodes, List<LeafNode> nodesToRemove)
+        {
+            // If at least one node is unavailable for further clustering, then remove those nodes from the lists of neighbors.
+            if (nodesToRemove.Count > 0)
+            {
+                // Find the exposed leaf nodes that might have the the unavailable nodes as potential neighbors.
+                var leafNodesWithNeighbors = nodes.Select(node => node.FirstLeaf)
+                    .Concat(nodes.Where(node => node.SecondLeaf != node.FirstLeaf).Select(node => node.SecondLeaf))
+                    .Where(leafNode => leafNode.NeighborsByDistance?.Count > 0);
+
+                var removeNeighborsTasks = leafNodesWithNeighbors
+                .Where(node => nodesToRemove.Any(nodeToRemove => nodeToRemove.Index < node.Index))
+                .Select(node => Task.Run(() =>
+                {
+                    var numNeighborsRemoved = node.NeighborsByDistance.RemoveAll(neighbor => nodesToRemove.Contains(neighbor.Node));
+                    return numNeighborsRemoved > 0 ? node : null;
+                }));
+
+                var affectedNodes = await Task.WhenAll(removeNeighborsTasks);
+                return affectedNodes.Where(node => node != null);
+            }
+            return Enumerable.Empty<LeafNode>();
+        }
+
+        private static async Task RecalculateNeighborsAsync(ICollection<Node> nodes, IEnumerable<LeafNode> nodesWithRemovedNeighbors, IDistanceMetric distanceMetric)
+        {
+            var nodesWithLastNeighborRemoved = nodesWithRemovedNeighbors.Where(node => node.NeighborsByDistance.Count == 0).ToList();
+            if (nodesWithLastNeighborRemoved.Count > 0)
+            {
+                var recalculateTasks = nodesWithLastNeighborRemoved.Select(leafNode => Task.Run(() =>
+                {
+                    var highestParent = leafNode.GetHighestParent();
+                    var leafNodes = nodes.Select(node => node.FirstLeaf)
+                       .Concat(nodes.Where(node => node.SecondLeaf != node.FirstLeaf).Select(node => node.SecondLeaf))
+                       .Where(node => node != highestParent.FirstLeaf && node != highestParent.SecondLeaf);
+                    leafNode.NeighborsByDistance = GetNeighborsByDistance(leafNodes, leafNode, distanceMetric);
+                }));
+                await Task.WhenAll(recalculateTasks);
+            }
         }
 
         private async Task<List<Node>> GetLeafNodesAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, IReadOnlyDictionary<int, float[]> matrix, IDistanceMetric distanceMetric, ProgressData progressData)

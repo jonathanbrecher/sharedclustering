@@ -192,6 +192,18 @@ namespace AncestryDnaClustering.Models
                             {
                                 // non-fatal if unable to download trees
                             }
+
+                            if (pageNumber == 1)
+                            {
+                                try
+                                {
+                                    await GetParentsAsync(guid, result, throttle);
+                                }
+                                catch
+                                {
+                                    // non-fatal if unable to download parents
+                                }
+                            }
                         }
 
                         progressData.Increment();
@@ -452,6 +464,45 @@ namespace AncestryDnaClustering.Models
                         throttle.Release();
                     }
                 }
+            }
+        }
+
+        private class ParentsInfo
+        {
+            public string MotherSampleId { get; set; }
+            public string FatherSampleId { get; set; }
+        }
+
+        private async Task GetParentsAsync(string guid, IEnumerable<Match> matches, Throttle throttle)
+        {
+            await throttle.WaitAsync();
+
+            try
+            {
+                var url = $"/discoveryui-matchesservice/api/samples/{guid}/matchesv2/parents";
+                using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync(url))
+                {
+                    testsResponse.EnsureSuccessStatusCode();
+                    var parentsInfo = await testsResponse.Content.ReadAsAsync<ParentsInfo>();
+                    if (!string.IsNullOrEmpty(parentsInfo.FatherSampleId) || !string.IsNullOrEmpty(parentsInfo.MotherSampleId))
+                    {
+                        foreach (var match in matches)
+                        {
+                            if (match.TestGuid == parentsInfo.FatherSampleId)
+                            {
+                                match.IsFather = true;
+                            }
+                            if (match.TestGuid == parentsInfo.MotherSampleId)
+                            {
+                                match.IsMother = true;
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                throttle.Release();
             }
         }
 

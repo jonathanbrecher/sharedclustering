@@ -151,13 +151,19 @@ namespace AncestryDnaClustering.Models
             }
         }
 
+        private static JsonSerializerSettings _ignoreNulls = new JsonSerializerSettings
+        { 
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore,
+        };
+
         public static void WriteAsJson<T>(string fileName, T data, bool doThrow)
         {
             while (true)
             {
                 try
                 {
-                    var json = JsonConvert.SerializeObject(data);
+                    var json = JsonConvert.SerializeObject(data, _ignoreNulls);
                     WriteAllLines(fileName, json, false, true);
                     return;
                 }

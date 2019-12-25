@@ -19,6 +19,9 @@ namespace AncestryDnaClustering.Models.SavedData
         public bool HasHint { get; set; }
         public string Note { get; set; }
 
+        public bool IsFather { get; set; }
+        public bool IsMother { get; set; }
+
         public string Name 
             => string.IsNullOrWhiteSpace(MatchTestAdminDisplayName)
             ? MatchTestDisplayName
