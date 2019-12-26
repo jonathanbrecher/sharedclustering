@@ -74,7 +74,7 @@ namespace AncestryDnaClustering.ViewModels
 
             try
             {
-                var (testTakerTestId, clusterableMatches) = await _matchesLoader.LoadClusterableMatchesAsync(matchesFileName, 0, 0, ProgressData);
+                var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(matchesFileName, 0, 0, ProgressData);
 
                 var outputFileName = SelectOutputFile();
                 if (string.IsNullOrEmpty(outputFileName))
@@ -84,7 +84,7 @@ namespace AncestryDnaClustering.ViewModels
 
                 var outputWriter = new ExcelOutputWriter(testTakerTestId, AncestryHostName, ProgressData);
                     
-                await outputWriter.ExportAsync(clusterableMatches, outputFileName);
+                await outputWriter.ExportAsync(clusterableMatches, tags, outputFileName);
 
                 FileUtils.LaunchFile(outputFileName);
             }

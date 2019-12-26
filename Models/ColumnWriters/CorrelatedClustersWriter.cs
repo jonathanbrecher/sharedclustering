@@ -45,5 +45,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
                 cell.Value = string.Join(", ", correlatedClusterNumbers);
             }
         }
+
+        public void ApplyConditionalFormatting(ExcelWorksheet ws, ExcelAddress excelAddress) { }
     }
 }

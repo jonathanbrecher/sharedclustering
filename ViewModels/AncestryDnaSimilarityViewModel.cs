@@ -235,7 +235,7 @@ namespace AncestryDnaClustering.ViewModels
 
             try
             {
-                var (testTakerTestId, clusterableMatches) = await _matchesLoader.LoadClusterableMatchesAsync(FilenameSimilarity, MinCentimorgansToCompareSimilarity, MinCentimorgansInSharedMatchesSimilarity, ProgressData);
+                var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(FilenameSimilarity, MinCentimorgansToCompareSimilarity, MinCentimorgansInSharedMatchesSimilarity, ProgressData);
                 if (clusterableMatches == null)
                 {
                     return;
@@ -243,7 +243,7 @@ namespace AncestryDnaClustering.ViewModels
                 clusterableMatches = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= MinCentimorgansToCompareSimilarity).ToList();
 
                 var SimilarityFinder = new SimilarityFinder(MinClusterSizeSimilarity, ProgressData);
-                Func<string, ISimilarityWriter> getSimilarityWriter = fileNameSuffix => new ExcelSimilarityWriter(testTakerTestId, AncestryHostName, clusterableMatches, SimilarityFilename, fileNameSuffix);
+                Func<string, ISimilarityWriter> getSimilarityWriter = fileNameSuffix => new ExcelSimilarityWriter(testTakerTestId, AncestryHostName, clusterableMatches, tags, SimilarityFilename, fileNameSuffix);
 
                 if (!string.IsNullOrEmpty(SimilarityBasisIds))
                 {

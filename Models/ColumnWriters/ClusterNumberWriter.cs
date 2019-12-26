@@ -20,9 +20,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
 
         public int? GetClusterNumber(IClusterableMatch match) => _indexClusterNumbers.TryGetValue(match.Index, out var clusterNumber) ? clusterNumber : (int?)null;
 
-        public void WriteValue(ExcelRange cell, IClusterableMatch match, LeafNode leafNode)
-        {
-            cell.Value = GetClusterNumber(match);
-        }
+        public void WriteValue(ExcelRange cell, IClusterableMatch match, LeafNode leafNode) => cell.Value = GetClusterNumber(match);
+
+        public void ApplyConditionalFormatting(ExcelWorksheet ws, ExcelAddress excelAddress) { }
     }
 }

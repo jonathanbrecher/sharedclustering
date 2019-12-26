@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AncestryDnaClustering.Models.SavedData;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,6 +17,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             List<ClusterNode> nodes,
             Dictionary<int, IClusterableMatch> matchesByIndex,
             Dictionary<int, int> indexClusterNumbers,
+            List<Tag> tags,
             string worksheetName);
         string SaveFile(int fileNum);
     }

@@ -46,7 +46,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return _serializedMatchesReaders.Select(reader => reader.GetTrimmedFileName(fileName)).FirstOrDefault(f => f != null);
         }
 
-        public async Task<(string, List<IClusterableMatch>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, ProgressData progressData)
+        public async Task<(string, List<IClusterableMatch>, List<Tag>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, ProgressData progressData)
         {
             progressData.Description = "Loading data...";
 
@@ -54,7 +54,7 @@ namespace AncestryDnaClustering.Models.SavedData
             if (serializedMatchesReaders.Count == 0)
             {
                 MessageBox.Show("Unsupported file type.");
-                return (null, null);
+                return (null, null, null);
             }
 
             Serialized input = null;
@@ -76,7 +76,7 @@ namespace AncestryDnaClustering.Models.SavedData
             if (input == null)
             {
                 MessageBox.Show(errorMessage);
-                return (null, null);
+                return (null, null, null);
             }
 
             return await Task.Run(() =>
@@ -103,7 +103,7 @@ namespace AncestryDnaClustering.Models.SavedData
                     }
                     )
                     .ToList();
-                return (input.TestTakerTestId, clusterableMatches);
+                return (input.TestTakerTestId, clusterableMatches, input.Tags);
             });
         }
     }

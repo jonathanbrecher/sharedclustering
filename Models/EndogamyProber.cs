@@ -1,5 +1,6 @@
 ﻿using AncestryDnaClustering.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,7 +22,7 @@ namespace AncestryDnaClustering.Models
             var shiftKeyDown = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
 
             var pageNum = matchIndexTarget / _matchesRetriever.MatchesPerPage + 1;
-            var matches = await _matchesRetriever.GetMatchesPageAsync(guid, pageNum, false, throttle, progressData);
+            var matches = await _matchesRetriever.GetMatchesPageAsync(guid, new HashSet<int>(), pageNum, false, throttle, progressData);
             var icwTasks = matches
                 .Take(numMatchesToTest)
                 .Select(match => _matchesRetriever.GetRawMatchesInCommonAsync(guid, match.TestGuid, 1, 0, throttle))

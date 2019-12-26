@@ -314,7 +314,9 @@ namespace AncestryDnaClustering.ViewModels
                     : MinCentimorgansToRetrieve >= 20 ? _matchCountsData.FourthCousins
                     : _matchCountsData.TotalMatches;
                 ProgressData.Reset("Downloading matches...", numMatchesToRetrieve);
-                var matches = await _matchesRetriever.GetMatchesAsync(guid, numMatchesToRetrieve, true, throttle, ProgressData);
+                var tags = await _matchesRetriever.GetTagsAsync(guid, throttle);
+                var tagIds = new HashSet<int>(tags.Select(tag => tag.TagId));
+                var matches = await _matchesRetriever.GetMatchesAsync(guid, numMatchesToRetrieve, tagIds, true, throttle, ProgressData);
 
                 // Make sure there are no duplicates among the matches
                 matches = matches
@@ -371,7 +373,7 @@ namespace AncestryDnaClustering.ViewModels
                     icw[matchIndex.Key] = new List<int> { matchIndex.Value };
                 }
 
-                var output = new Serialized { TestTakerTestId = guid, Matches = matches, MatchIndexes = matchIndexes, Icw = icw };
+                var output = new Serialized { TestTakerTestId = guid, Tags = tags, Matches = matches, MatchIndexes = matchIndexes, Icw = icw };
                 FileUtils.WriteAsJson(fileName, output, false);
                 LastFileDownloaded = fileName;
 

@@ -18,7 +18,7 @@ namespace AncestryDnaClustering.Models
             _ancestryLoginHelper = ancestryLoginHelper;
         }
 
-        public async Task<List<Match>> GetMatchesAsync(string guid, int numMatches, bool includeAdditionalInfo, Throttle throttle, ProgressData progressData)
+        public async Task<List<Match>> GetMatchesAsync(string guid, int numMatches, HashSet<int> tagIds, bool includeAdditionalInfo, Throttle throttle, ProgressData progressData)
         {
             var retryCount = 0;
             var retryMax = 5;
@@ -32,7 +32,7 @@ namespace AncestryDnaClustering.Models
                     progressData.Reset("Downloading matches...", numPages * 2);
 
                     var matchesTasks = Enumerable.Range(startPage, numPages)
-                        .Select(pageNumber => GetMatchesPageAsync(guid, pageNumber, includeAdditionalInfo, throttle, progressData));
+                        .Select(pageNumber => GetMatchesPageAsync(guid, tagIds, pageNumber, includeAdditionalInfo, throttle, progressData));
                     var matchesGroups = await Task.WhenAll(matchesTasks);
                     return matchesGroups.SelectMany(matchesGroup => matchesGroup).Take(numMatches).ToList();
                 }
@@ -52,7 +52,7 @@ namespace AncestryDnaClustering.Models
             // Make sure there are no more than 10 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
             var throttle = new Throttle(10);
 
-            var highestMatchesTask = GetMatchesPageAsync(guid, 1, false, throttle, ProgressData.SuppressProgress);
+            var highestMatchesTask = GetMatchesPageAsync(guid, new HashSet<int>(), 1, false, throttle, ProgressData.SuppressProgress);
             var thirdCousinsTask = CountThirdCousinsAsync(guid, throttle, ProgressData.SuppressProgress);
             var matchesTask = CountMatchesAsync(guid, throttle, ProgressData.SuppressProgress);
             await Task.WhenAll(thirdCousinsTask, matchesTask);
@@ -109,7 +109,7 @@ namespace AncestryDnaClustering.Models
             // Try to find some page that is at least as high as the highest valid match.
             do
             {
-                pageMatches = await GetMatchesPageAsync(guid, maxPage, false, throttle, progressData);
+                pageMatches = await GetMatchesPageAsync(guid, new HashSet<int>(), maxPage, false, throttle, progressData);
                 if (pageMatches.Any(match => !criteria(match)) || !pageMatches.Any())
                 {
                     break;
@@ -122,7 +122,7 @@ namespace AncestryDnaClustering.Models
             while (maxPage > minPage)
             {
                 midPage = (maxPage + minPage) / 2;
-                pageMatches = await GetMatchesPageAsync(guid, midPage, false, throttle, progressData);
+                pageMatches = await GetMatchesPageAsync(guid, new HashSet<int>(), midPage, false, throttle, progressData);
                 if (pageMatches.Any(match => criteria(match)))
                 {
                     if (pageMatches.Any(match => !criteria(match)))
@@ -140,7 +140,7 @@ namespace AncestryDnaClustering.Models
             return (midPage - 1) * MatchesPerPage + pageMatches.Count(match => criteria(match));
         }
 
-        public async Task<IEnumerable<Match>> GetMatchesPageAsync(string guid, int pageNumber, bool includeAdditionalInfo, Throttle throttle, ProgressData progressData)
+        public async Task<IEnumerable<Match>> GetMatchesPageAsync(string guid, HashSet<int> tagIds, int pageNumber, bool includeAdditionalInfo, Throttle throttle, ProgressData progressData)
         {
             var nameUnavailableCount = 0;
             var nameUnavailableMax = 60;
@@ -161,15 +161,20 @@ namespace AncestryDnaClustering.Models
                         testsResponse.EnsureSuccessStatusCode();
                         var matches = await testsResponse.Content.ReadAsAsync<MatchesV2>();
                         var result = matches.MatchGroups.SelectMany(matchGroup => matchGroup.Matches)
-                            .Select(match => new Match
+                            .Select(match => 
                             {
-                                MatchTestAdminDisplayName = match.AdminDisplayName,
-                                MatchTestDisplayName = match.DisplayName,
-                                TestGuid = match.TestGuid,
-                                SharedCentimorgans = match.Relationship?.SharedCentimorgans ?? 0,
-                                SharedSegments = match.Relationship?.SharedSegments ?? 0,
-                                Starred = match.Starred,
-                                Note = match.Note,
+                                var tagIdsToStore = match.Tags?.Intersect(tagIds).ToList();
+                                return new Match
+                                {
+                                    MatchTestAdminDisplayName = match.AdminDisplayName,
+                                    MatchTestDisplayName = match.DisplayName,
+                                    TestGuid = match.TestGuid,
+                                    SharedCentimorgans = match.Relationship?.SharedCentimorgans ?? 0,
+                                    SharedSegments = match.Relationship?.SharedSegments ?? 0,
+                                    Starred = match.Starred,
+                                    Note = match.Note,
+                                    TagIds = tagIdsToStore?.Count > 0 ? tagIdsToStore : null,
+                                };
                             })
                             .ToList();
 
@@ -405,6 +410,7 @@ namespace AncestryDnaClustering.Models
             public Relationship Relationship { get; set; }
             public bool Starred { get; set; }
             public string Note { get; set; }
+            public List<int> Tags { get; set; }
         }
 
         private class Relationship
@@ -506,6 +512,25 @@ namespace AncestryDnaClustering.Models
             }
         }
 
+        public async Task<List<Tag>> GetTagsAsync(string guid, Throttle throttle)
+        {
+            await throttle.WaitAsync();
+
+            try
+            {
+                var url = $"/discoveryui-matchesservice/api/samples/{guid}/tags";
+                using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync(url))
+                {
+                    testsResponse.EnsureSuccessStatusCode();
+                    return await testsResponse.Content.ReadAsAsync<List<Tag>>();
+                }
+            }
+            finally
+            {
+                throttle.Release();
+            }
+        }
+
         private class Ancestors
         {
             public List<AncestorCouple> AncestorCouples { get; set; }
@@ -545,10 +570,11 @@ namespace AncestryDnaClustering.Models
 
                         testsResponse.EnsureSuccessStatusCode();
                         var ancestorCouples = await testsResponse.Content.ReadAsAsync<Ancestors>();
-                        return ancestorCouples.AncestorCouples.SelectMany(couple => new[] { couple.Father, couple.Mother })
+                        var result = ancestorCouples.AncestorCouples.SelectMany(couple => new[] { couple.Father, couple.Mother })
                             .Select(ancestor => ancestor?.PersonData?.DisplayName)
                             .Where(name => !string.IsNullOrEmpty(name))
                             .ToList();
+                        return result.Count > 0 ? result : null;
                     }
                 }
                 catch (Exception ex)

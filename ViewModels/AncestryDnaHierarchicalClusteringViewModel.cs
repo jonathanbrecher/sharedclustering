@@ -360,7 +360,7 @@ namespace AncestryDnaClustering.ViewModels
             {
                 CanProcessSavedData = false;
 
-                var (testTakerTestId, clusterableMatches) = await _matchesLoader.LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches, ProgressData);
+                var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches, ProgressData);
                 if (clusterableMatches == null || clusterableMatches.Count == 0)
                 {
                     return;
@@ -405,7 +405,7 @@ namespace AncestryDnaClustering.ViewModels
                     }
                 }
 
-                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster, "heatmap");
+                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster, tags, "heatmap");
 
                 if (OpenClusterFileWhenComplete)
                 {

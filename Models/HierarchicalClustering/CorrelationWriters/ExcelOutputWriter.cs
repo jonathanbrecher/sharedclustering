@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters;
+using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.ViewModels;
 using OfficeOpenXml;
-using OfficeOpenXml.ConditionalFormatting;
 
 namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
 {
@@ -28,7 +24,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
             _progressData = progressData;
         }
 
-        public async Task ExportAsync(List<IClusterableMatch> matches, string exportFileName)
+        public async Task ExportAsync(List<IClusterableMatch> matches, List<Tag> tags, string exportFileName)
         {
             if (string.IsNullOrEmpty(exportFileName) || matches.Count == 0)
             {
@@ -51,7 +47,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                     ws.Row(row).Style.TextRotation = 90;
 
                     // Fixed columns
-                    var writers = new IColumnWriter[]
+                    var writers = new List<IColumnWriter>
                     {
                         new NameWriter(false),
                         matches.Any(match => !string.IsNullOrEmpty(match.Match.TestGuid)) ? new TestIdWriter() : null,
@@ -65,9 +61,10 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         matches.Any(match => match.Match.CommonAncestors?.Count > 0) ? new CommonAncestorsWriter() : null,
                         matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
                         matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
-                        new NoteWriter(),
-                    }.Where(writer => writer != null).ToArray();
-                    var columnWriters = new ColumnWritersCollection(p, ws, writers, _testTakerTestId);
+                    }.Where(writer => writer != null).ToList();
+                    writers.AddRange(tags.OrderBy(tag => tag.Label).Select(tag => new TagWriter(tag)));
+                    writers.Add(new NoteWriter());
+                    var columnWriters = new ColumnWritersCollection(p, ws, writers.ToArray(), _testTakerTestId);
 
                     col = columnWriters.WriteHeaders(row, col);
 
@@ -87,7 +84,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                     }
 
                     col = 1;
-                    col = columnWriters.FormatColumns(row, col);
+                    col = columnWriters.FormatColumns(1, col, row);
 
                     // Freeze the column and row headers
                     ws.View.FreezePanes(firstMatrixDataRow, firstMatrixDataColumn);

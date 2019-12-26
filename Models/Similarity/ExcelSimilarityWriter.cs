@@ -2,6 +2,7 @@
 using System.Linq;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters;
+using AncestryDnaClustering.Models.SavedData;
 using OfficeOpenXml;
 
 namespace AncestryDnaClustering.Models.SimilarityFinding
@@ -16,12 +17,18 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
         private int _col = 1;
         private readonly GenericObjectWriter _overlapWriter = new GenericObjectWriter("Shared matches with overlap");
 
-        public ExcelSimilarityWriter(string testTakerTestId, string ancestryHostName, List<IClusterableMatch> matches, string fileName, string fileNameSuffix)
+        public ExcelSimilarityWriter(
+            string testTakerTestId,
+            string ancestryHostName,
+            List<IClusterableMatch> matches,
+            List<Tag> tags,
+            string fileName,
+            string fileNameSuffix)
         {
             _fileName = string.IsNullOrEmpty(fileNameSuffix) ? fileName : FileUtils.AddSuffixToFilename(fileName, fileNameSuffix);
             _p = new ExcelPackage();
             _ws = _p.Workbook.Worksheets.Add("similarity");
-            var writers = new IColumnWriter[]
+            var writers = new List<IColumnWriter>
             {
                 new CountWriter(),
                 _overlapWriter,
@@ -36,9 +43,10 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
                 matches.Any(match => match.Match.TreeSize > 0) ? new TreeSizeWriter() : null,
                 matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
                 matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
-                new NoteWriter(),
-            }.Where(writer => writer != null).ToArray();
-            _writers = new ColumnWritersCollection(_p, _ws, writers, testTakerTestId);
+            }.Where(writer => writer != null).ToList();
+            writers.AddRange(tags.OrderBy(tag => tag.Label).Select(tag => new TagWriter(tag)));
+            writers.Add(new NoteWriter());
+            _writers = new ColumnWritersCollection(_p, _ws, writers.ToArray(), testTakerTestId);
 
             // Rotate the entire top row by 90 degrees
             _ws.Row(_row).Style.TextRotation = 90;
@@ -102,7 +110,7 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
             // Freeze the column and row headers
             _ws.View.FreezePanes(2, 1);
 
-            _writers.FormatColumns(1, 1);
+            _writers.FormatColumns(1, 1, _row);
 
             FileUtils.Save(_p, _fileName);
 

@@ -26,5 +26,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
                 cell.Hyperlink = new ExcelHyperLink(match.Match.TreeUrl, UriKind.Absolute) { Display = "Tree" };
             }
         }
+
+        public void ApplyConditionalFormatting(ExcelWorksheet ws, ExcelAddress excelAddress) {}
     }
 }

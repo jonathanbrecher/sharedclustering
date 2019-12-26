@@ -8,6 +8,7 @@ using AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters;
 using AncestryDnaClustering.Models.HierarchicalClustering.Distance;
 using AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders;
 using AncestryDnaClustering.Models.HierarchicalClustering.PrimaryClusterFinders;
+using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.ViewModels;
 
 namespace AncestryDnaClustering.Models.HierarchicalClustering
@@ -43,6 +44,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
             HashSet<string> testIdsToFilter,
             double lowestClusterableCentimorgans,
             double minCentimorgansToCluster,
+            List<Tag> tags,
             string worksheetName)
         {
             var minCentimorgansToClusterTruncated = Math.Max(lowestClusterableCentimorgans, minCentimorgansToCluster);
@@ -102,7 +104,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering
                 await Recluster(nodes, extendedClusters, immediateFamily, matchesByIndex, matrix);
             }
 
-            return await _correlationWriter.OutputCorrelationAsync(nodes, matchesByIndex, indexClusterNumbers, worksheetName);
+            return await _correlationWriter.OutputCorrelationAsync(nodes, matchesByIndex, indexClusterNumbers, tags, worksheetName);
         }
 
         private async Task<List<ClusterNode>> ClusterAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, List<IClusterableMatch> immediateFamily, IReadOnlyDictionary<int, float[]> matrix, ProgressData progressData)

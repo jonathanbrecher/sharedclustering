@@ -18,5 +18,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
         }
 
         public void WriteValue(ExcelRange cell, IClusterableMatch match, LeafNode leafNode) => cell.Value = GenericObject;
+
+        public void ApplyConditionalFormatting(ExcelWorksheet ws, ExcelAddress excelAddress) { }
     }
 }

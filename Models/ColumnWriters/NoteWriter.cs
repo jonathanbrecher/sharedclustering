@@ -10,12 +10,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
         public bool IsDecimal => false;
         public double Width => 15;
 
-        public void WriteValue(ExcelRange cell, IClusterableMatch match, LeafNode leafNode)
-        {
-            if (!string.IsNullOrEmpty(match.Match.Note))
-            {
-                cell.Value = match.Match.Note;
-            }
-        }
+        public void WriteValue(ExcelRange cell, IClusterableMatch match, LeafNode leafNode) => cell.Value = !string.IsNullOrEmpty(match.Match.Note) ? match.Match.Note : null;
+
+        public void ApplyConditionalFormatting(ExcelWorksheet ws, ExcelAddress excelAddress) { }
     }
 }

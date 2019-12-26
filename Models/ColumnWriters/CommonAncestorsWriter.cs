@@ -14,5 +14,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
             => cell.Value = match.Match.CommonAncestors?.Count > 0 
                 ? string.Join(", ", match.Match.CommonAncestors) 
                 : null;
+
+        public void ApplyConditionalFormatting(ExcelWorksheet ws, ExcelAddress excelAddress) { }
     }
 }

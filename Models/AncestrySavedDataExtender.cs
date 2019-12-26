@@ -37,7 +37,7 @@ namespace AncestryDnaClustering.ViewModels
 
             var startTime = DateTime.Now;
 
-            var (testTakerTestId, clusterableMatches) = await matchesLoader.LoadClusterableMatchesAsync(@"C:\Users\JSB\Desktop\Ancestry\bin\Debug\jim-ostroff-icw-saved-170000-200.txt", 6, 6, _progressData);
+            var (testTakerTestId, clusterableMatches, tags) = await matchesLoader.LoadClusterableMatchesAsync(@"C:\Users\JSB\Desktop\Ancestry\bin\Debug\jim-ostroff-icw-saved-170000-200.txt", 6, 6, _progressData);
             if (clusterableMatches == null)
             {
                 return;

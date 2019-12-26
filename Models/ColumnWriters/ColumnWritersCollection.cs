@@ -54,7 +54,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
             return col;
         }
 
-        public int FormatColumns(int row, int col)
+        public int FormatColumns(int row, int col, int numRows)
         {
             _ws.DefaultColWidth = 19.0 / 7; // 2
 
@@ -68,6 +68,10 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
                 {
                     _ws.Column(col).AutoFit();
                 }
+
+                var column = new ExcelAddress(1, col, numRows, col);
+                writer.ApplyConditionalFormatting(_ws, column);
+
                 col++;
             }
             return col;

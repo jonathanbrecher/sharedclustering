@@ -26,5 +26,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
             cell.Hyperlink = new ExcelHyperLink($"https://{_ancestryHostName}/discoveryui-matches/compare-ng/{_testTakerTestId}/with/{match.Match.TestGuid}/trees", UriKind.Absolute) { Display = "Link" };
             //cell.Hyperlink = new ExcelHyperLink($"https://{_ancestryHostName}/discoveryui-matches/compare-ng/{_testTakerTestId}/with/{match.Match.TestGuid}/sharedmatches", UriKind.Absolute) { Display = "Link" };
         }
+
+        public void ApplyConditionalFormatting(ExcelWorksheet ws, ExcelAddress excelAddress) { }
     }
 }

@@ -11,5 +11,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
         public double Width => 15;
 
         public void WriteValue(ExcelRange cell, IClusterableMatch match, LeafNode leafNode) => cell.Value = match.Count;
+
+        public void ApplyConditionalFormatting(ExcelWorksheet ws, ExcelAddress excelAddress) { }
     }
 }

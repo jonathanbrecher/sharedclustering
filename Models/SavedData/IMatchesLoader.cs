@@ -9,6 +9,6 @@ namespace AncestryDnaClustering.Models.SavedData
     {
         string SelectFile(string fileName);
         string GetTrimmedFileName(string fileName);
-        Task<(string, List<IClusterableMatch>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, ProgressData progressData);
+        Task<(string, List<IClusterableMatch>, List<Tag>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, ProgressData progressData);
     }
 }
