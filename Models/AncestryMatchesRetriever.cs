@@ -161,21 +161,7 @@ namespace AncestryDnaClustering.Models
                         testsResponse.EnsureSuccessStatusCode();
                         var matches = await testsResponse.Content.ReadAsAsync<MatchesV2>();
                         var result = matches.MatchGroups.SelectMany(matchGroup => matchGroup.Matches)
-                            .Select(match => 
-                            {
-                                var tagIdsToStore = match.Tags?.Intersect(tagIds).ToList();
-                                return new Match
-                                {
-                                    MatchTestAdminDisplayName = match.AdminDisplayName,
-                                    MatchTestDisplayName = match.DisplayName,
-                                    TestGuid = match.TestGuid,
-                                    SharedCentimorgans = match.Relationship?.SharedCentimorgans ?? 0,
-                                    SharedSegments = match.Relationship?.SharedSegments ?? 0,
-                                    Starred = match.Starred,
-                                    Note = match.Note,
-                                    TagIds = tagIdsToStore?.Count > 0 ? tagIdsToStore : null,
-                                };
-                            })
+                            .Select(match => ConvertMatch(match, tagIds))
                             .ToList();
 
                         // Sometimes Ancestry returns matches with partial data.
@@ -235,7 +221,23 @@ namespace AncestryDnaClustering.Models
             }
         }
 
-        public async Task<Match> GetMatchAsync(string guid, string testGuid, Throttle throttle, ProgressData progressData)
+        private static Match ConvertMatch(MatchV2 match, HashSet<int> tagIds)
+        {
+            var tagIdsToStore = match.Tags?.Intersect(tagIds).ToList();
+            return new Match
+            {
+                MatchTestAdminDisplayName = match.AdminDisplayName,
+                MatchTestDisplayName = match.DisplayName,
+                TestGuid = match.TestGuid,
+                SharedCentimorgans = match.Relationship?.SharedCentimorgans ?? 0,
+                SharedSegments = match.Relationship?.SharedSegments ?? 0,
+                Starred = match.Starred,
+                Note = match.Note,
+                TagIds = tagIdsToStore?.Count > 0 ? tagIdsToStore : null,
+            };
+        }
+
+        public async Task<Match> GetMatchAsync(string guid, string testGuid, HashSet<int> tagIds, Throttle throttle, ProgressData progressData)
         {
             await throttle.WaitAsync();
 
@@ -243,7 +245,12 @@ namespace AncestryDnaClustering.Models
             {
                 using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}/details"))
                 {
-                    return testsResponse.IsSuccessStatusCode ? await testsResponse.Content.ReadAsAsync<Match>() : null;
+                    if (!testsResponse.IsSuccessStatusCode)
+                    {
+                        return null;
+                    }
+
+                    return ConvertMatch(await testsResponse.Content.ReadAsAsync<MatchV2>(), tagIds);
                 }
             }
             finally
@@ -598,6 +605,70 @@ namespace AncestryDnaClustering.Models
             {
                 var url = $"/discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}";
                 using (var testsResponse = await _ancestryLoginHelper.AncestryClient.PutAsJsonAsync(url, new { note }))
+                {
+                    testsResponse.EnsureSuccessStatusCode();
+                }
+            }
+            finally
+            {
+                throttle.Release();
+            }
+        }
+
+        public async Task UpdateStarredAsync(string guid, string testGuid, bool starred, Throttle throttle)
+        {
+            await throttle.WaitAsync();
+
+            try
+            {
+                var url = $"/discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}";
+                using (var testsResponse = await _ancestryLoginHelper.AncestryClient.PutAsJsonAsync(url, new { starred }))
+                {
+                    testsResponse.EnsureSuccessStatusCode();
+                }
+            }
+            finally
+            {
+                throttle.Release();
+            }
+        }
+
+        public async Task AddTagAsync(string guid, string testGuid, int tagId, Throttle throttle)
+        {
+            await throttle.WaitAsync();
+
+            try
+            {
+                var url = $"/discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}/tags/{tagId}";
+                var request = new
+                {
+                    headers = new
+                    {
+                        normalizedNames = new { },
+                        lazyUpdate = (bool?)null,
+                        lazyInit = (bool?)null,
+                        headers = new { },
+                    }
+                };
+                using (var testsResponse = await _ancestryLoginHelper.AncestryClient.PutAsJsonAsync(url, request))
+                {
+                    testsResponse.EnsureSuccessStatusCode();
+                }
+            }
+            finally
+            {
+                throttle.Release();
+            }
+        }
+
+        public async Task DeleteTagAsync(string guid, string testGuid, int tagId, Throttle throttle)
+        {
+            await throttle.WaitAsync();
+
+            try
+            {
+                var url = $"/discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}/tags/{tagId}";
+                using (var testsResponse = await _ancestryLoginHelper.AncestryClient.DeleteAsync(url))
                 {
                     testsResponse.EnsureSuccessStatusCode();
                 }

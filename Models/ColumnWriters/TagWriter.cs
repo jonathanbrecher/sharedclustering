@@ -6,7 +6,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.ColumnWriters
 {
     public class TagWriter : IColumnWriter
     {
-        public string Header => $"{_tag.Label} [ID={_tag.TagId}]";
+        public string Header => _tag.Label;
         public bool RotateHeader => true;
         public bool IsAutofit => false;
         public bool IsDecimal => false;

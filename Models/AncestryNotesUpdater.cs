@@ -42,11 +42,14 @@ namespace AncestryDnaClustering.Models
 
         public async Task UpdateNotesAsync(string guid, string matchFile, Throttle throttle, ProgressData progressData)
         {
-            var notes = ReadMatchFile(matchFile, progressData).ToList();
+            var originalTags = await _matchesRetriever.GetTagsAsync(guid, throttle);
+            var originalTagIds = new HashSet<int>(originalTags.Select(tag => tag.TagId));
 
-            await MaybeUpdateFilesAsync(notes);
+            var notes = ReadMatchFile(matchFile, originalTags, progressData).ToList();
 
-            notes = (await FilterModifiedNodesAsync(guid, notes, throttle, progressData)).ToList();
+            await MaybeUpdateFilesAsync(notes, originalTags);
+
+            notes = (await FilterModifiedNodesAsync(guid, notes, originalTagIds, throttle, progressData)).ToList();
 
             if (notes.Count == 0)
             {
@@ -54,13 +57,28 @@ namespace AncestryDnaClustering.Models
                 return;
             }
 
-            var toChangeCount = notes.Count(note => !string.IsNullOrEmpty(note.NewNotes));
-            var toRemoveCount = notes.Count - toChangeCount;
+            var duplicateTags = originalTags
+                .GroupBy(tag => tag.Label)
+                .Where(g => g.Count() > 1)
+                .SelectMany(g => g).ToList();
+            if (duplicateTags.Count > 1 
+                && duplicateTags.Select(tag => tag.TagId).Intersect(notes.SelectMany(note => note.NewTags.Concat(note.NewTagsRemoved))).Any())
+            {
+                MessageBox.Show($"Duplicate group names found: '{duplicateTags.First().Label}'. Cannot update groups when more than one group has a matching name.", "Duplicate groups", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var toChangeCount = notes.Count(
+                note => (note.NewNotes != null && note.NewNotes != "") 
+                || (note.NewStarred != null && note.NewStarred != note.OldStarred)
+                || note.NewTags.Except(note.OldTags).Any()
+                || note.NewTagsRemoved.Intersect(note.OldTags).Any());
+            var toRemoveCount = notes.Count(note => note.NewNotes == "");
             var message = "Found "
                 + (toChangeCount > 0 && toRemoveCount > 0
-                ? $"{toChangeCount} notes to change and {toRemoveCount} notes to remove."
+                ? $"{toChangeCount} matches to change and {toRemoveCount} notes to remove."
                 : toChangeCount > 0
-                ? $"{toChangeCount} notes to change."
+                ? $"{toChangeCount} matches to change."
                 : $"{toRemoveCount} notes to remove.")
                 + " Continue?";
             if (MessageBox.Show(
@@ -76,13 +94,28 @@ namespace AncestryDnaClustering.Models
 
             var updateTasks = notes.Select(async note =>
             {
-                await _matchesRetriever.UpdateNotesAsync(guid, note.TestId, note.NewNotes, throttle);
+                if (note.NewNotes != null)
+                {
+                    await _matchesRetriever.UpdateNotesAsync(guid, note.TestId, note.NewNotes, throttle);
+                }
+                if (note.NewStarred != null)
+                {
+                    await _matchesRetriever.UpdateStarredAsync(guid, note.TestId, note.NewStarred.Value, throttle);
+                }
+                foreach (var tagId in note.NewTags.Except(note.OldTags))
+                {
+                    await _matchesRetriever.AddTagAsync(guid, note.TestId, tagId, throttle);
+                }
+                foreach (var tagId in note.NewTagsRemoved.Intersect(note.OldTags))
+                {
+                    await _matchesRetriever.DeleteTagAsync(guid, note.TestId, tagId, throttle);
+                }
                 progressData.Increment();
             });
 
             await Task.WhenAll(updateTasks);
 
-            await SaveUpdatedNotesToFileAsync(notes, progressData);
+            await SaveUpdatedNotesToFileAsync(notes, originalTags, progressData);
         }
 
         private class NotesData
@@ -91,12 +124,19 @@ namespace AncestryDnaClustering.Models
             public string TestId { get; set; }
             public string OldNotes { get; set; }
             public string NewNotes { get; set; }
+            public bool OldStarred { get; set; }
+            public bool? NewStarred { get; set; }
+            public List<int> OldTags { get; set; }
+            public List<int> NewTags { get; set; }
+            public List<int> NewTagsRemoved { get; set; }
         }
 
         private static readonly HashSet<string> _deletionKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "delete", "remove", "clear" }; 
 
-        private static IEnumerable<NotesData> ReadMatchFile(string matchFile, ProgressData progressData)
+        private static IEnumerable<NotesData> ReadMatchFile(string matchFile, List<Tag> originalTags, ProgressData progressData)
         {
+            var tagIdsByLabel = originalTags.GroupBy(tag => tag.Label).ToDictionary(g => g.Key, g => g.First().TagId);
+
             using (var fileStream = new FileStream(matchFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var package = new ExcelPackage(fileStream))
             using (var ws = package.Workbook.Worksheets[1])
@@ -104,6 +144,8 @@ namespace AncestryDnaClustering.Models
                 var nameColumn = 0;
                 var testIdColumn = 0;
                 var notesColumn = 0;
+                var starredColumn = 0;
+                var tagsColumns = new Dictionary<int, int>();
 
                 // Find the columns that have interesting data (don't assume specific column numbers)
                 foreach (var cell in ws.Cells.Where(c => c.Start.Row == 1))
@@ -111,35 +153,31 @@ namespace AncestryDnaClustering.Models
                     var cellValue = cell.GetValue<string>();
                     if (cellValue == null)
                     {
-                        continue;
+                        break;
                     }
                     if (cellValue.Equals("Name", StringComparison.OrdinalIgnoreCase))
                     {
                         nameColumn = cell.End.Column;
-                        if (testIdColumn > 0 && notesColumn > 0)
-                        {
-                            break;
-                        }
                     }
                     else if (cellValue.Equals("Test ID", StringComparison.OrdinalIgnoreCase))
                     {
                         testIdColumn = cell.End.Column;
-                        if (nameColumn > 0 && notesColumn > 0)
-                        {
-                            break;
-                        }
                     }
                     else if (cellValue.Equals("Notes", StringComparison.OrdinalIgnoreCase) || cellValue.Equals("Note", StringComparison.OrdinalIgnoreCase))
                     {
                         notesColumn = cell.End.Column;
-                        if (nameColumn > 0 && testIdColumn > 0)
-                        {
-                            break;
-                        }
+                    }
+                    else if (cellValue.Equals("Starred", StringComparison.OrdinalIgnoreCase))
+                    {
+                        starredColumn = cell.End.Column;
+                    }
+                    else if (tagIdsByLabel.TryGetValue(cellValue, out var tagId))
+                    {
+                        tagsColumns[tagId] = cell.End.Column;
                     }
                 }
 
-                if (nameColumn == 0 || testIdColumn == 0 || notesColumn == 0)
+                if (nameColumn == 0 || testIdColumn == 0 || (notesColumn == 0 && starredColumn == 0 && !tagsColumns.Any()))
                 {
                     throw new Exception($"Could not identify column headers from first sheet ({ws.Name}) in {matchFile}.");
                 }
@@ -162,27 +200,39 @@ namespace AncestryDnaClustering.Models
                     progressData.Increment();
 
                     var notes = ws.Cells[row, notesColumn].GetValue<string>();
-                    if (string.IsNullOrEmpty(notes))
+                    var starred = ws.Cells[row, starredColumn].GetValue<string>();
+                    var tags = tagsColumns
+                        .Select(kvp =>
+                        {
+                            var tagLabel = ws.Cells[row, kvp.Value].GetValue<string>();
+                            return new
+                            {
+                                TagId = kvp.Key,
+                                HasTag = _deletionKeywords.Contains(tagLabel) ? false : string.IsNullOrEmpty(tagLabel) ? (bool?)null : true,
+                            };
+                        })
+                        .Where(pair => pair.HasTag != null)
+                        .ToLookup(pair => pair.HasTag.Value, pair => pair.TagId);
+
+                    if (string.IsNullOrEmpty(notes) && string.IsNullOrEmpty(starred) && !tags.Any())
                     {
                         continue;
-                    }
-
-                    if (_deletionKeywords.Contains(notes))
-                    {
-                        notes = "";
                     }
 
                     yield return new NotesData
                     {
                         Name = ws.Cells[row, nameColumn].GetValue<string>(),
                         TestId = ws.Cells[row, testIdColumn].GetValue<string>(),
-                        NewNotes = notes,
+                        NewNotes = _deletionKeywords.Contains(notes) ? "" : string.IsNullOrEmpty(notes) ? null : notes,
+                        NewStarred = _deletionKeywords.Contains(starred) ? false : string.IsNullOrEmpty(starred) ? (bool?)null : true,
+                        NewTags = tags[true].ToList(),
+                        NewTagsRemoved = tags[false].ToList(),
                     };
                 }
             }
         }
 
-        private async Task MaybeUpdateFilesAsync(List<NotesData> notes)
+        private async Task MaybeUpdateFilesAsync(List<NotesData> notes, List<Tag> originalTags)
         {
             if (MessageBox.Show(
                 "Do you also want to update data files that you already downloaded from Ancestry and have saved locally?",
@@ -223,6 +273,19 @@ namespace AncestryDnaClustering.Models
                     if (notesById.TryGetValue(match.TestGuid, out var note))
                     {
                         match.Note = note.NewNotes;
+                        if (note.NewStarred != null)
+                        {
+                            match.Starred = note.NewStarred.Value;
+                        }
+                        if (note.NewTags.Any())
+                        {
+                            match.TagIds = (match.TagIds ?? new List<int>())
+                                .Except(note.NewTagsRemoved)
+                                .Concat(note.NewTags)
+                                .Distinct()
+                                .OrderBy(t => t)
+                                .ToList();
+                        }
                     }
                 }
 
@@ -230,20 +293,27 @@ namespace AncestryDnaClustering.Models
             }
         }
 
-        private async Task<IEnumerable<NotesData>> FilterModifiedNodesAsync(string guid, List<NotesData> notes, Throttle throttle, ProgressData progressData)
+        private async Task<IEnumerable<NotesData>> FilterModifiedNodesAsync(string guid, List<NotesData> notes, HashSet<int> tagIds, Throttle throttle, ProgressData progressData)
         {
             progressData.Reset("Filtering notes", notes.Count);
             var tasks = notes.Select(async note =>
             {
-                var match = await _matchesRetriever.GetMatchAsync(guid, note.TestId, throttle, progressData);
-                note.OldNotes = match?.Note;
-                return (match != null && match.Note != note.NewNotes) ? note : null;
+                var match = await _matchesRetriever.GetMatchAsync(guid, note.TestId, tagIds, throttle, progressData);
+                if (match == null)
+                {
+                    return null;
+                }
+
+                note.OldNotes = match.Note;
+                note.OldStarred = match.Starred;
+                note.OldTags = match.TagIds ?? new List<int>();
+                return (note.OldNotes != note.NewNotes || note.OldStarred != note.NewStarred || note.NewTagsRemoved.Any() || note.NewTags.Except(note.OldTags).Any()) ? note : null;
             });
             var notesToUpdate = await Task.WhenAll(tasks);
             return notesToUpdate.Where(note => note != null);
         }
 
-        private async Task SaveUpdatedNotesToFileAsync(List<NotesData> notes, ProgressData progressData)
+        private async Task SaveUpdatedNotesToFileAsync(List<NotesData> notes, List<Tag> originalTags, ProgressData progressData)
         {
             progressData.Reset("Saving local copy of changes.", notes.Count);
 
@@ -263,6 +333,11 @@ namespace AncestryDnaClustering.Models
             Settings.Default.Save();
             var fileName = saveFileDialog.FileName;
 
+            var affectedNotes = notes.Any(note => note.NewNotes != null);
+            var affectedStarred = notes.Any(note => note.NewStarred != null);
+            var affectedTagIds = new HashSet<int>(notes.SelectMany(note => note.NewTags.Concat(note.NewTagsRemoved)));
+            var affectedTags = originalTags.Where(tag => affectedTagIds.Contains(tag.TagId)).ToList();
+
             using (var p = new ExcelPackage())
             {
                 await Task.Run(() =>
@@ -270,19 +345,47 @@ namespace AncestryDnaClustering.Models
                     var ws = p.Workbook.Worksheets.Add("Updated Notes");
 
                     var row = 1;
-                    ws.Cells[row, 1].Value = "Name";
-                    ws.Cells[row, 2].Value = "Test ID";
-                    ws.Cells[row, 3].Value = "Old Notes";
-                    ws.Cells[row, 4].Value = "New Notes";
+                    var col = 1;
+                    ws.Cells[row, col++].Value = "Name";
+                    ws.Cells[row, col++].Value = "Test ID";
+                    if (affectedNotes)
+                    {
+                        ws.Cells[row, col++].Value = "Old Notes";
+                        ws.Cells[row, col++].Value = "New Notes";
+                    }
+                    if (affectedStarred)
+                    {
+                        ws.Cells[row, col++].Value = "Old Starred";
+                        ws.Cells[row, col++].Value = "New Starred";
+                    }
+                    foreach (var tag in affectedTags)
+                    {
+                        ws.Cells[row, col++].Value = $"Old {tag.Label}";
+                        ws.Cells[row, col++].Value = $"New {tag.Label}";
+                    }
 
                     foreach (var note in notes)
                     {
                         row++;
+                        col = 1;
 
-                        ws.Cells[row, 1].Value = note.Name;
-                        ws.Cells[row, 2].Value = note.TestId;
-                        ws.Cells[row, 3].Value = note.OldNotes;
-                        ws.Cells[row, 4].Value = note.NewNotes;
+                        ws.Cells[row, col++].Value = note.Name;
+                        ws.Cells[row, col++].Value = note.TestId;
+                        if (affectedNotes)
+                        {
+                            ws.Cells[row, col++].Value = note.OldNotes;
+                            ws.Cells[row, col++].Value = note.NewNotes;
+                        }
+                        if (affectedStarred)
+                        {
+                            ws.Cells[row, col++].Value = note.OldStarred ? "*" : null;
+                            ws.Cells[row, col++].Value = (note.NewStarred ?? note.OldStarred) ? "*" : null;
+                        }
+                        foreach (var tag in affectedTags)
+                        {
+                            ws.Cells[row, col++].Value = note.OldTags.Contains(tag.TagId) ? "." : null;
+                            ws.Cells[row, col++].Value = note.NewTagsRemoved.Contains(tag.TagId) ? null : note.NewTags.Contains(tag.TagId) || note.OldTags.Contains(tag.TagId) ? "." : null;
+                        }
 
                         progressData.Increment();
                     }
