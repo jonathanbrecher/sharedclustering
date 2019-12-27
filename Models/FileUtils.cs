@@ -266,8 +266,13 @@ namespace AncestryDnaClustering.Models
                 catch (Exception ex)
                 {
                     LogException(ex, false);
+                    var message = ex.Message;
+                    if (ex.ToString().Contains("being used by another process"))
+                    {
+                        message = "A file in that location is already open in another application.";
+                    }
                     if (MessageBox.Show(
-                        $"An error occurred while saving {fileName}:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}Try again?",
+                        $"An error occurred while saving {fileName}:{Environment.NewLine}{Environment.NewLine}{message}{Environment.NewLine}{Environment.NewLine}Try again?",
                         "File error",
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Warning) != MessageBoxResult.Yes)

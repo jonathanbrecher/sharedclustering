@@ -307,7 +307,12 @@ namespace AncestryDnaClustering.Models
                 note.OldNotes = match.Note;
                 note.OldStarred = match.Starred;
                 note.OldTags = match.TagIds ?? new List<int>();
-                return (note.OldNotes != note.NewNotes || note.OldStarred != note.NewStarred || note.NewTagsRemoved.Any() || note.NewTags.Except(note.OldTags).Any()) ? note : null;
+                return (
+                    note.OldNotes != note.NewNotes 
+                    || (note.NewStarred != null && note.OldStarred != note.NewStarred)
+                    || note.NewTags.Except(note.OldTags).Any()
+                    || note.NewTagsRemoved.Intersect(note.OldTags).Any()
+                ) ? note : null;
             });
             var notesToUpdate = await Task.WhenAll(tasks);
             return notesToUpdate.Where(note => note != null);
