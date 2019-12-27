@@ -199,8 +199,8 @@ namespace AncestryDnaClustering.Models
                 {
                     progressData.Increment();
 
-                    var notes = ws.Cells[row, notesColumn].GetValue<string>();
-                    var starred = ws.Cells[row, starredColumn].GetValue<string>();
+                    var notes = notesColumn > 0 ? ws.Cells[row, notesColumn].GetValue<string>() : null;
+                    var starred = starredColumn > 0 ? ws.Cells[row, starredColumn].GetValue<string>() : null;
                     var tags = tagsColumns
                         .Select(kvp =>
                         {

@@ -62,7 +62,10 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                         matches.Any(match => match.Match.Starred) ? new StarredWriter() : null,
                         matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
                     }.Where(writer => writer != null).ToList();
-                    writers.AddRange(tags.OrderBy(tag => tag.Label).Select(tag => new TagWriter(tag)));
+                    if (tags != null)
+                    {
+                        writers.AddRange(tags.OrderBy(tag => tag.Label).Select(tag => new TagWriter(tag)));
+                    }
                     writers.Add(new NoteWriter());
                     var columnWriters = new ColumnWritersCollection(p, ws, writers.ToArray(), _testTakerTestId);
 

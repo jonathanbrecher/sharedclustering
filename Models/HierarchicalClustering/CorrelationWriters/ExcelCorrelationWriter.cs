@@ -139,7 +139,10 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters
                 matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
                 new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter, _minClusterSize),
             }.Where(writer => writer != null).ToList();
-            writers.AddRange(tags.OrderBy(tag => tag.Label).Select(tag => new TagWriter(tag)));
+            if (tags != null)
+            {
+                writers.AddRange(tags.OrderBy(tag => tag.Label).Select(tag => new TagWriter(tag)));
+            }
             writers.Add(new NoteWriter());
 
             if (!FileIsOpen())
