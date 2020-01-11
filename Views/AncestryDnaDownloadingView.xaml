@@ -35,7 +35,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry user name: "/>
-                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding SignInViewModel.AncestryUserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding SignInViewModel.AncestryUserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Password: "/>
                 <PasswordBox Grid.Row="2" Grid.Column="2" x:Name="PasswordBox"/>
                 <TextBlock Grid.Row="4" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="Test: "/>
@@ -50,14 +50,14 @@
                 <ComboBox Grid.Row="4" Grid.Column="2"
                           HorizontalAlignment="Stretch"
                           ItemsSource="{Binding SignInViewModel.Tests}"
-                          SelectedItem="{Binding SignInViewModel.SelectedTest}"
+                          SelectedItem="{Binding SignInViewModel.SelectedTest, UpdateSourceTrigger=PropertyChanged}"
                           DisplayMemberPath="Key"/>
                 <TextBlock Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="3" VerticalAlignment="Center" Text="{Binding MatchCounts}"/>
 
                 <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Top" Text="Download completeness: "/>
                 <RadioButton Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
                              GroupName="DownloadType"
-                             IsChecked="{Binding DownloadTypeFast}">
+                             IsChecked="{Binding DownloadTypeFast, UpdateSourceTrigger=PropertyChanged}">
                     <RadioButton.Content>
                         <TextBlock TextWrapping="Wrap">
                             <Run Text="Fast but incomplete"/>
@@ -68,7 +68,7 @@
                 </RadioButton>
                 <RadioButton Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
                              GroupName="DownloadType"
-                             IsChecked="{Binding DownloadTypeComplete}">
+                             IsChecked="{Binding DownloadTypeComplete, UpdateSourceTrigger=PropertyChanged}">
                     <RadioButton.Content>
                         <TextBlock TextWrapping="Wrap">
                             <Run Text="Slow and complete"/>
@@ -79,7 +79,7 @@
                 </RadioButton>
                 <RadioButton Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
                              GroupName="DownloadType"
-                             IsChecked="{Binding DownloadTypeEndogamy}">
+                             IsChecked="{Binding DownloadTypeEndogamy, UpdateSourceTrigger=PropertyChanged}">
                     <RadioButton.Content>
                         <TextBlock TextWrapping="Wrap">
                             <Run Text="Endogamy special, for use with heavy endogamy"/>
@@ -97,7 +97,7 @@
 
             <Expander Margin="10"
                       Header="Advanced options:"
-                      IsExpanded="{Binding ShowAdvancedDownloadOptions}">
+                      IsExpanded="{Binding ShowAdvancedDownloadOptions, UpdateSourceTrigger=PropertyChanged}">
                 <Grid Margin="0,10,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>

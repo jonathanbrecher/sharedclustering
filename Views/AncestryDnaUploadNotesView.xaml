@@ -50,7 +50,7 @@
                     <ComboBox Grid.Row="4" Grid.Column="2"
                     HorizontalAlignment="Stretch"
                     ItemsSource="{Binding SignInViewModel.Tests}"
-                    SelectedItem="{Binding SignInViewModel.SelectedTest}"
+                    SelectedItem="{Binding SignInViewModel.SelectedTest, UpdateSourceTrigger=PropertyChanged}"
                     DisplayMemberPath="Key"/>
                 </Grid>
 
