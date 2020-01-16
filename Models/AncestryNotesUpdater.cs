@@ -265,7 +265,20 @@ namespace AncestryDnaClustering.Models
                 Settings.Default.LastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
                 Settings.Default.Save();
 
-                var notesById = notes.ToDictionary(note => note.TestId);
+                var notesByIdGroups = notes.GroupBy(note => note.TestId).ToList();
+
+                var duplicatedIds = notesByIdGroups.Where(g => g.Count() > 1).ToList();
+                if (duplicatedIds.Count > 0)
+                {
+                    MessageBox.Show(
+                        $"Duplicate IDs found  for names: {string.Join(", ", duplicatedIds.SelectMany(g => g).Select(notesData => notesData.Name))}. Please remove duplicates and try again",
+                        "Duplicate IDs found",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                var notesById = notesByIdGroups.ToDictionary(g => g.Key, g => g.First());
                 var serialized = await Task.Run(() => FileUtils.ReadAsJson<Serialized>(openFileDialog.FileName, false, false));
 
                 foreach (var match in serialized.Matches)
