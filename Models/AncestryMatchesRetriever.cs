@@ -53,6 +53,7 @@ namespace AncestryDnaClustering.Models
             var throttle = new Throttle(10);
 
             var highestMatchesTask = GetMatchesPageAsync(guid, new HashSet<int>(), 1, false, throttle, ProgressData.SuppressProgress);
+            var nextHighestMatchesTask = GetMatchesPageAsync(guid, new HashSet<int>(), 1, false, throttle, ProgressData.SuppressProgress);
             var thirdCousinsTask = CountThirdCousinsAsync(guid, throttle, ProgressData.SuppressProgress);
             var matchesTask = CountMatchesAsync(guid, throttle, ProgressData.SuppressProgress);
             await Task.WhenAll(thirdCousinsTask, matchesTask);
@@ -60,7 +61,7 @@ namespace AncestryDnaClustering.Models
             return new MatchCounts
             {
                 HighestCentimorgans = (await highestMatchesTask).FirstOrDefault()?.SharedCentimorgans ?? 4000,
-                TwoHundredthCentimorgans = (await highestMatchesTask).LastOrDefault()?.SharedCentimorgans ?? 50,
+                FourHundredthCentimorgans = (await nextHighestMatchesTask).LastOrDefault()?.SharedCentimorgans ?? (await highestMatchesTask).LastOrDefault()?.SharedCentimorgans ?? 50,
                 ThirdCousins = await thirdCousinsTask,
                 FourthCousins = (await matchesTask).fourthCousins,
                 TotalMatches = (await matchesTask).totalMatches,

@@ -74,7 +74,7 @@ namespace AncestryDnaClustering.ViewModels
                 _matchCountsData = await _matchesRetriever.GetMatchCounts(guid);
                 if (DownloadTypeEndogamy)
                 {
-                    MinSharedMatchesCentimorgansToRetrieve = _matchCountsData?.TwoHundredthCentimorgans ?? 50;
+                    MinSharedMatchesCentimorgansToRetrieve = _matchCountsData?.FourHundredthCentimorgans ?? 50;
                 }
                 CheckCanGetDnaMatches();
                 CheckCanCheckEndogamy();
@@ -161,7 +161,7 @@ namespace AncestryDnaClustering.ViewModels
                     if (DownloadTypeEndogamy)
                     {
                         MinCentimorgansToRetrieve = 6;
-                        MinSharedMatchesCentimorgansToRetrieve = _matchCountsData?.TwoHundredthCentimorgans ?? 50;
+                        MinSharedMatchesCentimorgansToRetrieve = _matchCountsData?.FourHundredthCentimorgans ?? 50;
                     }
                 }
             }
@@ -228,7 +228,7 @@ namespace AncestryDnaClustering.ViewModels
                     {
                         DownloadTypeComplete = false;
                     }
-                    if (DownloadTypeEndogamy && MinSharedMatchesCentimorgansToRetrieve != (_matchCountsData?.TwoHundredthCentimorgans ?? 50))
+                    if (DownloadTypeEndogamy && MinSharedMatchesCentimorgansToRetrieve != (_matchCountsData?.FourHundredthCentimorgans ?? 50))
                     {
                         DownloadTypeEndogamy = false;
                     }
