@@ -53,7 +53,7 @@ namespace AncestryDnaClustering.Models
             var throttle = new Throttle(10);
 
             var highestMatchesTask = GetMatchesPageAsync(guid, new HashSet<int>(), 1, false, throttle, ProgressData.SuppressProgress);
-            var nextHighestMatchesTask = GetMatchesPageAsync(guid, new HashSet<int>(), 1, false, throttle, ProgressData.SuppressProgress);
+            var nextHighestMatchesTask = GetMatchesPageAsync(guid, new HashSet<int>(), 2, false, throttle, ProgressData.SuppressProgress);
             var thirdCousinsTask = CountThirdCousinsAsync(guid, throttle, ProgressData.SuppressProgress);
             var matchesTask = CountMatchesAsync(guid, throttle, ProgressData.SuppressProgress);
             await Task.WhenAll(thirdCousinsTask, matchesTask);
@@ -154,7 +154,7 @@ namespace AncestryDnaClustering.Models
 
                 try
                 {
-                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchesv2?page={pageNumber}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
+                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/list?page={pageNumber}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
                     {
                         throttle.Release();
                         throttleReleased = true;
@@ -323,7 +323,7 @@ namespace AncestryDnaClustering.Models
 
                 try
                 {
-                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matchesv2?page={pageNumber}&relationguid={guidInCommon}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
+                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/list?page={pageNumber}&relationguid={guidInCommon}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
                     {
                         throttle.Release();
                         throttleReleased = true;
