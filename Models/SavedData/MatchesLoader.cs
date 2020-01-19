@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using AncestryDnaClustering.Models.Anonymizers;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Properties;
 using AncestryDnaClustering.ViewModels;
@@ -14,10 +15,12 @@ namespace AncestryDnaClustering.Models.SavedData
     public class MatchesLoader : IMatchesLoader
     {
         private readonly List<ISerializedMatchesReader> _serializedMatchesReaders;
+        private readonly IAnonymizer _anonymizer;
 
-        public MatchesLoader(List<ISerializedMatchesReader> serializedMatchesReaders)
+        public MatchesLoader(List<ISerializedMatchesReader> serializedMatchesReaders, IAnonymizer anonymizer)
         {
             _serializedMatchesReaders = serializedMatchesReaders;
+            _anonymizer = anonymizer;
         }
 
         // Present an Open File dialog to allow selecting the saved DNA data from disk
@@ -99,12 +102,44 @@ namespace AncestryDnaClustering.Models.SavedData
                     .Select((kvp, index) =>
                     {
                         var match = matchesDictionary[kvp.Key];
+                        match = GetAnonymizedMatch(match);
                         return (IClusterableMatch)new ClusterableMatch(index, match, kvp.Value);
                     }
                     )
                     .ToList();
-                return (input.TestTakerTestId, clusterableMatches, input.Tags);
+                var testTakerTestId = _anonymizer?.GetAnonymizedGuid(input.TestTakerTestId) ?? input.TestTakerTestId;
+                var tags = _anonymizer == null ? input.Tags : input.Tags?.Select((tag, index) => new Tag { TagId = tag.TagId, Color = tag.Color, Label = $"{tag.Label}{index}" }).ToList(); 
+                return (testTakerTestId, clusterableMatches, tags);
             });
+        }
+
+        private Match GetAnonymizedMatch(Match match)
+        {
+            if (_anonymizer == null)
+            {
+                return match;
+            }
+
+            return new Match
+            {        
+                MatchTestAdminDisplayName = _anonymizer.GetAnonymizedName(match.MatchTestAdminDisplayName),
+                MatchTestDisplayName = _anonymizer.GetAnonymizedName(match.MatchTestDisplayName),
+                TestGuid = _anonymizer.GetAnonymizedGuid(match.TestGuid),
+                SharedCentimorgans = match.SharedCentimorgans,
+                SharedSegments = match.SharedSegments,
+                LongestBlock = match.LongestBlock,
+                TreeType = match.TreeType,
+                TreeUrl = "https://invalid",
+                TreeSize = match.TreeSize,
+                HasCommonAncestors = match.HasCommonAncestors,
+                CommonAncestors = match.CommonAncestors?.Select(commonAncestor => _anonymizer.GetAnonymizedName(commonAncestor)).ToList(),
+                Starred = match.Starred,
+                HasHint = match.HasHint,
+                Note = null,
+                TagIds = match.TagIds,
+                IsFather = match.IsFather,
+                IsMother = match.IsMother,
+            };
         }
     }
 }

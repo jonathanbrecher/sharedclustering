@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Windows.Input;
 using AncestryDnaClustering.Models;
+using AncestryDnaClustering.Models.Anonymizers;
 using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
 
@@ -39,7 +40,7 @@ namespace AncestryDnaClustering.ViewModels
                 new AutoClusterExcelMatchesReader(),
             };
 
-            var matchesLoader = new MatchesLoader(serializedMatchesReaders);
+            var matchesLoader = new MatchesLoader(serializedMatchesReaders, null/*new Anonymizer()*/);
 
             var signInViewModel = new AncestryDnaSignInViewModel(loginHelper, testsRetriever);
 

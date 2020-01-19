@@ -113,6 +113,9 @@
     <Compile Include="Models\AncestryNotesUpdater.cs" />
     <Compile Include="Models\AncestrySavedDataExtender.cs" />
     <Compile Include="Models\AncestryTestsRetriever.cs" />
+    <Compile Include="Models\Anonymizers\Anonymizer.cs" />
+    <Compile Include="Models\Anonymizers\IAnonymizer.cs" />
+    <Compile Include="Models\Anonymizers\NonAnonymizer.cs" />
     <Compile Include="Models\ColumnWriters\ColumnWritersCollection.cs" />
     <Compile Include="Models\ColumnWriters\CountWriter.cs" />
     <Compile Include="Models\ColumnWriters\GenericObjectWriter.cs" />

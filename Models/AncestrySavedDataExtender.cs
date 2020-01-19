@@ -31,7 +31,7 @@ namespace AncestryDnaClustering.ViewModels
                 new AutoClusterExcelMatchesReader(),
             };
 
-            var matchesLoader = new MatchesLoader(serializedMatchesReaders);
+            var matchesLoader = new MatchesLoader(serializedMatchesReaders, null);
 
             Settings.Default.Save();
 
