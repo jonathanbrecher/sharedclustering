@@ -94,28 +94,40 @@ namespace AncestryDnaClustering.Models
 
             var updateTasks = notes.Select(async note =>
             {
-                if (note.NewNotes != null)
+                try
                 {
-                    await _matchesRetriever.UpdateNotesAsync(guid, note.TestId, note.NewNotes, throttle);
+                    if (note.NewNotes != null)
+                    {
+                        await _matchesRetriever.UpdateNotesAsync(guid, note.TestId, note.NewNotes, throttle);
+                    }
+                    if (note.NewStarred != null)
+                    {
+                        await _matchesRetriever.UpdateStarredAsync(guid, note.TestId, note.NewStarred.Value, throttle);
+                    }
+                    foreach (var tagId in note.NewTags.Except(note.OldTags))
+                    {
+                        await _matchesRetriever.AddTagAsync(guid, note.TestId, tagId, throttle);
+                    }
+                    foreach (var tagId in note.NewTagsRemoved.Intersect(note.OldTags))
+                    {
+                        await _matchesRetriever.DeleteTagAsync(guid, note.TestId, tagId, throttle);
+                    }
+                    return note;
                 }
-                if (note.NewStarred != null)
+                catch (Exception ex)
                 {
-                    await _matchesRetriever.UpdateStarredAsync(guid, note.TestId, note.NewStarred.Value, throttle);
+                    FileUtils.LogException(new Exception($"Failed to update notes for {note.Name} ({note.TestId})", ex), false);
+                    return null;
                 }
-                foreach (var tagId in note.NewTags.Except(note.OldTags))
+                finally
                 {
-                    await _matchesRetriever.AddTagAsync(guid, note.TestId, tagId, throttle);
+                    progressData.Increment();
                 }
-                foreach (var tagId in note.NewTagsRemoved.Intersect(note.OldTags))
-                {
-                    await _matchesRetriever.DeleteTagAsync(guid, note.TestId, tagId, throttle);
-                }
-                progressData.Increment();
             });
 
-            await Task.WhenAll(updateTasks);
+            var updatedNotes = await Task.WhenAll(updateTasks);
 
-            await SaveUpdatedNotesToFileAsync(notes, originalTags, progressData);
+            await SaveUpdatedNotesToFileAsync(updatedNotes.Where(note => note != null).ToList(), originalTags, progressData);
         }
 
         private class NotesData
