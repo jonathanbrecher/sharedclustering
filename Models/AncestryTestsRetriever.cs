@@ -25,10 +25,7 @@ namespace AncestryDnaClustering.Models
             {
                 if (testsResponse.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    MessageBox.Show("Invalid username or password" +
-                        $"{Environment.NewLine}{Environment.NewLine}" +
-                        "Your username or password is incorrect. Please try again.", "Invalid username or password", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return null;
+                    throw new Exception("Your username or password is incorrect. Please try again.");
                 }
                 testsResponse.EnsureSuccessStatusCode();
                 var tests = await testsResponse.Content.ReadAsAsync<SamplesSet>();

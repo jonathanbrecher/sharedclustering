@@ -110,7 +110,6 @@ namespace AncestryDnaClustering.ViewModels
             {
                 if (await SignInAsync(password, alternateHost) == null)
                 {
-                    MessageBox.Show($"Using backup login at {alternateHost}", "Sign in success", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
             }
