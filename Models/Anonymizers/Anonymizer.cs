@@ -10,6 +10,11 @@ namespace AncestryDnaClustering.Models.Anonymizers
 
         public string GetAnonymizedGuid(string originalGuid)
         {
+            if (originalGuid == null)
+            {
+                return null;
+            }
+
             return string.Join("", originalGuid.Select(c =>
             {
                 switch (char.ToUpper(c))
