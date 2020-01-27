@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using AncestryDnaClustering.Models.Anonymizers;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.ViewModels;
 
@@ -9,6 +10,6 @@ namespace AncestryDnaClustering.Models.SavedData
     {
         string SelectFile(string fileName);
         string GetTrimmedFileName(string fileName);
-        Task<(string, List<IClusterableMatch>, List<Tag>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, ProgressData progressData);
+        Task<(string, List<IClusterableMatch>, List<Tag>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, IAnonymizer anonymizer, ProgressData progressData);
     }
 }

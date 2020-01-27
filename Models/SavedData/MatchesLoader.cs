@@ -15,12 +15,10 @@ namespace AncestryDnaClustering.Models.SavedData
     public class MatchesLoader : IMatchesLoader
     {
         private readonly List<ISerializedMatchesReader> _serializedMatchesReaders;
-        private readonly IAnonymizer _anonymizer;
 
-        public MatchesLoader(List<ISerializedMatchesReader> serializedMatchesReaders, IAnonymizer anonymizer)
+        public MatchesLoader(List<ISerializedMatchesReader> serializedMatchesReaders)
         {
             _serializedMatchesReaders = serializedMatchesReaders;
-            _anonymizer = anonymizer;
         }
 
         // Present an Open File dialog to allow selecting the saved DNA data from disk
@@ -49,7 +47,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return _serializedMatchesReaders.Select(reader => reader.GetTrimmedFileName(fileName)).FirstOrDefault(f => f != null);
         }
 
-        public async Task<(string, List<IClusterableMatch>, List<Tag>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, ProgressData progressData)
+        public async Task<(string, List<IClusterableMatch>, List<Tag>)> LoadClusterableMatchesAsync(string savedData, double minCentimorgansToCluster, double minCentimorgansInSharedMatches, IAnonymizer anonymizer, ProgressData progressData)
         {
             progressData.Description = "Loading data...";
 
@@ -102,29 +100,29 @@ namespace AncestryDnaClustering.Models.SavedData
                     .Select((kvp, index) =>
                     {
                         var match = matchesDictionary[kvp.Key];
-                        match = GetAnonymizedMatch(match);
+                        match = GetAnonymizedMatch(match, anonymizer);
                         return (IClusterableMatch)new ClusterableMatch(index, match, kvp.Value);
                     }
                     )
                     .ToList();
-                var testTakerTestId = _anonymizer?.GetAnonymizedGuid(input.TestTakerTestId) ?? input.TestTakerTestId;
-                var tags = _anonymizer == null ? input.Tags : input.Tags?.Select((tag, index) => new Tag { TagId = tag.TagId, Color = tag.Color, Label = $"{tag.Label}{index}" }).ToList(); 
+                var testTakerTestId = anonymizer?.GetAnonymizedGuid(input.TestTakerTestId) ?? input.TestTakerTestId;
+                var tags = anonymizer == null ? input.Tags : input.Tags?.Select((tag, index) => new Tag { TagId = tag.TagId, Color = tag.Color, Label = $"Group{index}" }).ToList(); 
                 return (testTakerTestId, clusterableMatches, tags);
             });
         }
 
-        private Match GetAnonymizedMatch(Match match)
+        private Match GetAnonymizedMatch(Match match, IAnonymizer anonymizer)
         {
-            if (_anonymizer == null)
+            if (anonymizer == null)
             {
                 return match;
             }
 
             return new Match
             {        
-                MatchTestAdminDisplayName = _anonymizer.GetAnonymizedName(match.MatchTestAdminDisplayName),
-                MatchTestDisplayName = _anonymizer.GetAnonymizedName(match.MatchTestDisplayName),
-                TestGuid = _anonymizer.GetAnonymizedGuid(match.TestGuid),
+                MatchTestAdminDisplayName = anonymizer.GetAnonymizedName(match.MatchTestAdminDisplayName),
+                MatchTestDisplayName = anonymizer.GetAnonymizedName(match.MatchTestDisplayName),
+                TestGuid = anonymizer.GetAnonymizedGuid(match.TestGuid),
                 SharedCentimorgans = match.SharedCentimorgans,
                 SharedSegments = match.SharedSegments,
                 LongestBlock = match.LongestBlock,
@@ -132,7 +130,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 TreeUrl = "https://invalid",
                 TreeSize = match.TreeSize,
                 HasCommonAncestors = match.HasCommonAncestors,
-                CommonAncestors = match.CommonAncestors?.Select(commonAncestor => _anonymizer.GetAnonymizedName(commonAncestor)).ToList(),
+                CommonAncestors = match.CommonAncestors?.Select(commonAncestor => anonymizer.GetAnonymizedName(commonAncestor)).ToList(),
                 Starred = match.Starred,
                 HasHint = match.HasHint,
                 Note = null,

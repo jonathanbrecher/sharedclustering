@@ -40,17 +40,16 @@ namespace AncestryDnaClustering.ViewModels
                 new AutoClusterExcelMatchesReader(),
             };
 
-            var matchesLoader = new MatchesLoader(serializedMatchesReaders, null/*new Anonymizer()*/);
+            var matchesLoader = new MatchesLoader(serializedMatchesReaders);
 
             var signInViewModel = new AncestryDnaSignInViewModel(loginHelper, testsRetriever);
 
             // Extendable list of tabs to display.
-            var clusteringTab = new AncestryDnaHierarchicalClusteringViewModel(matchesLoader);
             Tabs = new List<object>
             {
                 new IntroductionViewModel(),
                 new AncestryDnaDownloadingViewModel(signInViewModel, matchesRetriever, endogamyProber, OpenInClusterTab),
-                new AncestryDnaHierarchicalClusteringViewModel(matchesLoader),
+                new AncestryDnaHierarchicalClusteringViewModel(matchesLoader, new Anonymizer()),
                 new AncestryDnaSimilarityViewModel(matchesLoader),
                 new AncestryDnaExportViewModel(matchesLoader),
                 new AncestryDnaUploadNotesViewModel(signInViewModel, new AncestryNotesUpdater(matchesRetriever)),

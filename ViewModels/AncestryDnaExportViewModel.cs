@@ -74,7 +74,7 @@ namespace AncestryDnaClustering.ViewModels
 
             try
             {
-                var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(matchesFileName, 0, 0, ProgressData);
+                var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(matchesFileName, 0, 0, null, ProgressData);
 
                 var outputFileName = SelectOutputFile();
                 if (string.IsNullOrEmpty(outputFileName))

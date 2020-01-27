@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using AncestryDnaClustering.Models;
+using AncestryDnaClustering.Models.Anonymizers;
 using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters;
 using AncestryDnaClustering.Models.HierarchicalClustering.Distance;
@@ -28,10 +29,12 @@ namespace AncestryDnaClustering.ViewModels
         public ProgressData ProgressData { get; } = new ProgressData();
 
         private readonly IMatchesLoader _matchesLoader;
+        private readonly IAnonymizer _anonymizer;
 
-        public AncestryDnaHierarchicalClusteringViewModel(IMatchesLoader matchesLoader)
+        public AncestryDnaHierarchicalClusteringViewModel(IMatchesLoader matchesLoader, IAnonymizer anonymizer)
         {
             _matchesLoader = matchesLoader;
+            _anonymizer = anonymizer;
 
             SelectFileCommand = new RelayCommand(SelectFile);
 
@@ -350,6 +353,14 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
+        // The AnonymizeOutput value is intentionally not saved between launches, to protect against leaving it on by accident.
+        private bool _anonymizeOutput;
+        public bool AnonymizeOutput
+        {
+            get => _anonymizeOutput;
+            set => SetFieldValue(ref _anonymizeOutput, value, nameof(AnonymizeOutput));
+        }
+
         private async Task ProcessSavedDataAsync()
         {
             Settings.Default.Save();
@@ -360,7 +371,7 @@ namespace AncestryDnaClustering.ViewModels
             {
                 CanProcessSavedData = false;
 
-                var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches, ProgressData);
+                var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches, AnonymizeOutput ? _anonymizer : null, ProgressData);
                 if (clusterableMatches == null || clusterableMatches.Count == 0)
                 {
                     return;

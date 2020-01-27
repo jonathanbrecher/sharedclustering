@@ -235,7 +235,7 @@ namespace AncestryDnaClustering.ViewModels
 
             try
             {
-                var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(FilenameSimilarity, MinCentimorgansToCompareSimilarity, MinCentimorgansInSharedMatchesSimilarity, ProgressData);
+                var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(FilenameSimilarity, MinCentimorgansToCompareSimilarity, MinCentimorgansInSharedMatchesSimilarity, null, ProgressData);
                 if (clusterableMatches == null)
                 {
                     return;

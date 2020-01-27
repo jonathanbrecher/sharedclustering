@@ -31,13 +31,13 @@ namespace AncestryDnaClustering.ViewModels
                 new AutoClusterExcelMatchesReader(),
             };
 
-            var matchesLoader = new MatchesLoader(serializedMatchesReaders, null);
+            var matchesLoader = new MatchesLoader(serializedMatchesReaders);
 
             Settings.Default.Save();
 
             var startTime = DateTime.Now;
 
-            var (testTakerTestId, clusterableMatches, tags) = await matchesLoader.LoadClusterableMatchesAsync(@"C:\Temp\foo.txt", 6, 6, _progressData);
+            var (testTakerTestId, clusterableMatches, tags) = await matchesLoader.LoadClusterableMatchesAsync(@"C:\Temp\foo.txt", 6, 6, null, _progressData);
             if (clusterableMatches == null)
             {
                 return;
