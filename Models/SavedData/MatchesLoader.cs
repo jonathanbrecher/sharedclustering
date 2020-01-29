@@ -127,7 +127,7 @@ namespace AncestryDnaClustering.Models.SavedData
                 SharedSegments = match.SharedSegments,
                 LongestBlock = match.LongestBlock,
                 TreeType = match.TreeType,
-                TreeUrl = "https://invalid",
+                TreeUrl = match.TreeUrl == null ? null : "https://invalid",
                 TreeSize = match.TreeSize,
                 HasCommonAncestors = match.HasCommonAncestors,
                 CommonAncestors = match.CommonAncestors?.Select(commonAncestor => anonymizer.GetAnonymizedName(commonAncestor)).ToList(),

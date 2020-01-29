@@ -263,7 +263,7 @@ namespace AncestryDnaClustering.ViewModels
                 Mouse.OverrideCursor = Cursors.Wait;
                 var throttle = new Throttle(50);
                 var numMatchesToTest = 10;
-                await _endogamyProber.ProbeAsync(SignInViewModel.SelectedTest.Key, SignInViewModel.SelectedTest.Value, _matchCountsData.FourthCousins, numMatchesToTest, throttle, ProgressData.SuppressProgress);
+                await _endogamyProber.ProbeAsync(SignInViewModel.SelectedTest.Key, SignInViewModel.SelectedTest.Value, _matchCountsData.FourthCousins, numMatchesToTest, throttle, ProgressData);
             }
             finally
             {
