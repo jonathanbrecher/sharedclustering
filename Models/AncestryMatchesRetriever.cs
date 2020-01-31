@@ -261,13 +261,13 @@ namespace AncestryDnaClustering.Models
             }
         }
 
-        public async Task<List<Match>> GetRawMatchesInCommonAsync(string guid, string guidInCommon, int maxPage, double minSharedCentimorgans, Throttle throttle)
+        public async Task<List<Match>> GetRawMatchesInCommonAsync(string guid, string guidInCommon, int maxPage, double minSharedCentimorgans, bool throwException, Throttle throttle)
         {
             var matches = new List<Match>();
             for (var pageNumber = 1; pageNumber <= maxPage; ++pageNumber)
             {
                 var originalCount = matches.Count;
-                var (pageMatches, moreMatchesAvailable) = await GetMatchesInCommonPageAsync(guid, guidInCommon, pageNumber, throttle);
+                var (pageMatches, moreMatchesAvailable) = await GetMatchesInCommonPageAsync(guid, guidInCommon, pageNumber, throwException, throttle);
                 matches.AddRange(pageMatches);
 
                 // Exit if we read past the end of the list of matches (a page with no matches),
@@ -285,13 +285,13 @@ namespace AncestryDnaClustering.Models
 
         public bool WillGetMatchesInCommon(Match match, bool noSharedMatches) => !noSharedMatches || match.HasCommonAncestors;
 
-        public async Task<List<int>> GetMatchesInCommonAsync(string guid, Match match, bool noSharedMatches, double minSharedCentimorgans, Throttle throttle, Dictionary<string, int> matchIndexes, ProgressData progressData)
+        public async Task<List<int>> GetMatchesInCommonAsync(string guid, Match match, bool noSharedMatches, double minSharedCentimorgans, Throttle throttle, Dictionary<string, int> matchIndexes, bool throwException, ProgressData progressData)
         {
             var commonAncestorsTask = match.HasCommonAncestors ? GetCommonAncestorsAsync(guid, match.TestGuid, throttle) : Task.FromResult((List<string>)null);
 
             // Retrieve the matches.
             const int maxPage = 10000;
-            var matches = noSharedMatches ? new List<Match>() : await GetRawMatchesInCommonAsync(guid, match.TestGuid, maxPage, minSharedCentimorgans, throttle);
+            var matches = noSharedMatches ? new List<Match>() : await GetRawMatchesInCommonAsync(guid, match.TestGuid, maxPage, minSharedCentimorgans, throwException, throttle);
             var result = matches.GroupBy(m => m.TestGuid).ToDictionary(g => g.Key, g => g.First().TestGuid);
 
             match.CommonAncestors = await commonAncestorsTask;
@@ -305,7 +305,7 @@ namespace AncestryDnaClustering.Models
                 .ToList();
         }
 
-        private async Task<(IEnumerable<Match>, bool)> GetMatchesInCommonPageAsync(string guid, string guidInCommon, int pageNumber, Throttle throttle)
+        private async Task<(IEnumerable<Match> matches, bool moreMatchesAvailable)> GetMatchesInCommonPageAsync(string guid, string guidInCommon, int pageNumber, bool throwException, Throttle throttle)
         {
             if (guid == guidInCommon)
             {
@@ -368,6 +368,10 @@ namespace AncestryDnaClustering.Models
                     {
                         FileUtils.LogException(ex, true);
                         await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                        if (throwException)
+                        {
+                            throw;
+                        }
                         return (Enumerable.Empty<Match>(), false);
                     }
                     await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);

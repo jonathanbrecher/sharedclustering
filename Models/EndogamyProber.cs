@@ -19,7 +19,7 @@ namespace AncestryDnaClustering.Models
 
         public async Task ProbeAsync(string name, string guid, int matchIndexTarget, int numMatchesToTest, Throttle throttle, ProgressData progressData)
         {
-            progressData.Reset("Checking endogamy...", numMatchesToTest + 1);
+            progressData.Reset("Checking endogamy...", numMatchesToTest + 2);
 
             try
             {
@@ -34,18 +34,34 @@ namespace AncestryDnaClustering.Models
                 var icwTasks = matchesToTest
                     .Select(async match =>
                     {
-                        var result = await _matchesRetriever.GetRawMatchesInCommonAsync(guid, match.TestGuid, pageNum, minCentimorgans, throttle);
-                        progressData.Increment();
-                        return result;
+                        try
+                        {
+                            return await _matchesRetriever.GetRawMatchesInCommonAsync(guid, match.TestGuid, pageNum, minCentimorgans, true, throttle);
+                        }
+                        catch
+                        {
+                            return null;
+                        }
+                        finally
+                        {
+                            progressData.Increment();
+                        }
                     })
                     .ToList();
                 var icws = await Task.WhenAll(icwTasks);
+
+                if (icws.Any(icw => icw == null))
+                {
+                    MessageBox.Show("Unable to retrieve match data. Please try again in a few minutes.", "Endogamy test", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
                 var orderedIcwCounts = icws.Select(l => l.Count).OrderBy(c => c).ToList();
                 var medianIcwCount = orderedIcwCounts.Skip(orderedIcwCounts.Count() / 2).FirstOrDefault();
                 var sharedMatchRatios = icws.Select(l => l.Where(m => m.SharedCentimorgans >= minCentimorgans).Count() / (double)maxIndex).OrderBy(c => c).ToList();
                 var reportableSharedMatchRatio = sharedMatchRatios
-                    .Take(sharedMatchRatios.Count())
-                    .Skip(sharedMatchRatios.Count() / 2)
+                    .Take((int)(sharedMatchRatios.Count() * 0.9)) // Discard top 10%
+                    .Skip(sharedMatchRatios.Count() / 2) // Discard lowest 50%
                     .DefaultIfEmpty(0)
                     .Average();
 

@@ -53,6 +53,7 @@ namespace AncestryDnaClustering.ViewModels
 
         private void SelectedTestChanged(object sender, EventArgs e)
         {
+            _matchCountsData = null;
             CheckCanGetDnaMatches();
             CheckCanCheckEndogamy();
 
@@ -353,7 +354,7 @@ namespace AncestryDnaClustering.ViewModels
                         try
                         {
                             var index = Interlocked.Increment(ref counter);
-                            return await _matchesRetriever.GetMatchesInCommonAsync(guid, match, NoSharedMatches, MinSharedMatchesCentimorgansToRetrieve, throttle, matchIndexes, ProgressData);
+                            return await _matchesRetriever.GetMatchesInCommonAsync(guid, match, NoSharedMatches, MinSharedMatchesCentimorgansToRetrieve, throttle, matchIndexes, false, ProgressData);
                         }
                         finally
                         {

@@ -57,9 +57,10 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
 
                 // Matches below 20 cM never appear in a shared match list on Ancestry,
                 // so only the stronger matches can be clustered.
-                var maxIndex = clusterableMatches
+                var clusterableMatchesOverLowestClusterableCentimorgans = clusterableMatches
                     .Where(match => match.Match.SharedCentimorgans >= _lowestClusterableCentimorgans)
-                    .Max(match => Math.Max(match.Index, match.Coords.Max()));
+                    .ToList();
+                var maxIndex = clusterableMatchesOverLowestClusterableCentimorgans.Max(match => Math.Max(match.Index, match.Coords.Max()));
 
                 var matrix = new ConcurrentDictionary<int, float[]>();
 
@@ -80,7 +81,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 }));
                 await Task.WhenAll(clusterableMatchesTasks);
 
-                ReduceIndirectCoords(matrix);
+                ReduceIndirectCoords(matrix, clusterableMatchesOverLowestClusterableCentimorgans.Count * matrix.Count());
 
                 _progressData.Reset("Done");
 
@@ -88,14 +89,13 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
             });
         }
 
-        private void ReduceIndirectCoords(IDictionary<int, float[]> matrix)
+        private void ReduceIndirectCoords(IDictionary<int, float[]> matrix, int totalCoords)
         {
             if (_maxIndirectPercentage >= 100)
             {
                 return;
             }
 
-            var totalCoords = matrix.Values.Sum(row => row.Count());
             var numDirectCoords = matrix.Values.Sum(row => row.Count(coord => coord >= 1));
             var numIndirectCoords = matrix.AsParallel().Sum(row => row.Value.Count(coord => coord > 0 && coord < 1));
             var maxAllowedIndirectCoords = (int)((totalCoords - numDirectCoords) * _maxIndirectPercentage);
