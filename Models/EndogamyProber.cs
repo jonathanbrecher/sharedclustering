@@ -17,7 +17,7 @@ namespace AncestryDnaClustering.Models
             _matchesRetriever = matchesRetriever;
         }
 
-        public async Task ProbeAsync(string name, string guid, int matchIndexTarget, int numMatchesToTest, Throttle throttle, ProgressData progressData)
+        public async Task ProbeAsync(string name, string guid, int matchIndexTarget, int numMatchesToTest, string matchCounts, Throttle throttle, ProgressData progressData)
         {
             progressData.Reset("Checking endogamy...", numMatchesToTest + 2);
 
@@ -98,7 +98,7 @@ namespace AncestryDnaClustering.Models
                     secondaryMessage = secondaryMessage + Environment.NewLine + Environment.NewLine + string.Join(", ", orderedIcwCounts);
                 }
 
-                MessageBox.Show(primaryMessage + Environment.NewLine + Environment.NewLine + secondaryMessage,
+                MessageBox.Show(primaryMessage + Environment.NewLine + Environment.NewLine + secondaryMessage + Environment.NewLine + Environment.NewLine + matchCounts,
                     "Endogamy test", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             finally
