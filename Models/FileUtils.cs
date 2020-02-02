@@ -41,8 +41,11 @@ namespace AncestryDnaClustering.Models
             {
                 try
                 {
-                    var json = ReadAllText(fileName, true);
-                    return JsonConvert.DeserializeObject<T>(json);
+                    using (var file = File.OpenText(fileName))
+                    using (var reader = new JsonTextReader(file))
+                    {
+                        return _ignoreNullsSerializer.Deserialize<T>(reader);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -151,11 +154,11 @@ namespace AncestryDnaClustering.Models
             }
         }
 
-        private static JsonSerializerSettings _ignoreNulls = new JsonSerializerSettings
+        private static JsonSerializer _ignoreNullsSerializer = JsonSerializer.Create(new JsonSerializerSettings
         { 
             DefaultValueHandling = DefaultValueHandling.Ignore,
             NullValueHandling = NullValueHandling.Ignore,
-        };
+        });
 
         public static void WriteAsJson<T>(string fileName, T data, bool doThrow)
         {
@@ -163,8 +166,11 @@ namespace AncestryDnaClustering.Models
             {
                 try
                 {
-                    var json = JsonConvert.SerializeObject(data, _ignoreNulls);
-                    WriteAllLines(fileName, json, false, true);
+                    using (var file = File.CreateText(fileName))
+                    using (var writer = new JsonTextWriter(file))
+                    {
+                        _ignoreNullsSerializer.Serialize(writer, data);
+                    }
                     return;
                 }
                 catch (Exception ex)
@@ -220,6 +226,7 @@ namespace AncestryDnaClustering.Models
 
         private static bool MaybeRetry(Exception ex, string action)
         {
+            LogException(ex, false);
             return MessageBox.Show(
                 $"An error occurred while {action}:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}Try again?",
                 "File error",
