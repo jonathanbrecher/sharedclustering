@@ -105,10 +105,52 @@ namespace AncestryDnaClustering.Models.SavedData
                     }
                     )
                     .ToList();
+
+                clusterableMatches = MaybeFilterMassivelySharedMatches(clusterableMatches);
+                
                 var testTakerTestId = anonymizer?.GetAnonymizedGuid(input.TestTakerTestId) ?? input.TestTakerTestId;
                 var tags = anonymizer == null ? input.Tags : input.Tags?.Select((tag, index) => new Tag { TagId = tag.TagId, Color = tag.Color, Label = $"Group{index}" }).ToList(); 
                 return (testTakerTestId, clusterableMatches, tags);
             });
+        }
+
+        private List<IClusterableMatch> MaybeFilterMassivelySharedMatches(List<IClusterableMatch> clusterableMatches)
+        {
+            var clusterableMatchesOver20cM = clusterableMatches.Where(match => match.Match.SharedCentimorgans > 20).ToList();
+            if (clusterableMatchesOver20cM.Count > 0)
+            {
+                var lowestClusterableSharedCentimorgans = clusterableMatchesOver20cM.Last().Match.SharedCentimorgans;
+                var filteringCutoff = clusterableMatchesOver20cM.Count / 3;
+
+                // Consider which matches are left if excluding all matches who have shared matches with at least 1/3 of the total matches
+                var clusterableMatchesFiltered = clusterableMatches
+                    .Where(match =>
+                        /*match.Match.SharedCentimorgans >= 1200
+                        || (match.Match.SharedCentimorgans >= 50
+                            && match.Match.SharedSegments > 1
+                            && match.Match.SharedCentimorgans / match.Match.SharedSegments >= 13) // Large minimum sesgment length
+                        ||*/ (match.Match.SharedCentimorgans >= lowestClusterableSharedCentimorgans
+                            && match.Count < filteringCutoff)
+                    ).ToList();
+
+                // Don't do anything unless filtering will remove at least 100 matches (arbitrary cutoff)
+                var numExcludedMatches = clusterableMatches.Count - clusterableMatchesFiltered.Count;
+                if (numExcludedMatches >= 100
+                    && MessageBox.Show(
+                        "Do you want to exclude matches with huge numbers of shared matches?"
+                        + Environment.NewLine + Environment.NewLine
+                        + $"This will exclude {numExcludedMatches} matches (out of {clusterableMatches.Count}) with at least {filteringCutoff} shared matches.",
+                        "Many shared matches",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    var coordsFiltered = new HashSet<int>(clusterableMatchesFiltered.Select(match => match.Index));
+                    clusterableMatches = clusterableMatchesFiltered
+                        .Select(match => (IClusterableMatch)new ClusterableMatch(match.Index, match.Match, match.Coords.Where(coord => coordsFiltered.Contains(coord)).ToList()))
+                        .ToList();
+                }
+            }
+            return clusterableMatches;
         }
 
         private Match GetAnonymizedMatch(Match match, IAnonymizer anonymizer)
