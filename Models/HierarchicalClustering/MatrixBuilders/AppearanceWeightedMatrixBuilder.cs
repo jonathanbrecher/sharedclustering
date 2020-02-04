@@ -50,6 +50,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 // Count how often each match appears in any match's match list.
                 // Every match appears at least once, in its own match list.
                 var appearances = clusterableMatches
+                    .Concat(immediateFamily)
                     .SelectMany(match => match.Coords)
                     .Where(index => matchIndexes.Contains(index))
                     .GroupBy(index => index)
