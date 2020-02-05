@@ -51,7 +51,7 @@
                           HorizontalAlignment="Stretch"
                           ItemsSource="{Binding SignInViewModel.Tests}"
                           SelectedItem="{Binding SignInViewModel.SelectedTest, UpdateSourceTrigger=PropertyChanged}"
-                          DisplayMemberPath="Key"/>
+                          DisplayMemberPath="DisplayName"/>
                 <TextBlock Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="3" VerticalAlignment="Center" Text="{Binding MatchCounts}"/>
 
                 <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Top" Text="Download completeness: "/>

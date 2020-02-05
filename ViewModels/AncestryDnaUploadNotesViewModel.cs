@@ -57,7 +57,7 @@ namespace AncestryDnaClustering.ViewModels
             {
                 var throttle = new Throttle(50);
 
-                await _ancestryNotesUpdater.UpdateNotesAsync(SignInViewModel.SelectedTest.Value, fileName, throttle, ProgressData);
+                await _ancestryNotesUpdater.UpdateNotesAsync(SignInViewModel.SelectedTest.TestGuid, fileName, throttle, ProgressData);
             }
             catch (Exception ex)
             {

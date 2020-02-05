@@ -51,7 +51,7 @@
                     HorizontalAlignment="Stretch"
                     ItemsSource="{Binding SignInViewModel.Tests}"
                     SelectedItem="{Binding SignInViewModel.SelectedTest, UpdateSourceTrigger=PropertyChanged}"
-                    DisplayMemberPath="Key"/>
+                    DisplayMemberPath="DisplayName"/>
                 </Grid>
 
                 <Grid Margin="10">

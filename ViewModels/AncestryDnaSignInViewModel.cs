@@ -52,8 +52,8 @@ namespace AncestryDnaClustering.ViewModels
         }
 
         // All of the tests (test ID and test taker name) available to the signed-in account.
-        private Dictionary<string, string> _tests;
-        public Dictionary<string, string> Tests
+        private List<Test> _tests;
+        public List<Test> Tests
         {
             get => _tests;
             set
@@ -64,13 +64,13 @@ namespace AncestryDnaClustering.ViewModels
                     {
                         // The selected test is the first one that matches the last-used value, otherwise the first one.
                         // The tests are ordered in the same order as in the Ancestry web site, with test taker's own test listed first.
-                        SelectedTest = Tests?.Any(test => test.Key == Settings.Default.SelectedTestId) == true
-                               ? Tests.FirstOrDefault(test => test.Key == Settings.Default.SelectedTestId)
+                        SelectedTest = Tests?.Any(test => test.DisplayName == Settings.Default.SelectedTestId) == true
+                               ? Tests.FirstOrDefault(test => test.DisplayName == Settings.Default.SelectedTestId)
                                : Tests.First();
                     }
                     else
                     {
-                        SelectedTest = new KeyValuePair<string, string>();
+                        SelectedTest = new Test();
                     }
                 }
             }
@@ -79,15 +79,15 @@ namespace AncestryDnaClustering.ViewModels
         public EventHandler OnSelectedTestChanged;
 
         // The test whose results will be downloaded.
-        private KeyValuePair<string, string> _selectedTest;
-        public KeyValuePair<string, string> SelectedTest
+        private Test _selectedTest;
+        public Test SelectedTest
         {
             get => _selectedTest;
             set
             {
                 if (SetFieldValue(ref _selectedTest, value, nameof(SelectedTest)))
                 {
-                    Settings.Default.SelectedTestId = SelectedTest.Key;
+                    Settings.Default.SelectedTestId = SelectedTest?.DisplayName;
                     OnSelectedTestChanged?.Invoke(this, EventArgs.Empty);
                 }
             }

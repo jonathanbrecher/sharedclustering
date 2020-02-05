@@ -36,7 +36,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>88</ApplicationRevision>
+    <ApplicationRevision>89</ApplicationRevision>
     <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -192,6 +192,7 @@
     <Compile Include="ViewModels\ProgressData.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="ViewModels\AncestryDnaToolsViewModel.cs" />
+    <Compile Include="Models\Test.cs" />
     <Compile Include="Views\PercentageNullZeroConverter.cs" />
     <Compile Include="Views\WatermarkAdorner.cs" />
     <Compile Include="Views\WatermarkService.cs" />

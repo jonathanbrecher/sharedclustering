@@ -61,7 +61,7 @@ namespace AncestryDnaClustering.ViewModels
             // Stop any previous task that was downloading match counts from a previous test.
             _matchCountsCancellationTokenSource.Cancel();
             _matchCountsCancellationTokenSource = new CancellationTokenSource();
-            GetMatchCounts(SignInViewModel.SelectedTest.Value, _matchCountsCancellationTokenSource.Token);
+            GetMatchCounts(SignInViewModel.SelectedTest.TestGuid, _matchCountsCancellationTokenSource.Token);
         }
 
         private MatchCounts _matchCountsData;
@@ -264,7 +264,7 @@ namespace AncestryDnaClustering.ViewModels
                 Mouse.OverrideCursor = Cursors.Wait;
                 var throttle = new Throttle(50);
                 var numMatchesToTest = 10;
-                await _endogamyProber.ProbeAsync(SignInViewModel.SelectedTest.Key, SignInViewModel.SelectedTest.Value, _matchCountsData.FourthCousins, numMatchesToTest, MatchCounts, throttle, ProgressData);
+                await _endogamyProber.ProbeAsync(SignInViewModel.SelectedTest.DisplayName, SignInViewModel.SelectedTest.TestGuid, _matchCountsData.FourthCousins, numMatchesToTest, MatchCounts, throttle, ProgressData);
             }
             finally
             {
@@ -279,7 +279,7 @@ namespace AncestryDnaClustering.ViewModels
 
             var startTime = DateTime.Now;
 
-            var fileName = $"{SignInViewModel.SelectedTest.Key} Ancestry Shared Clustering.txt";
+            var fileName = $"{SignInViewModel.SelectedTest.DisplayName} Ancestry Shared Clustering.txt";
             var saveFileDialog = new SaveFileDialog
             {
                 InitialDirectory = FileUtils.GetDefaultDirectory(null),
@@ -303,7 +303,7 @@ namespace AncestryDnaClustering.ViewModels
                 CanGetDnaMatches = false;
                 LastFileDownloaded = null;
 
-                var guid = SignInViewModel.SelectedTest.Value;
+                var guid = SignInViewModel.SelectedTest.TestGuid;
 
                 // Make sure there are no more than 50 concurrent HTTP requests, to avoid overwhelming the Ancestry web site.
                 var throttle = new Throttle(50);

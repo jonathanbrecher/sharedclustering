@@ -18,7 +18,7 @@ namespace AncestryDnaClustering.Models
 
         // Download the list of tests available to this user account.
         // As in the web site the tests are sorted with the user's own test, followed by the other tests alphabetically.
-        public async Task<Dictionary<string, string>> GetTestsAsync()
+        public async Task<List<Test>> GetTestsAsync()
         {
             using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync("discoveryui-matchesservice/api/samples/"))
             {
@@ -28,8 +28,7 @@ namespace AncestryDnaClustering.Models
                 }
                 testsResponse.EnsureSuccessStatusCode();
                 var tests = await testsResponse.Content.ReadAsAsync<SamplesSet>();
-                return tests.Samples.Complete
-                    .ToDictionary(test => test.DisplayName, test => test.TestGuid);
+                return tests.Samples.Complete.Select(test => new Test { DisplayName = test.DisplayName, TestGuid = test.TestGuid }).ToList();
             }
         }
 
