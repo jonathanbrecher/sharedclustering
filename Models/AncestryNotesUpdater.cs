@@ -324,7 +324,7 @@ namespace AncestryDnaClustering.Models
             var tasks = notes.Select(async note =>
             {
                 var match = await _matchesRetriever.GetMatchAsync(guid, note.TestId, tagIds, throttle, progressData);
-                if (match == null)
+                if (match?.TestGuid == null)
                 {
                     return null;
                 }
