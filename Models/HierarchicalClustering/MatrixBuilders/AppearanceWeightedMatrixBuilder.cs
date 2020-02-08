@@ -38,7 +38,8 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
 
             return Task.Run(async () =>
             {
-                var matchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
+                var allMatches = immediateFamily.Concat(clusterableMatches).ToList();
+                var clusterableMatchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
 
                 // Skip over any immediate family matches. Immediate family matches tend to have huge numbers of shared matches.
                 // If the immediate family are included, the entire cluster diagram will get swamped with low-level
@@ -49,16 +50,15 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
 
                 // Count how often each match appears in any match's match list.
                 // Every match appears at least once, in its own match list.
-                var appearances = clusterableMatches
-                    .Concat(immediateFamily)
+                var appearances = allMatches
                     .SelectMany(match => match.Coords)
-                    .Where(index => matchIndexes.Contains(index))
+                    .Where(index => clusterableMatchIndexes.Contains(index))
                     .GroupBy(index => index)
                     .ToDictionary(g => g.Key, g => g.Count());
 
                 // Matches below 20 cM never appear in a shared match list on Ancestry,
                 // so only the stronger matches can be clustered.
-                var clusterableMatchesOverLowestClusterableCentimorgans = clusterableMatches
+                var clusterableMatchesOverLowestClusterableCentimorgans = allMatches
                     .Where(match => match.Match.SharedCentimorgans >= _lowestClusterableCentimorgans)
                     .ToList();
                 var maxIndex = clusterableMatchesOverLowestClusterableCentimorgans.Max(match => Math.Max(match.Index, match.Coords.Max()));
@@ -82,7 +82,9 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 }));
                 await Task.WhenAll(clusterableMatchesTasks);
 
-                ReduceIndirectCoords(matrix, clusterableMatchesOverLowestClusterableCentimorgans.Count * matrix.Count());
+                var matchIndexesOverLowestClusterableCentimorgans = new HashSet<int>(clusterableMatchesOverLowestClusterableCentimorgans.Select(match => match.Index));
+                RemoveFilteredCoords(matrix, matchIndexesOverLowestClusterableCentimorgans);
+                ReduceIndirectCoords(matrix, matchIndexesOverLowestClusterableCentimorgans);
 
                 _progressData.Reset("Done");
 
@@ -90,8 +92,25 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
             });
         }
 
-        private void ReduceIndirectCoords(IDictionary<int, float[]> matrix, int totalCoords)
+        private void RemoveFilteredCoords(IDictionary<int, float[]> matrix, HashSet<int> matchIndexesOverLowestClusterableCentimorgans)
         {
+            foreach (var kvp in matrix)
+            {
+                var row = kvp.Value;
+                for (var i = 0; i < row.Length; ++i)
+                {
+                    if (!matchIndexesOverLowestClusterableCentimorgans.Contains(kvp.Key)
+                        || !matchIndexesOverLowestClusterableCentimorgans.Contains(i))
+                    {
+                        row[i] = 0;
+                    }
+                }
+            }
+        }
+
+        private void ReduceIndirectCoords(IDictionary<int, float[]> matrix, HashSet<int> matchIndexesOverLowestClusterableCentimorgans)
+        {
+            var totalCoords = matchIndexesOverLowestClusterableCentimorgans.Count * matrix.Count();
             if (_maxIndirectPercentage >= 100)
             {
                 return;
