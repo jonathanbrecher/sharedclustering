@@ -134,7 +134,7 @@ namespace AncestryDnaClustering.Models.SavedData
                     ).ToList();
 
                 // Don't do anything unless filtering will remove at least 100 matches (arbitrary cutoff)
-                var numExcludedMatches = clusterableMatches.Count - clusterableMatchesFiltered.Count;
+                var numExcludedMatches = clusterableMatchesOver20cM.Count - clusterableMatchesFiltered.Count;
                 if (numExcludedMatches >= 100
                     && MessageBox.Show(
                         "Do you want to exclude matches with huge numbers of shared matches?"
