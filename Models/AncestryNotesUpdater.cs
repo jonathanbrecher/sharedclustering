@@ -46,6 +46,7 @@ namespace AncestryDnaClustering.Models
             var originalTagIds = new HashSet<int>(originalTags.Select(tag => tag.TagId));
 
             var notes = ReadMatchFile(matchFile, originalTags, progressData).ToList();
+            var originalNumNotes = notes.Count;
 
             await MaybeUpdateFilesAsync(notes, originalTags);
 
@@ -128,6 +129,11 @@ namespace AncestryDnaClustering.Models
             var updatedNotes = await Task.WhenAll(updateTasks);
 
             await SaveUpdatedNotesToFileAsync(updatedNotes.Where(note => note != null).ToList(), originalTags, progressData);
+
+            if (originalNumNotes > notes.Count * 1000)
+            {
+                MessageBox.Show($"Only {originalNumNotes} out of {notes.Count} were updated. The uploading process will be much quicker if you trim down your file to just the changed matches, before uploading the changes.", "Few notes updated", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
 
         private class NotesData

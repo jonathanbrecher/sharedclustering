@@ -240,24 +240,39 @@ namespace AncestryDnaClustering.Models
 
         public async Task<Match> GetMatchAsync(string guid, string testGuid, HashSet<int> tagIds, Throttle throttle, ProgressData progressData)
         {
-            await throttle.WaitAsync();
-
-            try
+            var retryCount = 0;
+            var retryMax = 5;
+            while (true)
             {
-                using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}/details"))
+                await throttle.WaitAsync();
+
+                try
                 {
-                    if (!testsResponse.IsSuccessStatusCode)
+                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/{testGuid}/details"))
                     {
+                        if (!testsResponse.IsSuccessStatusCode)
+                        {
+                            return null;
+                        }
+
+                        return ConvertMatch(await testsResponse.Content.ReadAsAsync<MatchV2>(), tagIds);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (++retryCount >= retryMax)
+                    {
+                        FileUtils.LogException(ex, true);
+                        await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                         return null;
                     }
-
-                    return ConvertMatch(await testsResponse.Content.ReadAsAsync<MatchV2>(), tagIds);
+                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
                 }
-            }
-            finally
-            {
-                progressData.Increment();
-                throttle.Release();
+                finally
+                {
+                    progressData.Increment();
+                    throttle.Release();
+                }
             }
         }
 
