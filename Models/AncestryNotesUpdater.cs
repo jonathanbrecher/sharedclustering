@@ -81,7 +81,7 @@ namespace AncestryDnaClustering.Models
                 : toChangeCount > 0
                 ? $"{toChangeCount} matches to change."
                 : $"{toRemoveCount} notes to remove.")
-                + " Continue?";
+                + " Are you sure that you want to make changes to your notes on the Ancestry website?";
             if (MessageBox.Show(
                 message,
                 "Notes to change",
@@ -130,7 +130,7 @@ namespace AncestryDnaClustering.Models
 
             await SaveUpdatedNotesToFileAsync(updatedNotes.Where(note => note != null).ToList(), originalTags, progressData);
 
-            if (originalNumNotes > notes.Count * 1000)
+            if (originalNumNotes > notes.Count * 100 || originalNumNotes > notes.Count + 1000)
             {
                 MessageBox.Show($"Only {originalNumNotes} out of {notes.Count} were updated. The uploading process will be much quicker if you trim down your file to just the changed matches, before uploading the changes.", "Few notes updated", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -252,6 +252,21 @@ namespace AncestryDnaClustering.Models
 
         private async Task MaybeUpdateFilesAsync(List<NotesData> notes, List<Tag> originalTags)
         {
+            var notesByIdGroups = notes.GroupBy(note => note.TestId).ToList();
+
+            var duplicatedIds = notesByIdGroups.Where(g => g.Count() > 1).ToList();
+            if (duplicatedIds.Count > 0)
+            {
+                MessageBox.Show(
+                    $"Duplicate IDs found  for names: {string.Join(", ", duplicatedIds.SelectMany(g => g).Select(notesData => notesData.Name))}. Please remove duplicates and try again",
+                    "Duplicate IDs found",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            var notesById = notesByIdGroups.ToDictionary(g => g.Key, g => g.First());
+
             if (MessageBox.Show(
                 "Do you also want to update data files that you already downloaded from Ancestry and have saved locally?",
                 "Also update local saved data files",
@@ -283,20 +298,6 @@ namespace AncestryDnaClustering.Models
                 Settings.Default.LastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
                 Settings.Default.Save();
 
-                var notesByIdGroups = notes.GroupBy(note => note.TestId).ToList();
-
-                var duplicatedIds = notesByIdGroups.Where(g => g.Count() > 1).ToList();
-                if (duplicatedIds.Count > 0)
-                {
-                    MessageBox.Show(
-                        $"Duplicate IDs found  for names: {string.Join(", ", duplicatedIds.SelectMany(g => g).Select(notesData => notesData.Name))}. Please remove duplicates and try again",
-                        "Duplicate IDs found",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
-
-                var notesById = notesByIdGroups.ToDictionary(g => g.Key, g => g.First());
                 var serialized = await Task.Run(() => FileUtils.ReadAsJson<Serialized>(openFileDialog.FileName, false, false));
 
                 foreach (var match in serialized.Matches)
