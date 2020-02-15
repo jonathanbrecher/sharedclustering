@@ -8,8 +8,14 @@ namespace AncestryDnaClustering.Models
     {
         private readonly SemaphoreSlim _semaphoreInternal = new SemaphoreSlim(1);
         private readonly SemaphoreSlim _semaphore;
-        private readonly TimeSpan _timeUnit = TimeSpan.FromMinutes(2.0 / 600 * 1.1);
+
+        // Ancestry enforces a limit that appears to be tied to the number of requests made per minute,
+        // for example a maximum of 500 requests per minute. The time unit specified here is designed
+        // to level the number of requests over time by making a maximum of for example 2 requests per 2/500 minutes.
+        // An additional fudge factor of 1.1 is included to back off even a little bit further for safety.
+        private readonly TimeSpan _timeUnit = TimeSpan.FromMinutes(2.0 / 500 * 1.1);
         private readonly int _maxCountPerTimeUnit = 2;
+
         private DateTimeOffset _timeUnitStart;
         private DateTimeOffset _timeUnitEnd;
         private int _countThisTimeUnit;
