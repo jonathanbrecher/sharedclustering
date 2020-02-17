@@ -34,53 +34,53 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
 
         public Task<ConcurrentDictionary<int, float[]>> CorrelateAsync(List<IClusterableMatch> clusterableMatches, List<IClusterableMatch> immediateFamily)
         {
-            _progressData.Reset("Correlating data...", clusterableMatches.Count);
+            _progressData.Reset("Correlating data...", clusterableMatches.Count * 2);
 
             return Task.Run(async () =>
             {
-                var allMatches = immediateFamily.Concat(clusterableMatches).ToList();
-                var clusterableMatchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
-
-                // Skip over any immediate family matches. Immediate family matches tend to have huge numbers of shared matches.
-                // If the immediate family are included, the entire cluster diagram will get swamped with low-level
-                // indirect matches (gray cells in the final), obscuring the useful clusters. 
-                // The immediate family matches will still be included in the cluster diagram
-                // by virtue of the other matches that are shared directly with them.
-                clusterableMatches = clusterableMatches.Skip(immediateFamily.Count).ToList();
+                var immmediateFamilyIndexes = new HashSet<int>(immediateFamily.Select(match => match.Index));
+                var matchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
 
                 // Count how often each match appears in any match's match list.
                 // Every match appears at least once, in its own match list.
-                var appearances = allMatches
+                var appearances = clusterableMatches
                     .SelectMany(match => match.Coords)
-                    .Where(index => clusterableMatchIndexes.Contains(index))
+                    .Where(index => matchIndexes.Contains(index))
                     .GroupBy(index => index)
                     .ToDictionary(g => g.Key, g => g.Count());
 
                 // Matches below 20 cM never appear in a shared match list on Ancestry,
                 // so only the stronger matches can be clustered.
-                var clusterableMatchesOverLowestClusterableCentimorgans = allMatches
+                var clusterableMatchesOverLowestClusterableCentimorgans = clusterableMatches
                     .Where(match => match.Match.SharedCentimorgans >= _lowestClusterableCentimorgans)
                     .ToList();
                 var maxIndex = clusterableMatchesOverLowestClusterableCentimorgans.Max(match => Math.Max(match.Index, match.Coords.Max()));
 
                 var matrix = new ConcurrentDictionary<int, float[]>();
 
-                // For the immediate family, populate the matrix based only on direct shared matches.
-                var immediateFamilyTasks = immediateFamily.Select(match => Task.Run(() =>
+                var directTasks = clusterableMatches.Select(match => Task.Run(() =>
                 {
                     ExtendMatrixDirect(matrix, match, maxIndex, maxIndex, 1.0f);
                     _progressData.Increment();
                 }));
-                await Task.WhenAll(immediateFamilyTasks);
+                await Task.WhenAll(directTasks);
 
-                // For the other clusterable matches, populate the matrix based on both the direct and indirect matches.
-                var clusterableMatchesTasks = clusterableMatches.Select(match => Task.Run(() =>
+                var indirectTasks = clusterableMatches.Select(match => Task.Run(() =>
                 {
-                    ExtendMatrixDirect(matrix, match, maxIndex, maxIndex, 1.0f);
-                    ExtendMatrixIndirect(matrix, match, appearances, maxIndex);
+                    // Skip over any immediate family matches when marking indirect matches.
+                    // Immediate family matches tend to have huge numbers of shared matches.
+                    // If the immediate family are included, the entire cluster diagram will get swamped with low-level
+                    // indirect matches (gray cells in the final diagram), obscuring the useful clusters. 
+                    // The immediate family matches will still be included in the cluster diagram
+                    // by virtue of the other matches that are shared directly with them.
+                    // Indirect matches still need to be indicated for matches that are also direct,
+                    // else the diagonal won't be solid 2s, and immediate family matches will be too pale (closer to 1 than to 2) overall.
+                    var onlyIfDirect = immmediateFamilyIndexes.Contains(match.Index);
+
+                    ExtendMatrixIndirect(matrix, match, appearances, maxIndex, onlyIfDirect);
                     _progressData.Increment();
                 }));
-                await Task.WhenAll(clusterableMatchesTasks);
+                await Task.WhenAll(indirectTasks);
 
                 var matchIndexesOverLowestClusterableCentimorgans = new HashSet<int>(clusterableMatchesOverLowestClusterableCentimorgans.Select(match => match.Index));
                 RemoveFilteredCoords(matrix, matchIndexesOverLowestClusterableCentimorgans);
@@ -143,7 +143,7 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
         // If two matches A and B never appear on the same match list, then matrix[A][B] has a value of 0.
         // If match A appears in 4 shared match lists, and match B appears in 3 of those lists, then matrix[A][B] has a value of 0.75
         // If every shared match list that contains match A also contains match B, then matrix[A][B] has a value of 1.
-        private static void ExtendMatrixIndirect(ConcurrentDictionary<int, float[]> matrix, IClusterableMatch match, IReadOnlyDictionary<int, int> appearances, int maxIndex)
+        private static void ExtendMatrixIndirect(ConcurrentDictionary<int, float[]> matrix, IClusterableMatch match, IReadOnlyDictionary<int, int> appearances, int maxIndex, bool onlyIfDirect)
         {
             foreach (var coord1 in match.Coords)
             {
@@ -158,14 +158,20 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
                 {
                     if (coord1 < row.Length)
                     {
-                        row[coord1] += 1.0f / numAppearances;
+                        if (!onlyIfDirect || row[coord1] >= 1)
+                        {
+                            row[coord1] += 1.0f / numAppearances;
+                        }
                     }
                 }
                 else
                 {
                     foreach (var coord2 in match.Coords.Where(coord2 => coord2 != match.Index && coord2 <= maxIndex))
                     {
-                        row[coord2] += 1.0f / numAppearances;
+                        if (!onlyIfDirect || row[coord2] >= 1)
+                        {
+                            row[coord2] += 1.0f / numAppearances;
+                        }
                     }
                 }
             }
