@@ -124,6 +124,7 @@
     <Compile Include="Models\ColumnWriters\TagWriter.cs" />
     <Compile Include="Models\EndogamyProber.cs" />
     <Compile Include="Models\HierarchicalClustering\CorrelationWriters\ExcelOutputWriter.cs" />
+    <Compile Include="Models\LoginResult.cs" />
     <Compile Include="Models\SavedData\Tag.cs" />
     <Compile Include="Models\Similarity\SimilarityFinder.cs" />
     <Compile Include="Models\Similarity\ExcelSimilarityWriter.cs" />

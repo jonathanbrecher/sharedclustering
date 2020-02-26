@@ -23,7 +23,7 @@ namespace AncestryDnaClustering.ViewModels
             // The CookieContainer captures those cookies when they are set, and adds them to subsequent requests.
             var cookies = new CookieContainer();
             var handler = new HttpClientHandler { CookieContainer = cookies };
-            var ancestryClients = new[] { "https://www.ancestry.com", "https://www.ancestry.com.au", "https://www.ancestry.co.uk" }
+            var ancestryClients = new[] { "https://www.ancestry.com", "https://www.ancestry.com.au", "https://www.ancestry.co.uk", "https://www.ancestry.it" }
                 .ToDictionary(url => url, url => new HttpClient(handler) { BaseAddress = new Uri(url), Timeout = TimeSpan.FromMinutes(5) });
 
             var loginHelper = new AncestryLoginHelper(ancestryClients, cookies);

@@ -97,44 +97,46 @@ namespace AncestryDnaClustering.ViewModels
         {
             Settings.Default.Save();
 
-            // Try primary site, and capture error if any.
-            var primaryHost = _loginHelper.Hosts.First();
-            var errorMessage = await SignInAsync(password, primaryHost);
-            if (errorMessage == null)
+            // Try primary site. If not able to sign into the main Ancestry site, try some backups.
+            foreach (var host in _loginHelper.Hosts)
             {
-                return;
-            }
-
-            // If not able to sign into the main Ancestry site, try some backups.
-            foreach (var alternateHost in _loginHelper.Hosts.Skip(1))
-            {
-                if (await SignInAsync(password, alternateHost) == null)
+                var result = await SignInAsync(password, host);
+                if (result == LoginResult.Success)
                 {
+                    return;
+                }
+                if (result == LoginResult.MultifactorAuthentication)
+                {
+                    MessageBox.Show("Two-step verification is not currently supported. " + Environment.NewLine + Environment.NewLine +
+                        "Please disable two-step verification on your Ancestry account before continuing.", 
+                        "Two-Step Verification", MessageBoxButton.OK, MessageBoxImage.Information);
+                    //MessageBox.Show("Ancestry has sent a verification code to your mobile device. " + Environment.NewLine + Environment.NewLine +
+                    //    "Please re-enter your password with the verification code added to the end. " +
+                    //    "For example, if your password was Password and your verification code was 123456, " +
+                    //    "then you should enter Password123456 as your password here.", "Two-Step Verification", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
             }
 
             // Show error message from primary login failure if none of the backups worked.
-            MessageBox.Show(errorMessage, "Sign in failure", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show("Unable to sign in to Ancestry", "Sign in failure", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
-        private async Task<string> SignInAsync(PasswordBox password, string hostOverride)
+        private async Task<LoginResult> SignInAsync(PasswordBox password, string hostOverride)
         {
             try
             {
-                if (await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password, hostOverride))
+                var result = await _loginHelper.LoginAsync(AncestryUserName.Trim(), password.Password, hostOverride);
+                if (result == LoginResult.Success)
                 {
                     Tests = await _testsRetriever.GetTestsAsync();
-                    return null;
                 }
-                else
-                {
-                    return $"Unable to sign in to Ancestry";
-                }
+                return result;
             }
             catch (Exception ex)
             {
-                return $"Unable to sign in to Ancestry {Environment.NewLine}{Environment.NewLine}{ex.Message}";
+                FileUtils.LogException(ex, false);
+                return LoginResult.Exception;
             }
         }
     }

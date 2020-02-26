@@ -22,13 +22,14 @@ namespace AncestryDnaClustering.Models
         public IEnumerable<string> Hosts => _ancestryClients.Keys;
         public HttpClient AncestryClient { get; private set; }
 
-        public async Task<bool> LoginAsync(string username, string password, string host)
+        public async Task<LoginResult> LoginAsync(string username, string password, string host)
         {
             if (!_ancestryClients.TryGetValue(host, out var ancestryClient))
             {
-                return false;
+                return LoginResult.InternalError;
             }
 
+            LoginResult? primaryStatus = null;
             foreach (var expect100Continue in new[] { false, true })
             {
                 // The default value of True "should" be right
@@ -41,7 +42,13 @@ namespace AncestryDnaClustering.Models
                         var queryString = new StringContent(query);
                         queryString.Headers.ContentType = new MediaTypeHeaderValue(query[0] == '{' ? "application/json" : "application/x-www-form-urlencoded");
 
-                        if (await LoginAsync(url, queryString, ancestryClient))
+                        var status = await LoginAsync(url, queryString, ancestryClient);
+                        if (primaryStatus == null)
+                        {
+                            primaryStatus = status;
+                        }
+
+                        if (status == LoginResult.Success)
                         {
                             try
                             {
@@ -58,43 +65,51 @@ namespace AncestryDnaClustering.Models
                             }
 
                             AncestryClient = ancestryClient;
-                            return true;
+                            return status;
+                        }
+                        else if (status == LoginResult.MultifactorAuthentication)
+                        {
+                            return status;
                         }
                     }
                 }
             }
 
-            return false;
+            return primaryStatus ?? LoginResult.InternalError;
         }
 
-        public async Task<bool> LoginAsync(string requestUri, StringContent queryString, HttpClient ancestryClient)
+        private async Task<LoginResult> LoginAsync(string requestUri, StringContent queryString, HttpClient ancestryClient)
         {
             using (var loginResponse = await ancestryClient.PostAsync(requestUri, queryString))
             {
                 if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    return false;
+                    return LoginResult.Unauthorized;
                 }
                 try
                 {
                     loginResponse.EnsureSuccessStatusCode();
-                    var result = await loginResponse.Content.ReadAsAsync<LoginResult>();
-                    if (result.Status == "invalidCredentials")
+                    var result = await loginResponse.Content.ReadAsAsync<LoginResultDto>();
+                    if (result.Status.Equals("invalidCredentials", StringComparison.OrdinalIgnoreCase))
                     {
-                        return false;
+                        return LoginResult.InvalidCredentials;
+                    }
+                    else if (result.Status.Equals("mfa", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return LoginResult.MultifactorAuthentication;
                     }
                 }
                 catch (Exception e)
                 {
                     FileUtils.LogException(e, false);
-                    return false;
+                    return LoginResult.Exception;
                 }
             }
 
-            return true;
+            return LoginResult.Success;
         }
 
-        private class LoginResult
+        private class LoginResultDto
         {
             public string Status { get; set; }
             public string UserId { get; set; }
