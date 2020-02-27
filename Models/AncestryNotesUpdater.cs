@@ -132,7 +132,7 @@ namespace AncestryDnaClustering.Models
 
             if (originalNumNotes > notes.Count * 100 || originalNumNotes > notes.Count + 1000)
             {
-                MessageBox.Show($"Only {originalNumNotes} out of {notes.Count} were updated. The uploading process will be much quicker if you trim down your file to just the changed matches, before uploading the changes.", "Few notes updated", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Only {notes.Count} out of {originalNumNotes} were updated. The uploading process would be much quicker if you trim down your file to just the changed matches, before uploading the changes.", "Few notes updated", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
