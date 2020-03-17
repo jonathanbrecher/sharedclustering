@@ -372,17 +372,37 @@ namespace AncestryDnaClustering.ViewModels
                 CanProcessSavedData = false;
 
                 var (testTakerTestId, clusterableMatches, tags) = await _matchesLoader.LoadClusterableMatchesAsync(Filename, MinCentimorgansToCluster, MinCentimorgansInSharedMatches, AnonymizeOutput ? _anonymizer : null, ProgressData);
-                if (clusterableMatches == null || clusterableMatches.Count == 0)
+                if (clusterableMatches == null)
                 {
+                    return;
+                }
+
+                if (clusterableMatches.Count == 0)
+                {
+                    MessageBox.Show("Unable to read ICW data", "Unexpected failure", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
                 var testIdsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
 
                 var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
-                var clusterableCoords = clusterableMatches
-                    .Where(match => match.Match.SharedCentimorgans >= MinCentimorgansToCluster 
+
+                var filteredMatches = clusterableMatches
+                    .Where(match => match.Match.SharedCentimorgans >= MinCentimorgansToCluster
                         && (testIdsToFilter.Count == 0 || testIdsToFilter.Contains(match.Match.TestGuid)))
+                    .ToList();
+
+                if (filteredMatches.Count == 0)
+                {
+                    var errorMessage = testIdsToFilter.Count > 0
+                        ? $"No matches found over {MinCentimorgansToCluster} cM that match any of {testIdsToFilter.Count} filtered IDs. Clusters could not be generated."
+                        : $"No matches found over {MinCentimorgansToCluster} cM. Clusters could not be generated.";
+
+                    MessageBox.Show(errorMessage, "No filtered matches", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                var clusterableCoords = filteredMatches
                     .SelectMany(match => testIdsToFilter.Count == 0
                         ? match.Coords.Where(coord => coord != match.Index)
                         : new[] { match.Index })
@@ -392,7 +412,7 @@ namespace AncestryDnaClustering.ViewModels
 
                 if (clusterableCoords.Count == 0)
                 {
-                    MessageBox.Show("Unable to read ICW data", "Unexpected failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"No shared matches found for any of {filteredMatches.Count} matches. Clusters could not be generated.", "No shared matches", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -416,7 +436,8 @@ namespace AncestryDnaClustering.ViewModels
                     }
                 }
 
-                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster, tags, "heatmap");
+                var worksheetName = AnonymizeOutput ? "heatmap - anonymized" : "heatmap";
+                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster, tags, worksheetName);
 
                 if (OpenClusterFileWhenComplete)
                 {
