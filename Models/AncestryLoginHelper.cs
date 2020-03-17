@@ -30,14 +30,14 @@ namespace AncestryDnaClustering.Models
             }
 
             LoginResult? primaryStatus = null;
-            foreach (var expect100Continue in new[] { false, true })
+            foreach (var expect100Continue in new[] { false/*, true*/ })
             {
                 // The default value of True "should" be right
                 ServicePointManager.Expect100Continue = expect100Continue;
 
                 foreach (var query in new[] { $"{{\"password\":\"{password}\",\"username\":\"{username}\"}}"/*, $"username={username}&password={password}"*/ })
                 {
-                    foreach (var url in new[] { "account/signin/frame/authenticate", "account/signin" })
+                    foreach (var url in new[] { "account/signin/frame/authenticate"/*, "account/signin"*/ })
                     {
                         var queryString = new StringContent(query);
                         queryString.Headers.ContentType = new MediaTypeHeaderValue(query[0] == '{' ? "application/json" : "application/x-www-form-urlencoded");
@@ -67,7 +67,7 @@ namespace AncestryDnaClustering.Models
                             AncestryClient = ancestryClient;
                             return status;
                         }
-                        else if (status == LoginResult.MultifactorAuthentication)
+                        else if (status == LoginResult.MultifactorAuthentication || status == LoginResult.InvalidCredentials)
                         {
                             return status;
                         }

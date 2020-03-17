@@ -108,8 +108,19 @@ namespace AncestryDnaClustering.ViewModels
                 if (result == LoginResult.MultifactorAuthentication)
                 {
                     MessageBox.Show("Two-step verification is not currently supported. " + Environment.NewLine + Environment.NewLine +
-                        "Please disable two-step verification on your Ancestry account before continuing.", 
+                        "Please disable two-step verification on your Ancestry account before continuing.",
                         "Two-Step Verification", MessageBoxButton.OK, MessageBoxImage.Information);
+                    //MessageBox.Show("Ancestry has sent a verification code to your mobile device. " + Environment.NewLine + Environment.NewLine +
+                    //    "Please re-enter your password with the verification code added to the end. " +
+                    //    "For example, if your password was Password and your verification code was 123456, " +
+                    //    "then you should enter Password123456 as your password here.", "Two-Step Verification", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                if (result == LoginResult.InvalidCredentials)
+                {
+                    MessageBox.Show("The user name or password was not recognized by Ancestry. " + Environment.NewLine + Environment.NewLine +
+                        "Please check the spelling then try again.",
+                        "Invalid credentials", MessageBoxButton.OK, MessageBoxImage.Information);
                     //MessageBox.Show("Ancestry has sent a verification code to your mobile device. " + Environment.NewLine + Environment.NewLine +
                     //    "Please re-enter your password with the verification code added to the end. " +
                     //    "For example, if your password was Password and your verification code was 123456, " +

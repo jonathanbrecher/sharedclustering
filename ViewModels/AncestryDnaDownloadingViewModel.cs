@@ -61,7 +61,7 @@ namespace AncestryDnaClustering.ViewModels
             // Stop any previous task that was downloading match counts from a previous test.
             _matchCountsCancellationTokenSource.Cancel();
             _matchCountsCancellationTokenSource = new CancellationTokenSource();
-            GetMatchCounts(SignInViewModel.SelectedTest.TestGuid, _matchCountsCancellationTokenSource.Token);
+            GetMatchCounts(SignInViewModel.SelectedTest?.TestGuid, _matchCountsCancellationTokenSource.Token);
         }
 
         private MatchCounts _matchCountsData;
@@ -72,6 +72,11 @@ namespace AncestryDnaClustering.ViewModels
             try
             {
                 MatchCounts = null;
+                if (guid == null)
+                {
+                    return;
+                }
+
                 _matchCountsData = await _matchesRetriever.GetMatchCounts(guid);
                 if (DownloadTypeEndogamy)
                 {
