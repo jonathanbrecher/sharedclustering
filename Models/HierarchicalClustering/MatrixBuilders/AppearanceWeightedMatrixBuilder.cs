@@ -154,24 +154,11 @@ namespace AncestryDnaClustering.Models.HierarchicalClustering.MatrixBuilders
 
                 var row = matrix.GetOrAdd(coord1, _ => new float[maxIndex + 1]);
 
-                if (coord1 == match.Index)
+                foreach (var coord2 in match.Coords.Where(coord2 => coord2 <= maxIndex))
                 {
-                    if (coord1 < row.Length)
+                    if (!onlyIfDirect || row[coord2] >= 1)
                     {
-                        if (!onlyIfDirect || row[coord1] >= 1)
-                        {
-                            row[coord1] += 1.0f / numAppearances;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var coord2 in match.Coords.Where(coord2 => coord2 != match.Index && coord2 <= maxIndex))
-                    {
-                        if (!onlyIfDirect || row[coord2] >= 1)
-                        {
-                            row[coord2] += 1.0f / numAppearances;
-                        }
+                        row[coord2] += 1.0f / numAppearances;
                     }
                 }
             }

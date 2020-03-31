@@ -83,7 +83,7 @@ namespace AncestryDnaClustering.Models.SavedData
             return await Task.Run(() =>
             {
                 var strongMatches = input.Matches.Where(match => match.SharedCentimorgans >= minCentimorgansToCluster).ToList();
-                var maxMatchIndex = strongMatches.Count + 1;
+                var maxMatchIndex = strongMatches.Count - 1;
                 var maxIcwIndex = Math.Min(maxMatchIndex, input.Matches.Count(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches) + 1);
                 maxIcwIndex = Math.Min(maxIcwIndex, input.Matches.Count - 1);
                 var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestGuid), StringComparer.OrdinalIgnoreCase);
