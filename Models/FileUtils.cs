@@ -292,12 +292,12 @@ namespace AncestryDnaClustering.Models
 
         public static string GetDefaultDirectory(string defaultFileName)
         {
-            if (!string.IsNullOrEmpty(defaultFileName))
+            if (!string.IsNullOrEmpty(defaultFileName) && Directory.Exists(Path.GetDirectoryName(defaultFileName)))
             {
                 return Path.GetDirectoryName(defaultFileName);
             }
 
-            if (!string.IsNullOrEmpty(Settings.Default.LastUsedDirectory))
+            if (!string.IsNullOrEmpty(Settings.Default.LastUsedDirectory) && Directory.Exists(Settings.Default.LastUsedDirectory))
             {
                 return Settings.Default.LastUsedDirectory;
             }
