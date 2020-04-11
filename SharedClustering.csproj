@@ -197,6 +197,9 @@
     <Compile Include="Views\PercentageNullZeroConverter.cs" />
     <Compile Include="Views\WatermarkAdorner.cs" />
     <Compile Include="Views\WatermarkService.cs" />
+    <Compile Include="Views\AncestryWebsiteBrowser.xaml.cs">
+      <DependentUpon>AncestryWebsiteBrowser.xaml</DependentUpon>
+    </Compile>
     <Page Include="Views\AncestryDnaExportView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -233,6 +236,10 @@
       <DependentUpon>AncestryDnaToolsView.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\AncestryWebsiteBrowser.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

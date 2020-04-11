@@ -1,22 +1,25 @@
-﻿using System;
+﻿using AncestryDnaClustering.ViewModels;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace AncestryDnaClustering.Models
 {
     internal class AncestryLoginHelper
     {
-        private Dictionary<string, HttpClient> _ancestryClients;
-        private CookieContainer _cookies;
+        private readonly Dictionary<string, HttpClient> _ancestryClients;
+        private readonly CookieContainer _cookies;
+        private readonly AncestryDnaToolsViewModel _parent;
 
-        public AncestryLoginHelper(Dictionary<string, HttpClient> ancestryClients, CookieContainer cookies)
+        public AncestryLoginHelper(Dictionary<string, HttpClient> ancestryClients, CookieContainer cookies, AncestryDnaToolsViewModel parent)
         {
             _ancestryClients = ancestryClients;
             _cookies = cookies;
+            _parent = parent;
         }
 
         public IEnumerable<string> Hosts => _ancestryClients.Keys;
@@ -113,6 +116,26 @@ namespace AncestryDnaClustering.Models
         {
             public string Status { get; set; }
             public string UserId { get; set; }
+        }
+
+        public async Task<bool> LoginViaWebBrowserAsync()
+        {
+            var ancestryClient = _ancestryClients[Hosts.First()];
+
+            var ancestryWebsiteBrowser = new AncestryWebsiteBrowser(ancestryClient.BaseAddress, _parent.Width, _parent.Height);
+            ancestryWebsiteBrowser.Show();
+            while (ancestryWebsiteBrowser.IsVisible)
+            {
+                await Task.Delay(100);
+            }
+            if (ancestryWebsiteBrowser.Cookie != null)
+            {
+                _cookies.SetCookies(ancestryClient.BaseAddress, ancestryWebsiteBrowser.Cookie.Replace("; ", ","));
+                AncestryClient = ancestryClient;
+                return true;
+            }
+
+            return false;
         }
     }
 }

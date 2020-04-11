@@ -21,12 +21,12 @@ namespace AncestryDnaClustering.ViewModels
         {
             // Ancestry's security works by setting some cookies in the browser when someone signs in.
             // The CookieContainer captures those cookies when they are set, and adds them to subsequent requests.
-            var cookies = new CookieContainer();
+            var cookies = new CookieContainer { PerDomainCapacity = 100 };
             var handler = new HttpClientHandler { CookieContainer = cookies };
             var ancestryClients = new[] { "https://www.ancestry.com", "https://www.ancestry.com.au", "https://www.ancestry.co.uk", "https://www.ancestry.it" }
                 .ToDictionary(url => url, url => new HttpClient(handler) { BaseAddress = new Uri(url), Timeout = TimeSpan.FromMinutes(5) });
 
-            var loginHelper = new AncestryLoginHelper(ancestryClients, cookies);
+            var loginHelper = new AncestryLoginHelper(ancestryClients, cookies, this);
             var testsRetriever = new AncestryTestsRetriever(loginHelper);
             var matchesRetriever = new AncestryMatchesRetriever(loginHelper);
             var endogamyProber = new EndogamyProber(matchesRetriever);
@@ -89,6 +89,20 @@ namespace AncestryDnaClustering.ViewModels
                     Settings.Default.Save();
                 }
             }
+        }
+
+        private int _width = 850;
+        public int Width
+        {
+            get => _width;
+            set => SetFieldValue(ref _width, value, nameof(Width));
+        }
+
+        private int _height = 650;
+        public int Height
+        {
+            get => _height;
+            set => SetFieldValue(ref _height, value, nameof(Height));
         }
     }
 }
