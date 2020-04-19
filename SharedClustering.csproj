@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AncestryDnaClustering</RootNamespace>
     <AssemblyName>SharedClustering</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -32,7 +32,7 @@
     <ProductName>Shared Clustering</ProductName>
     <PublisherName>Shared Clustering</PublisherName>
     <SuiteName>Shared Clustering</SuiteName>
-    <MinimumRequiredVersion>1.1.0.53</MinimumRequiredVersion>
+    <MinimumRequiredVersion>1.1.0.98</MinimumRequiredVersion>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
@@ -42,6 +42,12 @@
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <StartupObject>AncestryDnaClustering.App</StartupObject>
+    <ApplicationIcon>SharedClustering.ico</ApplicationIcon>
+    <ManifestCertificateThumbprint>6B3CA3B1017C92E2F30B0D2BD9510BEAF146B63A</ManifestCertificateThumbprint>
+    <ManifestKeyFile>SharedClustering_TemporaryKey.pfx</ManifestKeyFile>
+    <GenerateManifests>true</GenerateManifests>
+    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -64,43 +70,10 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>AncestryDnaClustering.App</StartupObject>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>SharedClustering.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestCertificateThumbprint>6B3CA3B1017C92E2F30B0D2BD9510BEAF146B63A</ManifestCertificateThumbprint>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestKeyFile>SharedClustering_TemporaryKey.pfx</ManifestKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignManifests>true</SignManifests>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.configuration" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Security" />
-    <Reference Include="System.Xml" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Xaml">
-      <RequiredTargetFramework>4.0</RequiredTargetFramework>
-    </Reference>
+    <Reference Include="System.Xaml"/>
     <Reference Include="WindowsBase" />
-    <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
@@ -295,9 +268,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.WebApi.Client">
       <Version>5.2.6</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.3</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>11.0.2</Version>
