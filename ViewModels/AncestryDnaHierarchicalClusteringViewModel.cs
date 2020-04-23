@@ -53,7 +53,7 @@ namespace AncestryDnaClustering.ViewModels
             ExcludeClustersGreaterThan = Settings.Default.ExcludeClustersGreaterThan > 0 ? Settings.Default.ExcludeClustersGreaterThan : (int?)null;
             CorrelationFilename = Settings.Default.CorrelationFilename;
             ShowAdvancedClusteringOptions = Settings.Default.ShowAdvancedClusteringOptions;
-            ClusterTypeVeryClose = Settings.Default.ClusterTypeVeryClose;
+            ClusterTypeClose = Settings.Default.ClusterTypeClose;
             ClusterTypeOver20 = Settings.Default.ClusterTypeOver20;
             ClusterTypeComplete = Settings.Default.ClusterTypeComplete;
             OpenClusterFileWhenComplete = Settings.Default.OpenClusterFileWhenComplete;
@@ -138,7 +138,7 @@ namespace AncestryDnaClustering.ViewModels
                 {
                     Settings.Default.MinCentimorgansToCluster = MinCentimorgansToCluster;
                     UpdateCanProcessSavedData();
-                    ClusterTypeVeryClose = MinCentimorgansToCluster == 90 && MinCentimorgansInSharedMatches == 90;
+                    ClusterTypeClose = MinCentimorgansToCluster == 50 && MinCentimorgansInSharedMatches == 50;
                     ClusterTypeOver20 = MinCentimorgansToCluster == 20 && MinCentimorgansInSharedMatches == 20;
                     ClusterTypeComplete = MinCentimorgansToCluster <= 6 && MinCentimorgansInSharedMatches <= 6;
                 }
@@ -158,7 +158,7 @@ namespace AncestryDnaClustering.ViewModels
                 if (SetFieldValue(ref _minCentimorgansInSharedMatches, value, nameof(MinCentimorgansInSharedMatches)))
                 {
                     Settings.Default.MinCentimorgansInSharedMatches = MinCentimorgansInSharedMatches;
-                    ClusterTypeVeryClose = (MinCentimorgansToCluster == 90 && MinCentimorgansInSharedMatches == 90);
+                    ClusterTypeClose = (MinCentimorgansToCluster == 50 && MinCentimorgansInSharedMatches == 50);
                     ClusterTypeOver20 = (MinCentimorgansToCluster == 20 && MinCentimorgansInSharedMatches == 20);
                     ClusterTypeComplete = (MinCentimorgansToCluster <= 6 && MinCentimorgansInSharedMatches <= 6);
                 }
@@ -289,18 +289,18 @@ namespace AncestryDnaClustering.ViewModels
             }
         }
 
-        private bool _clusterTypeVeryClose;
-        public bool ClusterTypeVeryClose
+        private bool _clusterTypeClose;
+        public bool ClusterTypeClose
         {
-            get => _clusterTypeVeryClose;
+            get => _clusterTypeClose;
             set
             {
-                if (SetFieldValue(ref _clusterTypeVeryClose, value, nameof(ClusterTypeVeryClose)))
+                if (SetFieldValue(ref _clusterTypeClose, value, nameof(ClusterTypeClose)))
                 {
-                    Settings.Default.ClusterTypeVeryClose = ClusterTypeVeryClose;
-                    if (ClusterTypeVeryClose)
+                    Settings.Default.ClusterTypeClose = ClusterTypeClose;
+                    if (ClusterTypeClose)
                     {
-                        MinCentimorgansToCluster = MinCentimorgansInSharedMatches = 90;
+                        MinCentimorgansToCluster = MinCentimorgansInSharedMatches = 50;
                     }
                 }
             }

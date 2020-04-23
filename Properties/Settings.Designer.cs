@@ -229,19 +229,19 @@ namespace AncestryDnaClustering.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ClusterTypeVeryClose {
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ClusterTypeClose {
             get {
-                return ((bool)(this["ClusterTypeVeryClose"]));
+                return ((bool)(this["ClusterTypeClose"]));
             }
             set {
-                this["ClusterTypeVeryClose"] = value;
+                this["ClusterTypeClose"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ClusterTypeOver20 {
             get {
                 return ((bool)(this["ClusterTypeOver20"]));
