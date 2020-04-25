@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using AncestryDnaClustering.Models;
+using AncestryDnaClustering.Models.HierarchicalClustering;
 using AncestryDnaClustering.Models.HierarchicalClustering.CorrelationWriters;
 using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
@@ -83,8 +87,26 @@ namespace AncestryDnaClustering.ViewModels
                 }
 
                 var outputWriter = new ExcelOutputWriter(testTakerTestId, AncestryHostName, ProgressData);
-                    
-                await outputWriter.ExportAsync(clusterableMatches, tags, outputFileName);
+
+                const int maxMatchesPerFile = 50000;
+                var clusterableMatchesBatches = new List<IEnumerable<IClusterableMatch>> { clusterableMatches };
+                if (clusterableMatches.Count > maxMatchesPerFile)
+                {
+                    if (MessageBox.Show(
+                        $"Hyperlinks will not work if all {clusterableMatches.Count} matches are written to a single file.{Environment.NewLine}{Environment.NewLine}" +
+                        $"Do you want to split the output into {Math.Ceiling(clusterableMatches.Count / (double)maxMatchesPerFile)} files of {maxMatchesPerFile} matches each?",
+                        "Too many matches",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning) != MessageBoxResult.No)
+                    {
+                        clusterableMatchesBatches = clusterableMatches.Batch(maxMatchesPerFile).ToList();
+                    }
+                }
+
+                for (var fileNum = 0; fileNum < clusterableMatchesBatches.Count; ++fileNum)
+                {
+                    await outputWriter.ExportAsync(clusterableMatchesBatches[fileNum].ToList(), tags, fileNum == 0 ? outputFileName : FileUtils.AddSuffixToFilename(outputFileName, (fileNum + 1).ToString()));
+                }
 
                 FileUtils.LaunchFile(outputFileName);
             }
