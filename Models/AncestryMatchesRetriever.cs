@@ -154,16 +154,16 @@ namespace AncestryDnaClustering.Models
 
                 try
                 {
-                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/list?page={pageNumber}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
+                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/list?page={pageNumber}"))
                     {
                         throttle.Release();
                         throttleReleased = true;
 
                         testsResponse.EnsureSuccessStatusCode();
                         var matches = await testsResponse.Content.ReadAsAsync<MatchesV2>();
-                        var result = matches.MatchGroups.SelectMany(matchGroup => matchGroup.Matches)
+                        var result = matches.MatchGroups?.SelectMany(matchGroup => matchGroup.Matches)
                             .Select(match => ConvertMatch(match, tagIds))
-                            .ToList();
+                            .ToList() ?? new List<Match>();
 
                         // Sometimes Ancestry returns matches with partial data.
                         // If that happens, retry and hope to get full data the next time.
@@ -355,7 +355,7 @@ namespace AncestryDnaClustering.Models
                         testsResponse.EnsureSuccessStatusCode();
                         var matches = await testsResponse.Content.ReadAsAsync<MatchesV2>();
 
-                        var matchesInCommon = matches.MatchGroups.SelectMany(matchGroup => matchGroup.Matches)
+                        var matchesInCommon = matches.MatchGroups?.SelectMany(matchGroup => matchGroup.Matches)
                             .Select(match => new Match
                             {
                                 MatchTestAdminDisplayName = match.AdminDisplayName,
@@ -366,7 +366,7 @@ namespace AncestryDnaClustering.Models
                                 Starred = match.Starred,
                                 Note = match.Note,
                             })
-                            .ToList();
+                            .ToList() ?? new List<Match>();
 
                         if (matchesInCommon.Any(match => match.Name == "name unavailable") && ++nameUnavailableCount < nameUnavailableMax)
                         {

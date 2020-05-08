@@ -20,31 +20,36 @@ namespace AncestryDnaClustering.Models
         // As in the web site the tests are sorted with the user's own test, followed by the other tests alphabetically.
         public async Task<List<Test>> GetTestsAsync()
         {
-            using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync("discoveryui-matchesservice/api/samples/"))
+            using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync("dna/secure/tests"))
             {
                 if (testsResponse.StatusCode == HttpStatusCode.Unauthorized)
                 {
                     throw new Exception("Your username or password is incorrect. Please try again.");
                 }
                 testsResponse.EnsureSuccessStatusCode();
-                var tests = await testsResponse.Content.ReadAsAsync<SamplesSet>();
-                return tests.Samples.Complete.Select(test => new Test { DisplayName = test.DisplayName, TestGuid = test.TestGuid }).ToList();
+                var tests = await testsResponse.Content.ReadAsAsync<Tests>();
+                return tests.Data.CompleteTests.Select(test => new Test { DisplayName = test.TestSubject.DisplayName, TestGuid = test.Guid }).ToList();
             }
         }
 
-        private class SamplesSet
+        private class Tests
         {
-            public CompleteSamples Samples { get; set; }
+            public TestData Data { get; set; }
         }
 
-        private class CompleteSamples
+        private class TestData
         {
-            public List<CompleteSample> Complete { get; set; }
+            public List<CompleteTest> CompleteTests { get; set; }
         }
 
-        private class CompleteSample
+        private class CompleteTest
         {
-            public string TestGuid { get; set; }
+            public string Guid { get; set; }
+            public TestSubject TestSubject { get; set; }
+        }
+
+        private class TestSubject
+        {
             public string DisplayName { get; set; }
         }
     }
