@@ -38,6 +38,7 @@ namespace AncestryDnaClustering.ViewModels
                     //httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
                     //httpClient.DefaultRequestHeaders.Add("Cache-Control", "max-age=0");
                     //httpClient.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", WindowTitle);
                     //httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
                     //httpClient.DefaultRequestHeaders.Add("Sec-Fetch-Site", "none");
                     //httpClient.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "navigate");
