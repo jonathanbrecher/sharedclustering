@@ -28,7 +28,11 @@ namespace AncestryDnaClustering.Models
                 }
                 testsResponse.EnsureSuccessStatusCode();
                 var tests = await testsResponse.Content.ReadAsAsync<Tests>();
-                return tests.Data.CompleteTests.Select(test => new Test { DisplayName = test.TestSubject.DisplayName, TestGuid = test.Guid }).ToList();
+                return tests.Data.CompleteTests
+                    .OrderByDescending(test => test.UsersSelfTest)
+                    .ThenBy(test => test.TestSubject.Surname)
+                    .ThenBy(test => test.TestSubject.GivenNames)
+                    .Select(test => new Test { DisplayName = $"{test.TestSubject.GivenNames} {test.TestSubject.Surname}", TestGuid = test.Guid }).ToList();
             }
         }
 
@@ -46,11 +50,14 @@ namespace AncestryDnaClustering.Models
         {
             public string Guid { get; set; }
             public TestSubject TestSubject { get; set; }
+            public bool UsersSelfTest { get; set; }
         }
 
         private class TestSubject
         {
             public string DisplayName { get; set; }
+            public string GivenNames { get; set; }
+            public string Surname { get; set; }
         }
     }
 }
