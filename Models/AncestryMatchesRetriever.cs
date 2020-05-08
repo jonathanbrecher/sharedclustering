@@ -154,7 +154,7 @@ namespace AncestryDnaClustering.Models
 
                 try
                 {
-                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/list?page={pageNumber}"))
+                    using (var testsResponse = await _ancestryLoginHelper.AncestryClient.GetAsync($"discoveryui-matchesservice/api/samples/{guid}/matches/list?page={pageNumber}&bookmarkdata={{\"moreMatchesAvailable\":true,\"lastMatchesServicePageIdx\":{pageNumber - 1}}}"))
                     {
                         throttle.Release();
                         throttleReleased = true;
