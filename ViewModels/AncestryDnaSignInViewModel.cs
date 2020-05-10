@@ -97,17 +97,21 @@ namespace AncestryDnaClustering.ViewModels
         {
             Settings.Default.Save();
 
-            // Try primary site. If not able to sign into the main Ancestry site, try some backups.
-            foreach (var host in _loginHelper.Hosts)
+            var forceLoginViaWebBrowser = true;
+            if (!forceLoginViaWebBrowser)
             {
-                var result = await SignInAsync(password, host);
-                if (result == LoginResult.Success)
+                // Try primary site. If not able to sign into the main Ancestry site, try some backups.
+                foreach (var host in _loginHelper.Hosts)
                 {
-                    return;
-                }
-                if (result == LoginResult.MultifactorAuthentication || result == LoginResult.InvalidCredentials)
-                {
-                    break;
+                    var result = await SignInAsync(password, host);
+                    if (result == LoginResult.Success)
+                    {
+                        return;
+                    }
+                    if (result == LoginResult.MultifactorAuthentication || result == LoginResult.InvalidCredentials)
+                    {
+                        break;
+                    }
                 }
             }
 

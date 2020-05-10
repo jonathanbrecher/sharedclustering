@@ -42,10 +42,12 @@ namespace AncestryDnaClustering.Models
                     {
                         throw;
                     }
-                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                    await DelayForExceptionAsync(ex);
                 }
             }
         }
+
+        private Task DelayForExceptionAsync(Exception ex) => Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
 
         public async Task<MatchCounts> GetMatchCounts(string guid)
         {
@@ -207,10 +209,10 @@ namespace AncestryDnaClustering.Models
                     if (++retryCount >= retryMax)
                     {
                         FileUtils.LogException(ex, true);
-                        await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                        await DelayForExceptionAsync(ex);
                         return Enumerable.Empty<Match>();
                     }
-                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                    await DelayForExceptionAsync(ex);
                 }
                 finally
                 {
@@ -263,10 +265,10 @@ namespace AncestryDnaClustering.Models
                     if (++retryCount >= retryMax)
                     {
                         FileUtils.LogException(ex, true);
-                        await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                        await DelayForExceptionAsync(ex);
                         return null;
                     }
-                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                    await DelayForExceptionAsync(ex);
                 }
                 finally
                 {
@@ -353,6 +355,14 @@ namespace AncestryDnaClustering.Models
                             continue;
                         }
                         testsResponse.EnsureSuccessStatusCode();
+
+                        if (testsResponse.Content.Headers.ContentType.MediaType.Equals("text/html", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var body = await testsResponse.Content.ReadAsStringAsync();
+                            await Task.Delay(30000);
+                            throw new Exception($"Unexpected response content: {body}");
+                        }
+
                         var matches = await testsResponse.Content.ReadAsAsync<MatchesV2>();
 
                         var matchesInCommon = matches.MatchGroups?.SelectMany(matchGroup => matchGroup.Matches)
@@ -382,14 +392,14 @@ namespace AncestryDnaClustering.Models
                     if (++retryCount >= retryMax)
                     {
                         FileUtils.LogException(ex, true);
-                        await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                        await DelayForExceptionAsync(ex);
                         if (throwException)
                         {
                             throw;
                         }
                         return (Enumerable.Empty<Match>(), false);
                     }
-                    await Task.Delay(ex is UnsupportedMediaTypeException ? 30000 : 3000);
+                    await DelayForExceptionAsync(ex);
                 }
                 finally
                 {
