@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{47E211C5-80F4-4605-8360-9519BFE0D091}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SharedClustering.HierarchicalClustering</RootNamespace>
+    <AssemblyName>SharedClustering.HierarchicalClustering</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ClusterableMatch.cs" />
+    <Compile Include="ClusterNode.cs" />
+    <Compile Include="ColumnWriters\ClusterNumberWriter.cs" />
+    <Compile Include="ColumnWriters\ColumnWritersCollection.cs" />
+    <Compile Include="ColumnWriters\CommonAncestorsWriter.cs" />
+    <Compile Include="ColumnWriters\CorrelatedClustersWriter.cs" />
+    <Compile Include="ColumnWriters\CountWriter.cs" />
+    <Compile Include="ColumnWriters\GenericObjectWriter.cs" />
+    <Compile Include="ColumnWriters\IColumnWriter.cs" />
+    <Compile Include="ColumnWriters\LinkWriter.cs" />
+    <Compile Include="ColumnWriters\LongestBlockWriter.cs" />
+    <Compile Include="ColumnWriters\NameWriter.cs" />
+    <Compile Include="ColumnWriters\NoteWriter.cs" />
+    <Compile Include="ColumnWriters\SharedAncestorHintWriter.cs" />
+    <Compile Include="ColumnWriters\SharedCentimorgansWriter.cs" />
+    <Compile Include="ColumnWriters\SharedSegmentsWriter.cs" />
+    <Compile Include="ColumnWriters\StarredWriter.cs" />
+    <Compile Include="ColumnWriters\TagWriter.cs" />
+    <Compile Include="ColumnWriters\TestIdWriter.cs" />
+    <Compile Include="ColumnWriters\TreeSizeWriter.cs" />
+    <Compile Include="ColumnWriters\TreeTypeWriter.cs" />
+    <Compile Include="ColumnWriters\TreeUrlWriter.cs" />
+    <Compile Include="CorrelationWriters\ExcelCorrelationWriter.cs" />
+    <Compile Include="CorrelationWriters\ExcelOutputWriter.cs" />
+    <Compile Include="CorrelationWriters\ICorrelationWriter.cs" />
+    <Compile Include="Distance\Antiproximity.cs" />
+    <Compile Include="Distance\Correlation.cs" />
+    <Compile Include="Distance\EuclideanDistanceSquared.cs" />
+    <Compile Include="Distance\IDistanceMetric.cs" />
+    <Compile Include="Distance\Overlap.cs" />
+    <Compile Include="Distance\OverlapAndCloseWeightedEuclideanDistanceSquared.cs" />
+    <Compile Include="Distance\OverlapWeightedEuclideanDistanceSquared.cs" />
+    <Compile Include="Distance\StrengthWeightedEuclideanDistanceSquared.cs" />
+    <Compile Include="CorrelationWriters\ExcelPackageExtensions.cs" />
+    <Compile Include="HierarchicalClustering.cs" />
+    <Compile Include="IClusterableMatch.cs" />
+    <Compile Include="LeafNode.cs" />
+    <Compile Include="ClusterableMatchBuilder.cs" />
+    <Compile Include="MatrixBuilders\AppearanceWeightedMatrixBuilder.cs" />
+    <Compile Include="MatrixBuilders\CountBasedMatrixBuilder.cs" />
+    <Compile Include="MatrixBuilders\IMatrixBuilder.cs" />
+    <Compile Include="Neighbor.cs" />
+    <Compile Include="Node.cs" />
+    <Compile Include="PrimaryClusterFinders\HalfMatchPrimaryClusterFinder.cs" />
+    <Compile Include="PrimaryClusterFinders\IPrimaryClusterFinder.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="EPPlus">
+      <Version>4.5.2.1</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SharedClustering.Core\SharedClustering.Core.csproj">
+      <Project>{dd6b84dd-b15b-40f1-96d3-4128e7690dcb}</Project>
+      <Name>SharedClustering.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

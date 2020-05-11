@@ -1,9 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27428.2043
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering", "SharedClustering.csproj", "{C24A02B8-5CBB-478A-9CC2-87E3876FB719}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering", "src\SharedClustering\SharedClustering.csproj", "{C24A02B8-5CBB-478A-9CC2-87E3876FB719}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.Core", "src\SharedClustering.Core\SharedClustering.Core.csproj", "{DD6B84DD-B15B-40F1-96D3-4128E7690DCB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.HierarchicalClustering", "src\SharedClustering.HierarchicalClustering\SharedClustering.HierarchicalClustering.csproj", "{47E211C5-80F4-4605-8360-9519BFE0D091}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.Sample", "src\SharedClustering.Sample\SharedClustering.Sample.csproj", "{E2BF6E04-4B5D-4432-89B9-F1EA1C7BF8CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +21,18 @@ Global
 		{C24A02B8-5CBB-478A-9CC2-87E3876FB719}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C24A02B8-5CBB-478A-9CC2-87E3876FB719}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C24A02B8-5CBB-478A-9CC2-87E3876FB719}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD6B84DD-B15B-40F1-96D3-4128E7690DCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD6B84DD-B15B-40F1-96D3-4128E7690DCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD6B84DD-B15B-40F1-96D3-4128E7690DCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD6B84DD-B15B-40F1-96D3-4128E7690DCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47E211C5-80F4-4605-8360-9519BFE0D091}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47E211C5-80F4-4605-8360-9519BFE0D091}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47E211C5-80F4-4605-8360-9519BFE0D091}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47E211C5-80F4-4605-8360-9519BFE0D091}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2BF6E04-4B5D-4432-89B9-F1EA1C7BF8CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2BF6E04-4B5D-4432-89B9-F1EA1C7BF8CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2BF6E04-4B5D-4432-89B9-F1EA1C7BF8CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2BF6E04-4B5D-4432-89B9-F1EA1C7BF8CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
