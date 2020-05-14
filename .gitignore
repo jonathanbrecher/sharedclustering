@@ -9,3 +9,5 @@ bin
 /unused
 /*.pfx
 /*.user
+/src/SharedClustering/*.user
+/src/SharedClustering/*.pfx

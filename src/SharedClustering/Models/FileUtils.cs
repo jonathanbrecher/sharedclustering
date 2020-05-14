@@ -5,7 +5,6 @@ using System.Windows;
 using AncestryDnaClustering.Properties;
 using Newtonsoft.Json;
 using SharedClustering.Core;
-using SharedClustering.HierarchicalClustering;
 
 namespace AncestryDnaClustering.Models
 {

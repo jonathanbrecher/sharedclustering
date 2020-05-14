@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using SharedClustering.Core;
@@ -345,11 +346,16 @@ namespace AncestryDnaClustering.Models
                         throttle.Release();
                         throttleReleased = true;
 
-                        if (testsResponse.StatusCode == System.Net.HttpStatusCode.Gone)
+                        if (testsResponse.StatusCode == HttpStatusCode.Gone)
                         {
                             return (Enumerable.Empty<Match>(), false);
                         }
-                        if (testsResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                        if (testsResponse.StatusCode == (HttpStatusCode)429) // TooManyRequests
+                        {
+                            await Task.Delay(30000);
+                            continue;
+                        }
+                        if (testsResponse.StatusCode == HttpStatusCode.ServiceUnavailable)
                         {
                             await Task.Delay(120000);
                             continue;
@@ -360,7 +366,7 @@ namespace AncestryDnaClustering.Models
                         {
                             var body = await testsResponse.Content.ReadAsStringAsync();
                             await Task.Delay(30000);
-                            throw new Exception($"Unexpected response content: {body}");
+                            throw new Exception($"Unexpected response content: {body}.{Environment.NewLine}{Environment.NewLine}Downloading will continue.");
                         }
 
                         var matches = await testsResponse.Content.ReadAsAsync<MatchesV2>();
