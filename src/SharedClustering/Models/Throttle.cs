@@ -10,11 +10,12 @@ namespace AncestryDnaClustering.Models
         private readonly SemaphoreSlim _semaphore;
 
         // Ancestry enforces a limit that appears to be tied to the number of requests made per minute,
-        // for example a maximum of 50 requests per minute. The time unit specified here is designed
-        // to level the number of requests over time by making a maximum of for example 2 requests per 2/50 minutes.
+        // for example a maximum of 80 requests per minute. The time unit specified here is designed
+        // to level the number of requests over time by making a maximum of for example 2 requests per 2/80 minutes.
         // An additional fudge factor of 1.1 is included to back off even a little bit further for safety.
-        private readonly TimeSpan _timeUnit = TimeSpan.FromMinutes(2.0 / 50 * 1.1);
+        private readonly TimeSpan _timeUnit = TimeSpan.FromMinutes(2.0 / 80 * 1.1);
         private readonly int _maxCountPerTimeUnit = 2;
+        private DateTimeOffset _delayUntil = DateTimeOffset.Now;
 
         private DateTimeOffset _timeUnitStart;
         private DateTimeOffset _timeUnitEnd;
@@ -24,6 +25,11 @@ namespace AncestryDnaClustering.Models
         {
             _semaphore = new SemaphoreSlim(initialCount);
             ResetTimeUnit();
+        }
+
+        public void AbsoluteDelay(double milliseconds)
+        {
+            _delayUntil = DateTimeOffset.Now + TimeSpan.FromMilliseconds(milliseconds);
         }
 
         private void ResetTimeUnit()
@@ -38,6 +44,12 @@ namespace AncestryDnaClustering.Models
             await _semaphore.WaitAsync();
 
             await _semaphoreInternal.WaitAsync();
+
+            while (DateTimeOffset.Now < _delayUntil)
+            {
+                await Task.Delay(_delayUntil - DateTimeOffset.Now);
+            }
+
             try
             {
                 if (++_countThisTimeUnit > _maxCountPerTimeUnit)

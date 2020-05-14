@@ -352,12 +352,12 @@ namespace AncestryDnaClustering.Models
                         }
                         if (testsResponse.StatusCode == (HttpStatusCode)429) // TooManyRequests
                         {
-                            await Task.Delay(30000);
+                            throttle.AbsoluteDelay(30000);
                             continue;
                         }
                         if (testsResponse.StatusCode == HttpStatusCode.ServiceUnavailable)
                         {
-                            await Task.Delay(120000);
+                            throttle.AbsoluteDelay(120000);
                             continue;
                         }
                         testsResponse.EnsureSuccessStatusCode();
