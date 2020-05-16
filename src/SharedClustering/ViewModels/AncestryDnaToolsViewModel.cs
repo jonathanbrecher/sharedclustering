@@ -33,7 +33,7 @@ namespace AncestryDnaClustering.ViewModels
                     var httpClient = new HttpClient(handler)
                     {
                         BaseAddress = new Uri(url),
-                        Timeout = TimeSpan.FromMinutes(5),
+                        Timeout = TimeSpan.FromSeconds(15),
                     };
                     //httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
                     //httpClient.DefaultRequestHeaders.Add("Cache-Control", "max-age=0");
