@@ -42,7 +42,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>109</ApplicationRevision>
+    <ApplicationRevision>110</ApplicationRevision>
     <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -90,6 +90,7 @@
     <Compile Include="Models\AncestryTestsRetriever.cs" />
     <Compile Include="Models\EndogamyProber.cs" />
     <Compile Include="Models\LoginResult.cs" />
+    <Compile Include="Models\SavedData\DnaGedcomMyHeritageMatchesReader.cs" />
     <Compile Include="Models\SavedData\SharedClusteringExcelMatchesReader.cs" />
     <Compile Include="Models\Similarity\SimilarityFinder.cs" />
     <Compile Include="Models\Similarity\ExcelSimilarityWriter.cs" />
