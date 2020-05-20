@@ -58,6 +58,7 @@ namespace AncestryDnaClustering.ViewModels
             {
                 new DnaGedcomAncestryMatchesReader(),
                 new DnaGedcomFtdnaMatchesReader(),
+                new SharedClusteringExcelMatchesReader(),
                 new SharedClusteringMatchesReader(),
                 new AutoClusterCsvMatchesReader(),
                 new AutoClusterExcelMatchesReader(),

@@ -90,6 +90,7 @@
     <Compile Include="Models\AncestryTestsRetriever.cs" />
     <Compile Include="Models\EndogamyProber.cs" />
     <Compile Include="Models\LoginResult.cs" />
+    <Compile Include="Models\SavedData\SharedClusteringExcelMatchesReader.cs" />
     <Compile Include="Models\Similarity\SimilarityFinder.cs" />
     <Compile Include="Models\Similarity\ExcelSimilarityWriter.cs" />
     <Compile Include="Models\Similarity\ISimilarityWriter.cs" />

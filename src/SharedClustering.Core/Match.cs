@@ -107,5 +107,10 @@ namespace SharedClustering.Core
             : MatchTestDisplayName == MatchTestAdminDisplayName
                 ? MatchTestAdminDisplayName 
                 : $"{MatchTestDisplayName} (managed by {MatchTestAdminDisplayName})";
+
+        public override string ToString()
+        {
+            return $"{Name} ({SharedCentimorgans})";
+        }
     }
 }
