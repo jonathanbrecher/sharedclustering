@@ -4,12 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using AncestryDnaClustering.Properties;
+using AncestryDnaClustering.SavedData;
 using Microsoft.Win32;
 using SharedClustering.Core;
 using SharedClustering.Core.Anonymizers;
 using SharedClustering.HierarchicalClustering;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.Models
 {
     public class MatchesLoader : IMatchesLoader
     {
@@ -25,7 +26,7 @@ namespace AncestryDnaClustering.Models.SavedData
         {
             var openFileDialog = new OpenFileDialog
             {
-                InitialDirectory = FileUtils.GetDefaultDirectory(fileName),
+                InitialDirectory = DirectoryUtils.GetDefaultDirectory(fileName),
                 FileName = fileName,
                 Filter = "DNAGedcom icw_ or AutoCluster files (*.csv)|*.csv|AutoCluster files (*.xlsx)|*.xlsx|Shared Clustering downloaded data (*.txt)|*.txt;*.json|All files (*.*)|*.*",
                 FilterIndex = Settings.Default.MatchesLoaderFilterIndex,

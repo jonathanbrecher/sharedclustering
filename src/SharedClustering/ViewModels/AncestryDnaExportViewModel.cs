@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using AncestryDnaClustering.Models;
-using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
+using AncestryDnaClustering.SavedData;
 using Microsoft.Win32;
 using SharedClustering.Core;
 using SharedClustering.HierarchicalClustering;
@@ -56,7 +56,7 @@ namespace AncestryDnaClustering.ViewModels
         {
             var saveFileDialog = new SaveFileDialog
             {
-                InitialDirectory = FileUtils.GetDefaultDirectory(null),
+                InitialDirectory = DirectoryUtils.GetDefaultDirectory(null),
                 DefaultExt = ".xlsx",
                 Filter = "Excel Workbook|*.xlsx",
             };

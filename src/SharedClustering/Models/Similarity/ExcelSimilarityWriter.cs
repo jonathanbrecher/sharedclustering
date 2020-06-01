@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using AncestryDnaClustering.SavedData;
 using OfficeOpenXml;
 using SharedClustering.Core;
 using SharedClustering.HierarchicalClustering;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.SavedData
 {
     public class Serialized
     {

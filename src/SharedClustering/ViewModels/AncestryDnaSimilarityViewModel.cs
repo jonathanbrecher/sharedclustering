@@ -6,12 +6,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AncestryDnaClustering.Models.SimilarityFinding;
-using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
 using Microsoft.Win32;
 using System.Windows;
 using AncestryDnaClustering.Models;
-using SharedClustering.Core;
+using AncestryDnaClustering.SavedData;
 
 namespace AncestryDnaClustering.ViewModels
 {
@@ -173,7 +172,7 @@ namespace AncestryDnaClustering.ViewModels
         {
             var saveFileDialog = new SaveFileDialog
             {
-                InitialDirectory = FileUtils.GetDefaultDirectory(SimilarityFilename),
+                InitialDirectory = DirectoryUtils.GetDefaultDirectory(SimilarityFilename),
                 FileName = SimilarityFilename,
                 DefaultExt = ".xlsx",
                 Filter = "Excel Workbook|*.xlsx",

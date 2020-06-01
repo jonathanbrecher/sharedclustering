@@ -8,12 +8,12 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using SharedClustering.Core;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.SavedData
 {
     /// <summary>
     /// Read files saved by DNAGedcom.
     /// </summary>
-    public class DnaGedcomFtdnaMatchesReader : ISerializedMatchesReader
+    public class DnaGedcomMyHeritageMatchesReader : ISerializedMatchesReader
     {
         public bool IsSupportedFileType(string fileName) => fileName != null && Path.GetExtension(fileName).ToLower() == ".csv";
 
@@ -25,7 +25,7 @@ namespace AncestryDnaClustering.Models.SavedData
             }
 
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-            foreach (var suffix in new[] { "_family_finder_matches", "_icw" })
+            foreach (var suffix in new[] { "_family_finder_matches", "_matches", "_icw" })
             {
                 if (fileNameWithoutExtension.ToLower().EndsWith(suffix))
                 {
@@ -43,16 +43,20 @@ namespace AncestryDnaClustering.Models.SavedData
                 return (null, $"{fileName} is not a *.csv file");
             }
 
-            // DNAGedcom saves two files: a match file ending with _Family_Finder_Matches,
+            // DNAGedcom saves two files: a match file ending with _Matches,
             // and an in-common-with file ending with _ICW
             var trimmedFileName = GetTrimmedFileName(fileName);
             if (trimmedFileName == null)
             {
-                return (null, "File name does not end with _Family_Finder_Matches or _ICW");
+                return (null, "File name does not end with _ICW");
             }
 
             var path = Path.GetDirectoryName(fileName);
             var matchFile = Path.Combine(path, $"{trimmedFileName}_Family_Finder_Matches.csv");
+            if (!File.Exists(matchFile))
+            {
+                matchFile = Path.Combine(path, $"{trimmedFileName}_Matches.csv");
+            }
             var icwFile = Path.Combine(path, $"{trimmedFileName}_ICW.csv");
 
             if (!File.Exists(matchFile) || !File.Exists(icwFile))
@@ -84,7 +88,7 @@ namespace AncestryDnaClustering.Models.SavedData
 
             try
             {
-                var treeFile = Path.Combine(path, $"{trimmedFileName}_Family_Finder_Trees.csv");
+                var treeFile = Path.Combine(path, $"{trimmedFileName}_Trees.csv");
                 await Task.Run(() => ReadTreeFile(serialized, treeFile));
             }
             catch (Exception)
@@ -125,6 +129,7 @@ namespace AncestryDnaClustering.Models.SavedData
                         TestGuid = match.MatchId,
                         SharedCentimorgans = GetDouble(match.SharedCm),
                         LongestBlock = GetDouble(match.LongestBlock),
+                        Note = match.Notes,
                     })
                     // Do not assume that the DNAGedcom data is free of duplicates.
                     .GroupBy(match => match.TestGuid)
@@ -242,7 +247,7 @@ namespace AncestryDnaClustering.Models.SavedData
             //public string Ancestral { get; set; }
             //public string YdnaHaplogroup { get; set; }
             //public string MtDnaHaplogroup { get; set; }
-            //public string Notes { get; set; }
+            public string Notes { get; set; }
             //public string Name { get; set; }
         }
 
@@ -252,13 +257,13 @@ namespace AncestryDnaClustering.Models.SavedData
             {
                 //Map(m => m.TestId).Name("testid");
                 Map(m => m.MatchId).Name("ResultID2");
-                Map(m => m.Name).Name("Full Name");
+                Map(m => m.Name).Name("Full_Name");
                 //Map(m => m.Admin).Name("admin");
                 //Map(m => m.People).Name("people");
-                Map(m => m.SharedCm).Name("Shared cM");
+                Map(m => m.SharedCm).Name("Shared_cM");
                 //Map(m => m.SharedSegments).Name("sharedSegments");
-                Map(m => m.LongestBlock).Name("Longest Block");
-                //Map(m => m.Note).Name("note");
+                Map(m => m.LongestBlock).Name("Longest_Block");
+                Map(m => m.Notes).Name("Notes");
             }
         }
 
@@ -277,10 +282,10 @@ namespace AncestryDnaClustering.Models.SavedData
         {
             public DnaGedcomIcwMap()
             {
-                Map(m => m.MatchId).Name("Profile KitID");
-                Map(m => m.MatchName).Name("Profile Name");
-                Map(m => m.IcwId).Name("Match KitID");
-                Map(m => m.IcwName).Name("Full Name");
+                Map(m => m.MatchId).Name("Profile_KitID");
+                Map(m => m.MatchName).Name("Profile_Name");
+                Map(m => m.IcwId).Name("Match_KitID");
+                Map(m => m.IcwName).Name("Full_Name");
             }
         }
 

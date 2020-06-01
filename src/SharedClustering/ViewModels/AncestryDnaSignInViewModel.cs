@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using AncestryDnaClustering.Models;
 using AncestryDnaClustering.Properties;
+using AncestryDnaClustering.SavedData;
 using SharedClustering.Core;
 
 namespace AncestryDnaClustering.ViewModels

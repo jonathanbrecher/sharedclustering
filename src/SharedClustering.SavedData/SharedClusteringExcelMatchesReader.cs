@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using OfficeOpenXml;
 using SharedClustering.Core;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.SavedData
 {
     /// <summary>
     /// Read cluster diagrams saved by Shared Clustering.

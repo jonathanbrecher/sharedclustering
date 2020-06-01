@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AncestryDnaClustering.Models;
-using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
+using AncestryDnaClustering.SavedData;
 using SharedClustering.Core;
 using SharedClustering.HierarchicalClustering;
 
@@ -13,11 +13,13 @@ namespace AncestryDnaClustering.ViewModels
     internal class AncestrySavedDataExtender
     {
         private readonly AncestryMatchesRetriever _matchesRetriever;
+        private readonly ISerializedMatchesWriter _serializedWriter;
         private readonly IProgressData _progressData;
 
-        public AncestrySavedDataExtender(AncestryMatchesRetriever matchesRetriever, IProgressData progressData)
+        public AncestrySavedDataExtender(AncestryMatchesRetriever matchesRetriever, ISerializedMatchesWriter serializedWriter, IProgressData progressData)
         {
             _matchesRetriever = matchesRetriever;
+            _serializedWriter = serializedWriter;
             _progressData = progressData;
         }
 
@@ -27,6 +29,8 @@ namespace AncestryDnaClustering.ViewModels
             {
                 new DnaGedcomAncestryMatchesReader(),
                 new DnaGedcomFtdnaMatchesReader(),
+                new DnaGedcomMyHeritageMatchesReader(),
+                new SharedClusteringExcelMatchesReader(),
                 new SharedClusteringMatchesReader(),
                 new AutoClusterCsvMatchesReader(),
                 new AutoClusterExcelMatchesReader(),
@@ -94,7 +98,7 @@ namespace AncestryDnaClustering.ViewModels
                 Icw = icw
             };
             var fileName = @"C:\temp\foo.txt";
-            FileUtils.WriteAsJson(fileName, output, false);
+            _serializedWriter.Write(fileName, output);
 
             var matchesWithSharedMatches = output.Icw.Where(match => match.Value.Count > 1).ToList();
             var averageSharedMatches = matchesWithSharedMatches.Sum(match => match.Value.Count - 1) / (double)matchesWithSharedMatches.Count;

@@ -8,7 +8,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using SharedClustering.Core;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.SavedData
 {
     /// <summary>
     /// Read files saved by AutoCluster.

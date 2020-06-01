@@ -8,12 +8,12 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using SharedClustering.Core;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.SavedData
 {
     /// <summary>
     /// Read files saved by DNAGedcom.
     /// </summary>
-    public class DnaGedcomMyHeritageMatchesReader : ISerializedMatchesReader
+    public class DnaGedcomAncestryMatchesReader : ISerializedMatchesReader
     {
         public bool IsSupportedFileType(string fileName) => fileName != null && Path.GetExtension(fileName).ToLower() == ".csv";
 
@@ -25,11 +25,11 @@ namespace AncestryDnaClustering.Models.SavedData
             }
 
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-            foreach (var suffix in new[] { "_family_finder_matches", "_matches", "_icw" })
+            foreach (var prefix in new[] { "m_", "icw_" })
             {
-                if (fileNameWithoutExtension.ToLower().EndsWith(suffix))
+                if (fileNameWithoutExtension.StartsWith(prefix))
                 {
-                    return fileNameWithoutExtension.Substring(0, fileNameWithoutExtension.Length - suffix.Length);
+                    return fileNameWithoutExtension.Substring(prefix.Length);
                 }
             }
 
@@ -43,21 +43,17 @@ namespace AncestryDnaClustering.Models.SavedData
                 return (null, $"{fileName} is not a *.csv file");
             }
 
-            // DNAGedcom saves two files: a match file ending with _Matches,
-            // and an in-common-with file ending with _ICW
+            // DNAGedcom saves two files: a match file starting with m_,
+            // and an in-common-with file starting with icw_
             var trimmedFileName = GetTrimmedFileName(fileName);
             if (trimmedFileName == null)
             {
-                return (null, "File name does not end with _ICW");
+                return (null, "File name does not start with m_ or icw_");
             }
 
             var path = Path.GetDirectoryName(fileName);
-            var matchFile = Path.Combine(path, $"{trimmedFileName}_Family_Finder_Matches.csv");
-            if (!File.Exists(matchFile))
-            {
-                matchFile = Path.Combine(path, $"{trimmedFileName}_Matches.csv");
-            }
-            var icwFile = Path.Combine(path, $"{trimmedFileName}_ICW.csv");
+            var matchFile = Path.Combine(path, $"m_{trimmedFileName}.csv");
+            var icwFile = Path.Combine(path, $"icw_{trimmedFileName}.csv");
 
             if (!File.Exists(matchFile) || !File.Exists(icwFile))
             {
@@ -86,17 +82,6 @@ namespace AncestryDnaClustering.Models.SavedData
                 return (null, $"Unexpected error while reading DNAGedcom icw file: {ex.Message}");
             }
 
-            try
-            {
-                var treeFile = Path.Combine(path, $"{trimmedFileName}_Trees.csv");
-                await Task.Run(() => ReadTreeFile(serialized, treeFile));
-            }
-            catch (Exception)
-            {
-                // Not a problem if we can't read the tree file
-            }
-
-
             return (serialized, null);
         }
 
@@ -114,22 +99,35 @@ namespace AncestryDnaClustering.Models.SavedData
                 csv.Configuration.RegisterClassMap<DnaGedcomMatchMap>();
                 csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.Replace('_', ' ');
                 var dnaGedcomMatches = csv.GetRecords<DnaGedcomMatch>();
-                if (dnaGedcomMatches == null)
+
+                // In case DNAGedcom file has data from more than one test, find the test ID with the largest number of matches.
+                var matches = dnaGedcomMatches
+                    .Where(match => match != null)
+                    .GroupBy(match => match.TestId ?? "")
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault();
+                if (matches == null)
                 {
                     return;
                 }
 
+                // This is the Test ID for the person taking the test
+                serialized.TestTakerTestId = matches.Key;
+
                 // Translate match properties from DNAGedcom naming to Shared Clustering naming.
-                serialized.Matches = dnaGedcomMatches
-                    .Where(match => match != null)
+                serialized.Matches = matches
                     .AsParallel()
                     .Select(match => new Match
                     {
+                        MatchTestAdminDisplayName = match.Admin,
                         MatchTestDisplayName = match.Name,
                         TestGuid = match.MatchId,
                         SharedCentimorgans = GetDouble(match.SharedCm),
-                        LongestBlock = GetDouble(match.LongestBlock),
-                        Note = match.Notes,
+                        SharedSegments = int.TryParse(match.SharedSegments, out var sharedSegmentsInt) ? sharedSegmentsInt : 0,
+                        TreeSize = int.TryParse(match.People, out var peopleInt) ? peopleInt : 0,
+                        Starred = bool.TryParse(match.Starred, out var isStarred) && isStarred,
+                        HasHint = bool.TryParse(match.Hint, out var hasHint) && hasHint,
+                        Note = match.Note,
                     })
                     // Do not assume that the DNAGedcom data is free of duplicates.
                     .GroupBy(match => match.TestGuid)
@@ -185,7 +183,7 @@ namespace AncestryDnaClustering.Models.SavedData
                     .GroupBy(icw => icw.MatchId, icw => icw.IcwId)
                     .ToDictionary
                     (
-                        g => g.Key,
+                        g => g.Key, 
                         g => g.Concat(new[] { g.Key })
                             .Select(id => serialized.MatchIndexes.TryGetValue(id, out var index) ? index : -1).Where(i => i >= 0)
                             .OrderBy(i => i)
@@ -203,67 +201,49 @@ namespace AncestryDnaClustering.Models.SavedData
             }
         }
 
-        private static void ReadTreeFile(Serialized serialized, string treeFile)
-        {
-            using (var fileStream = new FileStream(treeFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var treeReader = new StreamReader(fileStream))
-            using (var csv = new CsvReader(treeReader))
-            {
-                csv.Configuration.Delimiter = ",";
-                csv.Configuration.HeaderValidated = null;
-                csv.Configuration.MissingFieldFound = null;
-                csv.Configuration.BadDataFound = null;
-                csv.Configuration.LineBreakInQuotedFieldIsBadData = false;
-                csv.Configuration.RegisterClassMap<DnaGedcomTreeNodeMap>();
-                csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.Replace('_', ' ');
-
-                // Translate the ICW data.
-                // Shared Clustering assumes that every match also matches themselves.
-                // DNAGedcom does not include the self-matches in the saved ICW data,
-                // so the self-matches need to be added during the translation.
-                var trees = csv.GetRecords<DnaGedcomTreeNode>()
-                    .Where(treeNode => treeNode?.ResultId != null)
-                    .ToLookup(treeNode => treeNode.ResultId);
-
-                foreach (var match in serialized.Matches)
-                {
-                    match.TreeSize = trees[match.TestGuid].Count();
-                }
-            }
-        }
-
         // Load all fields as strings and parse manually, to protect against parse failures
         private class DnaGedcomMatch
         {
+            public string TestId { get; set; }
             public string MatchId { get; set; }
             public string Name { get; set; }
+            public string Admin { get; set; }
+            public string People { get; set; }
+            //public string Range { get; set; }
+            //public double Confidence { get; set; }
             public string SharedCm { get; set; }
-            //public string MatchDate { get; set; }
-            //public string RelationshipRange { get; set; }
-            //public string SuggestedRelationship { get; set; }
-            public string LongestBlock { get; set; }
-            //public string KnownRelationship { get; set; }
-            //public string Email { get; set; }
-            //public string Ancestral { get; set; }
-            //public string YdnaHaplogroup { get; set; }
-            //public string MtDnaHaplogroup { get; set; }
-            public string Notes { get; set; }
-            //public string Name { get; set; }
+            public string SharedSegments { get; set; }
+            //lastlogin { get; set; }
+            public string Starred { get; set; }
+            //viewed { get; set; }
+            //private { get; set; }
+            public string Hint { get; set; }
+            //archived { get; set; }
+            public string Note { get; set; }
+            //imageurl { get; set; }
+            //profileurl { get; set; }
+            //treeurl { get; set; }
+            //scanned { get; set; }
+            //membersince { get; set; }
+            //ethnicregions { get; set; }
+            //ethnictraceregions { get; set; }
+            //public string MatchUrl { get; set; }
         }
 
         private sealed class DnaGedcomMatchMap : ClassMap<DnaGedcomMatch>
         {
             public DnaGedcomMatchMap()
             {
-                //Map(m => m.TestId).Name("testid");
-                Map(m => m.MatchId).Name("ResultID2");
-                Map(m => m.Name).Name("Full_Name");
-                //Map(m => m.Admin).Name("admin");
-                //Map(m => m.People).Name("people");
-                Map(m => m.SharedCm).Name("Shared_cM");
-                //Map(m => m.SharedSegments).Name("sharedSegments");
-                Map(m => m.LongestBlock).Name("Longest_Block");
-                Map(m => m.Notes).Name("Notes");
+                Map(m => m.TestId).Name("testid");
+                Map(m => m.MatchId).Name("matchid");
+                Map(m => m.Name).Name("name");
+                Map(m => m.Admin).Name("admin");
+                Map(m => m.People).Name("people");
+                Map(m => m.SharedCm).Name("sharedCM");
+                Map(m => m.SharedSegments).Name("sharedSegments");
+                Map(m => m.Starred).Name("starred");
+                Map(m => m.Hint).Name("hint");
+                Map(m => m.Note).Name("note");
             }
         }
 
@@ -271,47 +251,22 @@ namespace AncestryDnaClustering.Models.SavedData
         {
             public string MatchId { get; set; }
             public string MatchName { get; set; }
+            public string MatchAdmin { get; set; }
             public string IcwId { get; set; }
             public string IcwName { get; set; }
-            //public string TotalCm { get; set; }
-            //public string MaxCm { get; set; }
-            //public string Email { get; set; }
+            public string IcwAdmin { get; set; }
         }
 
         private sealed class DnaGedcomIcwMap : ClassMap<DnaGedcomIcw>
         {
             public DnaGedcomIcwMap()
             {
-                Map(m => m.MatchId).Name("Profile_KitID");
-                Map(m => m.MatchName).Name("Profile_Name");
-                Map(m => m.IcwId).Name("Match_KitID");
-                Map(m => m.IcwName).Name("Full_Name");
-            }
-        }
-
-        private class DnaGedcomTreeNode
-        {
-            public string ResultId { get; set; }
-            //public string TreeId { get; set; }
-            //public string KitNumber { get; set; }
-            //public string FirstName { get; set; }
-            //public string MiddleName { get; set; }
-            //public string LastName { get; set; }
-            //public string MotherId { get; set; }
-            //public string FatherId { get; set; }
-            //public string Generation { get; set; }
-            //public string Gender { get; set; }
-            //public string BirthDate { get; set; }
-            //public string BirthPlace { get; set; }
-            //public string DeathDate { get; set; }
-            //public string DeathPlace { get; set; }
-        }
-
-        private sealed class DnaGedcomTreeNodeMap : ClassMap<DnaGedcomTreeNode>
-        {
-            public DnaGedcomTreeNodeMap()
-            {
-                Map(m => m.ResultId).Name("Resultid");
+                Map(m => m.MatchId).Name("matchid");
+                Map(m => m.MatchName).Name("matchname");
+                Map(m => m.MatchAdmin).Name("matchadmin");
+                Map(m => m.IcwId).Name("icwid");
+                Map(m => m.IcwName).Name("icwname");
+                Map(m => m.IcwAdmin).Name("icwadmin");
             }
         }
     }

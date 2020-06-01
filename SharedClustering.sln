@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.Hierarchic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.Sample", "src\SharedClustering.Sample\SharedClustering.Sample.csproj", "{E2BF6E04-4B5D-4432-89B9-F1EA1C7BF8CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.SavedData", "src\SharedClustering.SavedData\SharedClustering.SavedData.csproj", "{785430DC-292A-4B59-8674-611F97499101}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{E2BF6E04-4B5D-4432-89B9-F1EA1C7BF8CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2BF6E04-4B5D-4432-89B9-F1EA1C7BF8CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E2BF6E04-4B5D-4432-89B9-F1EA1C7BF8CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{785430DC-292A-4B59-8674-611F97499101}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{785430DC-292A-4B59-8674-611F97499101}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{785430DC-292A-4B59-8674-611F97499101}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{785430DC-292A-4B59-8674-611F97499101}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,8 +6,8 @@ using System.Net;
 using System.Net.Http;
 using System.Windows.Input;
 using AncestryDnaClustering.Models;
-using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
+using AncestryDnaClustering.SavedData;
 using SharedClustering.Core.Anonymizers;
 
 namespace AncestryDnaClustering.ViewModels
@@ -52,6 +52,7 @@ namespace AncestryDnaClustering.ViewModels
             var loginHelper = new AncestryLoginHelper(ancestryClients, cookies, this);
             var testsRetriever = new AncestryTestsRetriever(loginHelper);
             var matchesRetriever = new AncestryMatchesRetriever(loginHelper);
+            var serializedWriter = new SerializedMatchesWriter();
             var endogamyProber = new EndogamyProber(matchesRetriever);
 
             var serializedMatchesReaders = new List<ISerializedMatchesReader>
@@ -73,11 +74,11 @@ namespace AncestryDnaClustering.ViewModels
             Tabs = new List<object>
             {
                 new IntroductionViewModel(),
-                new AncestryDnaDownloadingViewModel(signInViewModel, matchesRetriever, endogamyProber, OpenInClusterTab),
+                new AncestryDnaDownloadingViewModel(signInViewModel, matchesRetriever, serializedWriter, endogamyProber, OpenInClusterTab),
                 new AncestryDnaHierarchicalClusteringViewModel(matchesLoader, new Anonymizer()),
                 new AncestryDnaSimilarityViewModel(matchesLoader),
                 new AncestryDnaExportViewModel(matchesLoader),
-                new AncestryDnaUploadNotesViewModel(signInViewModel, new AncestryNotesUpdater(matchesRetriever)),
+                new AncestryDnaUploadNotesViewModel(signInViewModel, new AncestryNotesUpdater(matchesRetriever, serializedWriter)),
             };
             SelectedTabIndex = Settings.Default.SelectedTabIndex;
         }

@@ -4,7 +4,7 @@ using SharedClustering.Core;
 using SharedClustering.Core.Anonymizers;
 using SharedClustering.HierarchicalClustering;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.Models
 {
     public interface IMatchesLoader
     {

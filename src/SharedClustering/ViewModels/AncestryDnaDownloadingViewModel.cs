@@ -6,16 +6,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AncestryDnaClustering.Models;
-using AncestryDnaClustering.Models.SavedData;
 using AncestryDnaClustering.Properties;
+using AncestryDnaClustering.SavedData;
 using Microsoft.Win32;
-using SharedClustering.Core;
 
 namespace AncestryDnaClustering.ViewModels
 {
     internal class AncestryDnaDownloadingViewModel : ObservableObject
     {
         private readonly AncestryMatchesRetriever _matchesRetriever;
+        private readonly ISerializedMatchesWriter _serializedWriter;
         private readonly EndogamyProber _endogamyProber;
 
         public AncestryDnaSignInViewModel SignInViewModel { get; }
@@ -26,11 +26,13 @@ namespace AncestryDnaClustering.ViewModels
         public AncestryDnaDownloadingViewModel(
             AncestryDnaSignInViewModel signInViewModel,
             AncestryMatchesRetriever matchesRetriever,
+            ISerializedMatchesWriter serializedWriter,
             EndogamyProber endogamyProber,
             Action<string> continueInClusterTab)
         {
             SignInViewModel = signInViewModel;
             _matchesRetriever = matchesRetriever;
+            _serializedWriter = serializedWriter;
             _endogamyProber = endogamyProber;
 
             SignInViewModel.OnSelectedTestChanged += SelectedTestChanged;
@@ -288,7 +290,7 @@ namespace AncestryDnaClustering.ViewModels
             var fileName = $"{SignInViewModel.SelectedTest.DisplayName} Ancestry Shared Clustering.txt";
             var saveFileDialog = new SaveFileDialog
             {
-                InitialDirectory = FileUtils.GetDefaultDirectory(null),
+                InitialDirectory = DirectoryUtils.GetDefaultDirectory(null),
                 FileName = fileName,
                 DefaultExt = ".txt",
                 Filter = "Text|*.txt",
@@ -381,7 +383,7 @@ namespace AncestryDnaClustering.ViewModels
                 }
 
                 var output = new Serialized { TestTakerTestId = guid, Tags = tags, Matches = matches, MatchIndexes = matchIndexes, Icw = icw };
-                FileUtils.WriteAsJson(fileName, output, false);
+                _serializedWriter.Write(fileName, output);
                 LastFileDownloaded = fileName;
 
                 var matchesWithSharedMatches = output.Icw.Where(match => match.Value.Count > 1).ToList();

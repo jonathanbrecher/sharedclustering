@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using SharedClustering.Core;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.SavedData
 {
     public interface ISerializedMatchesReader
     {

@@ -89,24 +89,15 @@
     <Compile Include="Models\AncestrySavedDataExtender.cs" />
     <Compile Include="Models\AncestryTestsRetriever.cs" />
     <Compile Include="Models\EndogamyProber.cs" />
+    <Compile Include="Models\IMatchesLoader.cs" />
     <Compile Include="Models\LoginResult.cs" />
-    <Compile Include="Models\SavedData\DnaGedcomMyHeritageMatchesReader.cs" />
-    <Compile Include="Models\SavedData\SharedClusteringExcelMatchesReader.cs" />
+    <Compile Include="Models\MatchesLoader.cs" />
     <Compile Include="Models\Similarity\SimilarityFinder.cs" />
     <Compile Include="Models\Similarity\ExcelSimilarityWriter.cs" />
     <Compile Include="Models\Similarity\ISimilarityWriter.cs" />
     <Compile Include="Models\Similarity\TextSimilarityWriter.cs" />
-    <Compile Include="Models\FileUtils.cs" />
+    <Compile Include="Models\DirectoryUtils.cs" />
     <Compile Include="Models\MatchCounts.cs" />
-    <Compile Include="Models\SavedData\AutoClusterExcelMatchesReader.cs" />
-    <Compile Include="Models\SavedData\AutoClusterCsvMatchesReader.cs" />
-    <Compile Include="Models\SavedData\DnaGedcomAncestryMatchesReader.cs" />
-    <Compile Include="Models\SavedData\DnaGedcomFtdnaMatchesReader.cs" />
-    <Compile Include="Models\SavedData\IMatchesLoader.cs" />
-    <Compile Include="Models\SavedData\ISerializedMatchesReader.cs" />
-    <Compile Include="Models\SavedData\MatchesLoader.cs" />
-    <Compile Include="Models\SavedData\Serialized.cs" />
-    <Compile Include="Models\SavedData\SharedClusteringMatchesReader.cs" />
     <Compile Include="Models\Throttle.cs" />
     <Compile Include="ViewModels\AncestryDnaExportViewModel.cs" />
     <Compile Include="ViewModels\AncestryDnaSignInViewModel.cs" />
@@ -213,17 +204,8 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CsvHelper">
-      <Version>12.1.1</Version>
-    </PackageReference>
-    <PackageReference Include="EPPlus">
-      <Version>4.5.2.1</Version>
-    </PackageReference>
     <PackageReference Include="Microsoft.AspNet.WebApi.Client">
       <Version>5.2.6</Version>
-    </PackageReference>
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>11.0.2</Version>
     </PackageReference>
     <PackageReference Include="System.Windows.Interactivity.WPF">
       <Version>2.0.20525</Version>
@@ -237,6 +219,10 @@
     <ProjectReference Include="..\SharedClustering.HierarchicalClustering\SharedClustering.HierarchicalClustering.csproj">
       <Project>{47e211c5-80f4-4605-8360-9519bfe0d091}</Project>
       <Name>SharedClustering.HierarchicalClustering</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SharedClustering.SavedData\SharedClustering.SavedData.csproj">
+      <Project>{785430dc-292a-4b59-8674-611f97499101}</Project>
+      <Name>SharedClustering.SavedData</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using OfficeOpenXml;
 using SharedClustering.Core;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.SavedData
 {
     /// <summary>
     /// Read files saved by AutoCluster.

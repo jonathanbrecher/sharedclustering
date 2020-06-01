@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using AncestryDnaClustering.Models;
+using AncestryDnaClustering.SavedData;
 
 namespace AncestryDnaClustering
 {

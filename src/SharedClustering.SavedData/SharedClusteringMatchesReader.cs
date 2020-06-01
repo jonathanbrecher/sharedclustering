@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using SharedClustering.Core;
 
-namespace AncestryDnaClustering.Models.SavedData
+namespace AncestryDnaClustering.SavedData
 {
     /// <summary>
     /// Read files saved natively by Shared Clustering.

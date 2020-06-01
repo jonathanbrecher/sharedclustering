@@ -1,5 +1,5 @@
-﻿using AncestryDnaClustering.Models.SavedData;
-using AncestryDnaClustering.Properties;
+﻿using AncestryDnaClustering.Properties;
+using AncestryDnaClustering.SavedData;
 using Microsoft.Win32;
 using OfficeOpenXml;
 using SharedClustering.Core;
@@ -16,10 +16,12 @@ namespace AncestryDnaClustering.Models
     internal class AncestryNotesUpdater
     {
         private readonly AncestryMatchesRetriever _matchesRetriever;
+        private readonly ISerializedMatchesWriter _serializedWriter;
 
-        public AncestryNotesUpdater(AncestryMatchesRetriever matchesRetriever)
+        public AncestryNotesUpdater(AncestryMatchesRetriever matchesRetriever, ISerializedMatchesWriter serializedWriter)
         {
             _matchesRetriever = matchesRetriever;
+            _serializedWriter = serializedWriter;
         }
 
         // Present an Open File dialog to allow selecting the saved DNA data from disk
@@ -28,7 +30,7 @@ namespace AncestryDnaClustering.Models
             var openFileDialog = new OpenFileDialog
             {
                 Title = "Select file with Ancestry notes to upload",
-                InitialDirectory = FileUtils.GetDefaultDirectory(fileName),
+                InitialDirectory = DirectoryUtils.GetDefaultDirectory(fileName),
                 FileName = fileName,
                 Filter = "Excel Workbook (*.xlsx)|*.xlsx",
             };
@@ -288,7 +290,7 @@ namespace AncestryDnaClustering.Models
                 var openFileDialog = new OpenFileDialog
                 {
                     Title = "Select local file with Ancestry data to update",
-                    InitialDirectory = FileUtils.GetDefaultDirectory(null),
+                    InitialDirectory = DirectoryUtils.GetDefaultDirectory(null),
                     Filter = "Shared Clustering downloaded data (*.txt)|*.txt",
                 };
                 if (openFileDialog.ShowDialog() != true || string.IsNullOrEmpty(openFileDialog.FileName))
@@ -322,7 +324,7 @@ namespace AncestryDnaClustering.Models
                     }
                 }
 
-                FileUtils.WriteAsJson(openFileDialog.FileName, serialized, false);
+                _serializedWriter.Write(openFileDialog.FileName, serialized);
             }
         }
 
@@ -358,7 +360,7 @@ namespace AncestryDnaClustering.Models
             var saveFileDialog = new SaveFileDialog
             {
                 Title = "Save a record of updated notes",
-                InitialDirectory = FileUtils.GetDefaultDirectory(null),
+                InitialDirectory = DirectoryUtils.GetDefaultDirectory(null),
                 FileName = $"Ancestry Notes Changes {DateTime.Now.ToString("yyyy-MM-dd")}.xlsx",
                 DefaultExt = ".xlsx",
                 Filter = "Excel Workbook (*.xlsx)|*.xlsx",
