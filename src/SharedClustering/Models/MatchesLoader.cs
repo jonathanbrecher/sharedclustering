@@ -28,7 +28,7 @@ namespace AncestryDnaClustering.Models
             {
                 InitialDirectory = DirectoryUtils.GetDefaultDirectory(fileName),
                 FileName = fileName,
-                Filter = "DNAGedcom icw_ or AutoCluster files (*.csv)|*.csv|AutoCluster files (*.xlsx)|*.xlsx|Shared Clustering downloaded data (*.txt)|*.txt;*.json|All files (*.*)|*.*",
+                Filter = "Shared Clustering downloaded data (*.txt)|*.txt;*.json|DNAGedcom icw_ or AutoCluster files (*.csv)|*.csv|Existing cluster diagrams (*.xlsx)|*.xlsx|All files (*.*)|*.*",
                 FilterIndex = Settings.Default.MatchesLoaderFilterIndex,
             };
             if (openFileDialog.ShowDialog() == true)

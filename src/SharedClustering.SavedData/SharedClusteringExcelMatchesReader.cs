@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.OleDb;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -66,11 +65,6 @@ namespace AncestryDnaClustering.SavedData
                 { 
                     using (var ws = package.Workbook.Worksheets[worksheetNumber])
                     {
-                        if (worksheetNumber < numWorksheets && !ws.Name.StartsWith("heatmap", StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
-
                         var nameColumn = 0;
                         var identifierColumn = 0;
                         var totalSharedCmColumn = 0;
@@ -95,6 +89,8 @@ namespace AncestryDnaClustering.SavedData
                             }
                         }
 
+                        var firstNameCellValue = "";
+
                         // Find the columns that have interesting data (don't assume specific column numbers)
                         for (var col = 1; col < 1000; ++col)
                         {
@@ -107,6 +103,7 @@ namespace AncestryDnaClustering.SavedData
                             if (cellValue.Equals("Name", StringComparison.OrdinalIgnoreCase))
                             {
                                 nameColumn = col;
+                                firstNameCellValue = ws.Cells[2, nameColumn].GetValue<string>();
                             }
                             else if (cellValue.Equals("Test ID", StringComparison.OrdinalIgnoreCase))
                             {
@@ -141,16 +138,17 @@ namespace AncestryDnaClustering.SavedData
                                 notesColumn = col;
                             }
 
-                            if (notesColumn > 0 && col > notesColumn)
+                            if ((notesColumn > 0 && col > notesColumn)
+                                || (!string.IsNullOrEmpty(firstNameCellValue) && cellValue == firstNameCellValue))
                             {
                                 firstMatchFieldIndex = col;
                                 break;
                             }
                         }
 
-                        if (totalSharedCmColumn == 0)
+                        if (nameColumn == 0 && totalSharedCmColumn == 0)
                         {
-                            throw new Exception("Shared Centimorgans column not found.");
+                            throw new Exception("Could not find either a Name column or a Shared Centimorgans column.");
                         }
 
                         lastMatchFieldIndex = firstMatchFieldIndex;
@@ -160,7 +158,8 @@ namespace AncestryDnaClustering.SavedData
                         }
 
                         var maxRow = 1;
-                        while (ws.Cells[maxRow + 1, totalSharedCmColumn].Value != null)
+                        while ((totalSharedCmColumn > 0 && ws.Cells[maxRow + 1, totalSharedCmColumn].Value != null) 
+                            || (nameColumn > 0 && ws.Cells[maxRow + 1, nameColumn].Value != null))
                         {
                             maxRow++;
                         }
@@ -188,13 +187,31 @@ namespace AncestryDnaClustering.SavedData
                             {
                                 resultMatch.TestGuid = ws.Cells[row, identifierColumn].GetValue<string>();
                             }
+                            else
+                            {
+                                resultMatch.TestGuid = $"row_{row}";
+                            }
                             if (totalSharedCmColumn != 0)
                             {
-                                resultMatch.SharedCentimorgans = ws.Cells[row, totalSharedCmColumn].GetValue<double>();
+                                try
+                                {
+                                    resultMatch.SharedCentimorgans = ws.Cells[row, totalSharedCmColumn].GetValue<double>();
+                                }
+                                catch
+                                {
+                                    // Exceptions are non-fatal
+                                }
                             }
                             if (totalSharedSegmentsColumn != 0)
                             {
-                                resultMatch.SharedSegments = ws.Cells[row, totalSharedSegmentsColumn].GetValue<int>();
+                                try
+                                {
+                                    resultMatch.SharedSegments = ws.Cells[row, totalSharedSegmentsColumn].GetValue<int>();
+                                }
+                                catch
+                                {
+                                    // Exceptions are non-fatal
+                                }
                             }
                             if (treeTypeColumn != 0)
                             {
@@ -202,7 +219,14 @@ namespace AncestryDnaClustering.SavedData
                             }
                             if (treeSizeColumn != 0)
                             {
-                                resultMatch.TreeSize = ws.Cells[row, treeSizeColumn].GetValue<int>();
+                                try
+                                {
+                                    resultMatch.TreeSize = ws.Cells[row, treeSizeColumn].GetValue<int>();
+                                }
+                                catch
+                                {
+                                    // Exceptions are non-fatal
+                                }
                             }
                             if (commonAncestorsColumn != 0)
                             {
@@ -231,7 +255,20 @@ namespace AncestryDnaClustering.SavedData
                             }
 
                             var columnValues = Enumerable.Range(firstMatchFieldIndex, lastMatchFieldIndex - firstMatchFieldIndex + 1)
-                                .Select(col => (Index: col - firstMatchFieldIndex, Value: ws.Cells[row, col].GetValue<double>()))
+                                .Select(col =>
+                                {
+                                    var index = col - firstMatchFieldIndex;
+                                    var value = 0.0;
+                                    try
+                                    {
+                                        value = ws.Cells[row, col].GetValue<double>();
+                                    }
+                                    catch
+                                    {
+                                        value = string.IsNullOrEmpty(ws.Cells[row, col].GetValue<string>()) ? 0.0 : 1.0;
+                                    }
+                                    return (Index: index, Value: value);
+                                })
                                 .ToList();
 
                             var matchIndex = serialized.MatchIndexes.Count;
@@ -249,10 +286,13 @@ namespace AncestryDnaClustering.SavedData
                             serialized.Icw[resultMatch.TestGuid] = icw;
                         }
 
-                        // Adjust ICW to ignore any under-20 cM matches that aren't fully clustered.
-                        serialized.Icw = serialized.Icw.ToDictionary(
-                            kvp => kvp.Key,
-                            kvp => kvp.Value.Where(value => value < clusteredIndexes.Count).Select(value => clusteredIndexes[value]).ToList());
+                        if (clusteredIndexes.Count > 0)
+                        {
+                            // Adjust ICW to ignore any under-20 cM matches that aren't fully clustered.
+                            serialized.Icw = serialized.Icw.ToDictionary(
+                                kvp => kvp.Key,
+                                kvp => kvp.Value.Where(value => value < clusteredIndexes.Count).Select(value => clusteredIndexes[value]).ToList());
+                        }
 
                         // Make sure that every match is in common with itself
                         foreach (var kvp in serialized.MatchIndexes)

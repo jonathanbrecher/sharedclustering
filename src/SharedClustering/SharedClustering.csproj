@@ -38,11 +38,11 @@
     <ProductName>Shared Clustering</ProductName>
     <PublisherName>Shared Clustering</PublisherName>
     <SuiteName>Shared Clustering</SuiteName>
-    <MinimumRequiredVersion>1.1.0.98</MinimumRequiredVersion>
+    <MinimumRequiredVersion>1.1.0.110</MinimumRequiredVersion>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>110</ApplicationRevision>
+    <ApplicationRevision>111</ApplicationRevision>
     <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
