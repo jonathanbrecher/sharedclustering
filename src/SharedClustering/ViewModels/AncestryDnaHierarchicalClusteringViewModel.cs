@@ -417,7 +417,7 @@ namespace AncestryDnaClustering.ViewModels
                     return;
                 }
 
-                var lowestClusterableCentimorgans = Math.Max(clusterableCoords.Min(coord => matchesByIndex[coord].Match.SharedCentimorgans), 20);
+                var lowestClusterableCentimorgans = HierarchicalClustering.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
 
                 var hierarchicalClustering = new HierarchicalClustering(
                     MinClusterSize,

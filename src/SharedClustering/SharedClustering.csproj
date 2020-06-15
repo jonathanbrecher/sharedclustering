@@ -31,18 +31,18 @@
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>Days</UpdateIntervalUnits>
     <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
+    <UpdateRequired>true</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>https://raw.githubusercontent.com/jonathanbrecher/sharedclustering/master/publish/</InstallUrl>
     <SupportUrl>https://github.com/jonathanbrecher/sharedclustering/wiki</SupportUrl>
     <ProductName>Shared Clustering</ProductName>
     <PublisherName>Shared Clustering</PublisherName>
     <SuiteName>Shared Clustering</SuiteName>
-    <MinimumRequiredVersion>1.1.0.110</MinimumRequiredVersion>
+    <MinimumRequiredVersion>1.1.0.111</MinimumRequiredVersion>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>111</ApplicationRevision>
+    <ApplicationRevision>112</ApplicationRevision>
     <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>

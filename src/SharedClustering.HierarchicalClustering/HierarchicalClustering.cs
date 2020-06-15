@@ -40,6 +40,29 @@ namespace SharedClustering.HierarchicalClustering
             _progressData = progressData;
         }
 
+        public static double GetLowestClusterableCentimorgans(List<int> clusterableCoords, List<IClusterableMatch> matches, Dictionary<int, IClusterableMatch> matchesByIndex, HashSet<string> testIdsToFilter)
+        {
+            // Find the absolute lowest shared centimorgans value.
+            var lowestCentimorgans = clusterableCoords.Min(coord => matchesByIndex[coord].Match.SharedCentimorgans);
+
+            // Shared centimorgan values down to 20 cM are clusterable on all sites.
+            if (lowestCentimorgans >= 20)
+            {
+                return lowestCentimorgans;
+            }
+
+            // Find the lowest shared centimorgans that is a shared match to some other match.
+            var lowestSharedCentimorgans = matches
+                .Where(match => testIdsToFilter.Count == 0 || testIdsToFilter.Contains(match.Match.TestGuid))
+                .SelectMany(match => match.Coords.Where(coord => coord != match.Index))
+                .Distinct()
+                .Select(coord => matchesByIndex.TryGetValue(coord, out var match) ? match.Match.SharedCentimorgans : lowestCentimorgans)
+                .DefaultIfEmpty(lowestCentimorgans)
+                .Min();
+
+            return lowestSharedCentimorgans;
+        }
+
         public async Task<List<string>> ClusterAsync(
             List<IClusterableMatch> clusterableMatches,
             Dictionary<int, IClusterableMatch> matchesByIndex,

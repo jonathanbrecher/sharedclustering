@@ -100,7 +100,7 @@ namespace SharedClustering.Sample
             }
 
             // Ancestry doesn't report shared matches below 20 cM. This number could be lowered if generating clusters from other sites.
-            var lowestClusterableCentimorgans = Math.Max(clusterableCoords.Min(coord => matchesByIndex[coord].Match.SharedCentimorgans), 20);
+            var lowestClusterableCentimorgans = HierarchicalClustering.HierarchicalClustering.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
 
             // Perform the actual clustering.
             var hierarchicalClustering = new HierarchicalClustering.HierarchicalClustering(
