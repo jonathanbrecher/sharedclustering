@@ -61,7 +61,7 @@ namespace AncestryDnaClustering.SavedData
             using (var package = new ExcelPackage(fileStream))
             {
                 var numWorksheets = package.Workbook.Worksheets.Count;
-                for (var worksheetNumber = 1; worksheetNumber <= numWorksheets; ++worksheetNumber)
+                for (var worksheetNumber = 1; worksheetNumber <= numWorksheets && serialized.Matches.Count == 0; ++worksheetNumber)
                 { 
                     using (var ws = package.Workbook.Worksheets[worksheetNumber])
                     {
@@ -149,6 +149,16 @@ namespace AncestryDnaClustering.SavedData
                         if (nameColumn == 0 && totalSharedCmColumn == 0)
                         {
                             throw new Exception("Could not find either a Name column or a Shared Centimorgans column.");
+                        }
+
+                        if (totalSharedCmColumn == 0 && firstMatchFieldIndex == 0)
+                        {
+                            throw new Exception("Could not find a Shared Centimorgans column.");
+                        }
+
+                        if (firstMatchFieldIndex == 0)
+                        {
+                            throw new Exception("Could not find any match column.");
                         }
 
                         lastMatchFieldIndex = firstMatchFieldIndex;
