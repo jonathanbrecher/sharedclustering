@@ -433,7 +433,7 @@ namespace AncestryDnaClustering.ViewModels
                     FileUtils.CoreFileUtils.AskYesNo,
                     ProgressData);
 
-                clusterableMatches = LargeClusterExcluder.MaybeExcludeLargeClusters(clusterableMatches, ExcludeClustersGreaterThan.Value, ProgressData);
+                clusterableMatches = LargeClusterExcluder.MaybeExcludeLargeClusters(clusterableMatches, ExcludeClustersGreaterThan, ProgressData);
                 if (clusterableMatches.Count == 0)
                 {
                     MessageBox.Show($"All matches excluded as being clusters with more than {ExcludeClustersGreaterThan} members", "All matches excluded", MessageBoxButton.OK, MessageBoxImage.Information);

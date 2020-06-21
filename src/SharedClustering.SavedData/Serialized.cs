@@ -29,7 +29,10 @@ namespace AncestryDnaClustering.SavedData
 
             Icw = Icw.ToDictionary(
                 kvp => kvp.Key,
-                kvp => kvp.Value.Select(index => MatchIndexes[originalIndexesInverted[index]]).ToList());
+                kvp => kvp.Value
+                    .Select(index => originalIndexesInverted.TryGetValue(index, out var originalIndex) && MatchIndexes.TryGetValue(originalIndex, out var matchIndex) ? matchIndex : -1)
+                    .Where(index => index != -1)
+                    .ToList());
         }
     }
 }
