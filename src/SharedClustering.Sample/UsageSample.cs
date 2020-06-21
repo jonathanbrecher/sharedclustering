@@ -100,19 +100,24 @@ namespace SharedClustering.Sample
             }
 
             // Ancestry doesn't report shared matches below 20 cM. This number could be lowered if generating clusters from other sites.
-            var lowestClusterableCentimorgans = HierarchicalClustering.HierarchicalClustering.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
+            var lowestClusterableCentimorgans = HierarchicalClusterer.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
 
             // Perform the actual clustering.
-            var hierarchicalClustering = new HierarchicalClustering.HierarchicalClustering(
+            var matrixBuilder = new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, maxGrayPercentage, suppressProgress);
+            var clusterBuilder = new ClusterBuilder();
+            var clusterExtender = new ClusterExtender(clusterBuilder, minClusterSize, matrixBuilder, suppressProgress);
+            var hierarchicalClustering = new HierarchicalClusterer(
+                clusterBuilder,
+                clusterExtender,
                 minClusterSize,
                 _ => new OverlapWeightedEuclideanDistanceSquared(),
-                new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, maxGrayPercentage, suppressProgress),
+                matrixBuilder,
                 new HalfMatchPrimaryClusterFinder(),
-                new ExcelCorrelationWriter(outputFileName, testTakerTestId, ancestryHostName, minClusterSize, maxMatchesPerClusterFile, lowestClusterableCentimorgans, fileUtils, suppressProgress),
-                fileUtils,
+                new ExcelCorrelationWriter(outputFileName, tags, worksheetName, testTakerTestId, ancestryHostName, minClusterSize, maxMatchesPerClusterFile, lowestClusterableCentimorgans, fileUtils, suppressProgress),
+                fileUtils.AskYesNo,
                 suppressProgress);
 
-            var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, minCentimorgansToCluster, tags, worksheetName);
+            var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, minCentimorgansToCluster);
         }
 
         /// <summary>

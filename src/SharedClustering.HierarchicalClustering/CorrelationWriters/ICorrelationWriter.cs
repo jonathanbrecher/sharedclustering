@@ -1,5 +1,4 @@
-﻿using SharedClustering.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,11 +13,9 @@ namespace SharedClustering.HierarchicalClustering.CorrelationWriters
 
         IDisposable BeginWriting();
         Task<List<string>> OutputCorrelationAsync(
-            List<ClusterNode> nodes,
-            Dictionary<int, IClusterableMatch> matchesByIndex,
-            Dictionary<int, int> indexClusterNumbers,
-            List<Tag> tags,
-            string worksheetName);
+            IReadOnlyCollection<ClusterNode> nodes,
+            IReadOnlyDictionary<int, IClusterableMatch> matchesByIndex,
+            IReadOnlyDictionary<int, int> indexClusterNumbers);
         string SaveFile(int fileNum);
     }
 }

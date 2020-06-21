@@ -26,7 +26,7 @@ namespace SharedClustering.HierarchicalClustering.CorrelationWriters
             _progressData = progressData;
         }
 
-        public async Task ExportAsync(List<IClusterableMatch> matches, List<Tag> tags, string exportFileName)
+        public async Task ExportAsync(IReadOnlyCollection<IClusterableMatch> matches, IReadOnlyCollection<Tag> tags, string exportFileName)
         {
             if (string.IsNullOrEmpty(exportFileName) || matches.Count == 0)
             {

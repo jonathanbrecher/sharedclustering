@@ -22,8 +22,8 @@ namespace AncestryDnaClustering.Models.SimilarityFinding
         public ExcelSimilarityWriter(
             string testTakerTestId,
             string ancestryHostName,
-            List<IClusterableMatch> matches,
-            List<Tag> tags,
+            IReadOnlyCollection<IClusterableMatch> matches,
+            IReadOnlyCollection<Tag> tags,
             string fileName,
             string fileNameSuffix)
         {

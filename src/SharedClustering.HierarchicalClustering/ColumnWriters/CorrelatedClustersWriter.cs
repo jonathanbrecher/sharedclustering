@@ -12,13 +12,13 @@ namespace SharedClustering.HierarchicalClustering.ColumnWriters
         public bool IsDecimal => false;
         public double Width => 15;
 
-        private readonly List<LeafNode> _leafNodes;
-        private readonly HashSet<int> _immediateFamilyIndexes;
-        private readonly Dictionary<int, int> _indexClusterNumbers;
+        private readonly IReadOnlyCollection<LeafNode> _leafNodes;
+        private readonly ISet<int> _immediateFamilyIndexes;
+        private readonly IReadOnlyDictionary<int, int> _indexClusterNumbers;
         private readonly ClusterNumberWriter _clusterNumberWriter;
         private readonly int _minClusterSize;
 
-        public CorrelatedClustersWriter(List<LeafNode> leafNodes, HashSet<int> immediateFamilyIndexes, Dictionary<int, int> indexClusterNumbers, ClusterNumberWriter clusterNumberWriter, int minClusterSize)
+        public CorrelatedClustersWriter(IReadOnlyCollection<LeafNode> leafNodes, ISet<int> immediateFamilyIndexes, IReadOnlyDictionary<int, int> indexClusterNumbers, ClusterNumberWriter clusterNumberWriter, int minClusterSize)
         {
             _leafNodes = leafNodes;
             _immediateFamilyIndexes = immediateFamilyIndexes;

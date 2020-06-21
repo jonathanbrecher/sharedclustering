@@ -246,21 +246,21 @@ namespace AncestryDnaClustering.ViewModels
 
                 if (!string.IsNullOrEmpty(SimilarityBasisIds))
                 {
-                    var testIdsAsBasis = new HashSet<string>(Regex.Split(SimilarityBasisIds, @"[^a-zA-Z0-9-]+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
+                    var testIdsAsBasis = Regex.Split(SimilarityBasisIds, @"[^a-zA-Z0-9-]+").Where(guid => !string.IsNullOrEmpty(guid)).ToHashSet(StringComparer.OrdinalIgnoreCase);
                     var foo = clusterableMatches.FirstOrDefault(match => match.Match.TestGuid == testIdsAsBasis.First());
                     var matchesAsBasis = testIdsAsBasis.Count() == 1
                         ? clusterableMatches.Where(match => string.Equals(match.Match.TestGuid, testIdsAsBasis.First(), StringComparison.OrdinalIgnoreCase)).ToList()
                         : clusterableMatches.Where(match => testIdsAsBasis.Contains(match.Match.TestGuid)).ToList();
-                    var indexesAsBasis = new HashSet<int>(
-                        matchesAsBasis.Any(match => match.Match.SharedCentimorgans < MinCentimorgansInSharedMatchesSimilarity)
+                    var indexesAsBasis = matchesAsBasis.Any(match => match.Match.SharedCentimorgans < MinCentimorgansInSharedMatchesSimilarity)
                         ? matchesAsBasis
                             .SelectMany(match => match.Coords)
                             .GroupBy(coord => coord)
                             .Where(g => g.Count() >= matchesAsBasis.Count / 2 && clusterableMatches.First(clusterableMatch => clusterableMatch.Index == g.Key).Match.SharedCentimorgans < 600)
                             .Select(g => g.Key)
+                            .ToHashSet()
                         : matchesAsBasis.Count() == 1  && testIdsAsBasis.Count() == 1
-                        ? matchesAsBasis.First().Coords 
-                        : matchesAsBasis.Select(match => match.Index));
+                        ? matchesAsBasis.First().Coords.ToHashSet()
+                        : matchesAsBasis.Select(match => match.Index).ToHashSet();
                     await SimilarityFinder.FindClosestBySimilarityAsync(clusterableMatches, indexesAsBasis, getSimilarityWriter);
                 }
                 else

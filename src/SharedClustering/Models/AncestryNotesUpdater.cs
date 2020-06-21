@@ -46,12 +46,12 @@ namespace AncestryDnaClustering.Models
         public async Task UpdateNotesAsync(string guid, string matchFile, Throttle throttle, IProgressData progressData)
         {
             var originalTags = await _matchesRetriever.GetTagsAsync(guid, throttle);
-            var originalTagIds = new HashSet<int>(originalTags.Select(tag => tag.TagId));
+            var originalTagIds = originalTags.Select(tag => tag.TagId).ToHashSet();
 
             var notes = ReadMatchFile(matchFile, originalTags, progressData).ToList();
             var originalNumNotes = notes.Count;
 
-            await MaybeUpdateFilesAsync(notes, originalTags);
+            await MaybeUpdateFilesAsync(notes);
 
             notes = (await FilterModifiedNodesAsync(guid, notes, originalTagIds, throttle, progressData)).ToList();
 
@@ -152,7 +152,7 @@ namespace AncestryDnaClustering.Models
             public List<int> NewTagsRemoved { get; set; }
         }
 
-        private static readonly HashSet<string> _deletionKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "delete", "remove", "clear" }; 
+        private static readonly HashSet<string> _deletionKeywords = new[] { "delete", "remove", "clear" }.ToHashSet(StringComparer.OrdinalIgnoreCase); 
 
         private static IEnumerable<NotesData> ReadMatchFile(string matchFile, List<Tag> originalTags, IProgressData progressData)
         {
@@ -253,7 +253,7 @@ namespace AncestryDnaClustering.Models
             }
         }
 
-        private async Task MaybeUpdateFilesAsync(List<NotesData> notes, List<Tag> originalTags)
+        private async Task MaybeUpdateFilesAsync(List<NotesData> notes)
         {
             var notesByIdGroups = notes.GroupBy(note => note.TestId).ToList();
 
@@ -361,7 +361,7 @@ namespace AncestryDnaClustering.Models
             {
                 Title = "Save a record of updated notes",
                 InitialDirectory = DirectoryUtils.GetDefaultDirectory(null),
-                FileName = $"Ancestry Notes Changes {DateTime.Now.ToString("yyyy-MM-dd")}.xlsx",
+                FileName = $"Ancestry Notes Changes {DateTime.Now:yyyy-MM-dd}.xlsx",
                 DefaultExt = ".xlsx",
                 Filter = "Excel Workbook (*.xlsx)|*.xlsx",
             };
@@ -375,7 +375,7 @@ namespace AncestryDnaClustering.Models
 
             var affectedNotes = notes.Any(note => note.NewNotes != null);
             var affectedStarred = notes.Any(note => note.NewStarred != null);
-            var affectedTagIds = new HashSet<int>(notes.SelectMany(note => note.NewTags.Concat(note.NewTagsRemoved)));
+            var affectedTagIds = notes.SelectMany(note => note.NewTags.Concat(note.NewTagsRemoved)).ToHashSet();
             var affectedTags = originalTags.Where(tag => affectedTagIds.Contains(tag.TagId)).ToList();
 
             using (var p = new ExcelPackage())

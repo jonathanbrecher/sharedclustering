@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClusterableMatch.cs" />
+    <Compile Include="IClusterExgtender.cs" />
+    <Compile Include="IClusterBuilder.cs" />
     <Compile Include="ClusterNode.cs" />
     <Compile Include="ColumnWriters\ClusterNumberWriter.cs" />
     <Compile Include="ColumnWriters\ColumnWritersCollection.cs" />
@@ -74,7 +76,10 @@
     <Compile Include="Distance\OverlapWeightedEuclideanDistanceSquared.cs" />
     <Compile Include="Distance\StrengthWeightedEuclideanDistanceSquared.cs" />
     <Compile Include="CorrelationWriters\ExcelPackageExtensions.cs" />
-    <Compile Include="HierarchicalClustering.cs" />
+    <Compile Include="ClusterExtender.cs" />
+    <Compile Include="ClusterBuilder.cs" />
+    <Compile Include="LargeClusterExcluder.cs" />
+    <Compile Include="HierarchicalClusterer.cs" />
     <Compile Include="IClusterableMatch.cs" />
     <Compile Include="LeafNode.cs" />
     <Compile Include="ClusterableMatchBuilder.cs" />

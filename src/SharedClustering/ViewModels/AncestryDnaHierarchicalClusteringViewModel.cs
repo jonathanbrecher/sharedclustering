@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -10,7 +9,6 @@ using AncestryDnaClustering.Models;
 using AncestryDnaClustering.Properties;
 using AncestryDnaClustering.SavedData;
 using Microsoft.Win32;
-using SharedClustering.Core;
 using SharedClustering.Core.Anonymizers;
 using SharedClustering.HierarchicalClustering;
 using SharedClustering.HierarchicalClustering.CorrelationWriters;
@@ -384,7 +382,7 @@ namespace AncestryDnaClustering.ViewModels
                     return;
                 }
 
-                var testIdsToFilter = new HashSet<string>(Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)), StringComparer.OrdinalIgnoreCase);
+                var testIdsToFilter = Regex.Split(FilterToGuids, @"\s+").Where(guid => !string.IsNullOrEmpty(guid)).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
                 var matchesByIndex = clusterableMatches.ToDictionary(match => match.Index);
 
@@ -417,29 +415,32 @@ namespace AncestryDnaClustering.ViewModels
                     return;
                 }
 
-                var lowestClusterableCentimorgans = HierarchicalClustering.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
+                var lowestClusterableCentimorgans = HierarchicalClusterer.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
 
-                var hierarchicalClustering = new HierarchicalClustering(
+                var matrixBuilder = new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData);
+                var clusterBuilder = new ClusterBuilder();
+                var clusterExtender = new ClusterExtender(clusterBuilder, MinClusterSize, matrixBuilder, ProgressData);
+                var worksheetName = AnonymizeOutput ? "heatmap - anonymized" : "heatmap";
+
+                var hierarchicalClustering = new HierarchicalClusterer(
+                    clusterBuilder,
+                    clusterExtender,
                     MinClusterSize,
                     _ => new OverlapWeightedEuclideanDistanceSquared(),
-                    new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData),
+                    matrixBuilder,
                     new HalfMatchPrimaryClusterFinder(),
-                    new ExcelCorrelationWriter(CorrelationFilename, testTakerTestId, AncestryHostName, _minClusterSize, MaxMatchesPerClusterFile, lowestClusterableCentimorgans, FileUtils.CoreFileUtils, ProgressData),
-                    FileUtils.CoreFileUtils,
+                    new ExcelCorrelationWriter(CorrelationFilename, tags, worksheetName, testTakerTestId, AncestryHostName, _minClusterSize, MaxMatchesPerClusterFile, lowestClusterableCentimorgans, FileUtils.CoreFileUtils, ProgressData),
+                    FileUtils.CoreFileUtils.AskYesNo,
                     ProgressData);
 
-                if (ExcludeClustersGreaterThan != null)
+                clusterableMatches = LargeClusterExcluder.MaybeExcludeLargeClusters(clusterableMatches, ExcludeClustersGreaterThan.Value, ProgressData);
+                if (clusterableMatches.Count == 0)
                 {
-                    clusterableMatches = hierarchicalClustering.ExcludeLargeClusters(clusterableMatches, ExcludeClustersGreaterThan.Value);
-                    if (clusterableMatches.Count == 0)
-                    {
-                        MessageBox.Show($"All matches excluded as being clusters with more than {ExcludeClustersGreaterThan} members", "All matches excluded", MessageBoxButton.OK, MessageBoxImage.Information);
-                        return;
-                    }
+                    MessageBox.Show($"All matches excluded as being clusters with more than {ExcludeClustersGreaterThan} members", "All matches excluded", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
                 }
 
-                var worksheetName = AnonymizeOutput ? "heatmap - anonymized" : "heatmap";
-                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster, tags, worksheetName);
+                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
 
                 if (OpenClusterFileWhenComplete)
                 {

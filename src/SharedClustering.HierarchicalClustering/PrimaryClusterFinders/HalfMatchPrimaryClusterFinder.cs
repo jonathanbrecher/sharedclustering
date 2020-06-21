@@ -22,7 +22,7 @@ namespace SharedClustering.HierarchicalClustering.PrimaryClusterFinders
             }
 
             var leafNodes = clusterNode.GetOrderedLeafNodes();
-            var matchIndexes = new HashSet<int>(leafNodes.Select(leafNode => leafNode.Index));
+            var matchIndexes = leafNodes.Select(leafNode => leafNode.Index).ToHashSet();
 
             var firstAndLastLeafNodes = new[] { clusterNode.FirstLeaf, clusterNode.SecondLeaf };
 

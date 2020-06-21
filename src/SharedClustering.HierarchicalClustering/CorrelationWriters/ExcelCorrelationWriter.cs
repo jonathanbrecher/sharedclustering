@@ -17,6 +17,8 @@ namespace SharedClustering.HierarchicalClustering.CorrelationWriters
     public class ExcelCorrelationWriter : ICorrelationWriter
     {
         private readonly string _correlationFilename;
+        private readonly IReadOnlyCollection<Tag> _tags;
+        private readonly string _worksheetName;
         private readonly string _testTakerTestId;
         private readonly string _ancestryHostName;
         private readonly int _minClusterSize;
@@ -25,9 +27,21 @@ namespace SharedClustering.HierarchicalClustering.CorrelationWriters
         private readonly ICoreFileUtils _coreFileUtils;
         private ExcelPackage _p = null;
 
-        public ExcelCorrelationWriter(string correlationFilename, string testTakerTestId, string ancestryHostName, int minClusterSize, int maxMatchesPerClusterFile, double lowestClusterableCentimorgans, ICoreFileUtils coreFileUtils, IProgressData progressData)
+        public ExcelCorrelationWriter(
+            string correlationFilename,
+            IReadOnlyCollection<Tag> tags,
+            string worksheetName,
+            string testTakerTestId,
+            string ancestryHostName,
+            int minClusterSize,
+            int maxMatchesPerClusterFile,
+            double lowestClusterableCentimorgans,
+            ICoreFileUtils coreFileUtils,
+            IProgressData progressData)
         {
             _correlationFilename = correlationFilename;
+            _tags = tags;
+            _worksheetName = worksheetName;
             _testTakerTestId = testTakerTestId;
             _ancestryHostName = ancestryHostName;
             _minClusterSize = minClusterSize;
@@ -64,11 +78,9 @@ namespace SharedClustering.HierarchicalClustering.CorrelationWriters
         public int MaxMatchesPerClusterFile { get; }
 
         public async Task<List<string>> OutputCorrelationAsync(
-            List<ClusterNode> nodes,
-            Dictionary<int, IClusterableMatch> matchesByIndex,
-            Dictionary<int, int> indexClusterNumbers,
-            List<Tag> tags,
-            string worksheetName)
+            IReadOnlyCollection<ClusterNode> nodes,
+            IReadOnlyDictionary<int, IClusterableMatch> matchesByIndex,
+            IReadOnlyDictionary<int, int> indexClusterNumbers)
         {
             if (string.IsNullOrEmpty(_correlationFilename))
             {
@@ -116,11 +128,10 @@ namespace SharedClustering.HierarchicalClustering.CorrelationWriters
 
             // Because very strong matches are included in so many clusters,
             // excluding the strong matches makes it easier to identify edges of the clusters. 
-            var immediateFamilyIndexes = new HashSet<int>(
-                matchesByIndex.Values
+            var immediateFamilyIndexes = matchesByIndex.Values
                 .Where(match => match.Match.SharedCentimorgans > 200)
                 .Select(match => match.Index)
-                );
+                .ToHashSet();
 
             // Fixed columns
             var clusterNumberWriter = new ClusterNumberWriter(indexClusterNumbers);
@@ -141,26 +152,26 @@ namespace SharedClustering.HierarchicalClustering.CorrelationWriters
                 matches.Any(match => match.Match.HasHint) ? new SharedAncestorHintWriter() : null,
                 new CorrelatedClustersWriter(leafNodes, immediateFamilyIndexes, indexClusterNumbers, clusterNumberWriter, _minClusterSize),
             }.Where(writer => writer != null).ToList();
-            if (tags != null)
+            if (_tags != null)
             {
-                writers.AddRange(tags.OrderBy(tag => tag.Label).Select(tag => new TagWriter(tag)));
+                writers.AddRange(_tags.OrderBy(tag => tag.Label).Select(tag => new TagWriter(tag)));
             }
             writers.Add(new NoteWriter());
 
             if (!FileIsOpen())
             {
-                return await OutputFiles(worksheetName, matchesByIndex, leafNodes, nonDistantMatches, orderedIndexes, writers.ToArray(), numOutputFiles);
+                return await OutputFiles(_worksheetName, matchesByIndex, leafNodes, nonDistantMatches, orderedIndexes, writers.ToArray(), numOutputFiles);
             }
             else
             {
-                await OutputWorksheet(worksheetName, matchesByIndex, leafNodes, nonDistantMatches, orderedIndexes, writers.ToArray(), 0);
+                await OutputWorksheet(_worksheetName, matchesByIndex, leafNodes, nonDistantMatches, orderedIndexes, writers.ToArray(), 0);
                 return new List<string>{ _correlationFilename };
             }
         }
 
         private async Task<List<string>> OutputFiles(
             string worksheetName,
-            Dictionary<int, IClusterableMatch> matchesByIndex,
+            IReadOnlyDictionary<int, IClusterableMatch> matchesByIndex,
             List<LeafNode> leafNodes,
             List<IClusterableMatch> nonDistantMatches,
             List<int> orderedIndexes,
@@ -196,7 +207,7 @@ namespace SharedClustering.HierarchicalClustering.CorrelationWriters
 
         private Task OutputWorksheet(
             string worksheetName,
-            Dictionary<int, IClusterableMatch> matchesByIndex,
+            IReadOnlyDictionary<int, IClusterableMatch> matchesByIndex,
             List<LeafNode> leafNodes,
             List<IClusterableMatch> nonDistantMatches,
             List<int> orderedIndexes,

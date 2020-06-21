@@ -38,8 +38,8 @@ namespace SharedClustering.HierarchicalClustering.MatrixBuilders
 
             return Task.Run(async () =>
             {
-                var immmediateFamilyIndexes = new HashSet<int>(immediateFamily.Select(match => match.Index));
-                var matchIndexes = new HashSet<int>(clusterableMatches.Select(match => match.Index));
+                var immmediateFamilyIndexes = immediateFamily.Select(match => match.Index).ToHashSet();
+                var matchIndexes = clusterableMatches.Select(match => match.Index).ToHashSet();
 
                 // Count how often each match appears in any match's match list.
                 // Every match appears at least once, in its own match list.
@@ -82,7 +82,7 @@ namespace SharedClustering.HierarchicalClustering.MatrixBuilders
                 }));
                 await Task.WhenAll(indirectTasks);
 
-                var matchIndexesOverLowestClusterableCentimorgans = new HashSet<int>(clusterableMatchesOverLowestClusterableCentimorgans.Select(match => match.Index));
+                var matchIndexesOverLowestClusterableCentimorgans = clusterableMatchesOverLowestClusterableCentimorgans.Select(match => match.Index).ToHashSet();
                 RemoveFilteredCoords(matrix, matchIndexesOverLowestClusterableCentimorgans);
                 ReduceIndirectCoords(matrix, matchIndexesOverLowestClusterableCentimorgans);
 

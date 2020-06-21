@@ -27,7 +27,7 @@ namespace SharedClustering.HierarchicalClustering
                 var maxMatchIndex = strongMatches.Count - 1;
                 var maxIcwIndex = Math.Min(maxMatchIndex, matches.Count(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches) + 1);
                 maxIcwIndex = Math.Min(maxIcwIndex, matches.Count - 1);
-                var strongMatchesGuids = new HashSet<string>(strongMatches.Select(match => match.TestGuid), StringComparer.OrdinalIgnoreCase);
+                var strongMatchesGuids = strongMatches.Select(match => match.TestGuid).ToHashSet(StringComparer.OrdinalIgnoreCase);
                 var icw = rawIcw
                     .Where(kvp => strongMatchesGuids.Contains(kvp.Key))
                     .OrderBy(kvp => matchIndexes.TryGetValue(kvp.Key, out var index) ? index : matchIndexes.Count)
@@ -79,7 +79,7 @@ namespace SharedClustering.HierarchicalClustering
                         + $"This will exclude {numExcludedMatches} matches (out of {clusterableMatches.Count}) with at least {filteringCutoff} shared matches.",
                         "Many shared matches"))
                 {
-                    var coordsFiltered = new HashSet<int>(clusterableMatchesFiltered.Select(match => match.Index));
+                    var coordsFiltered = clusterableMatchesFiltered.Select(match => match.Index).ToHashSet();
                     clusterableMatches = clusterableMatchesFiltered
                         .Select(match => (IClusterableMatch)new ClusterableMatch(match.Index, match.Match, match.Coords.Where(coord => coordsFiltered.Contains(coord)).ToList()))
                         .ToList();

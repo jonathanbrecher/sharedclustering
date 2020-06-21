@@ -11,9 +11,9 @@ namespace SharedClustering.HierarchicalClustering.ColumnWriters
         public bool IsDecimal => false;
         public double Width => 26.0 / 7;
 
-        public Dictionary<int, int> _indexClusterNumbers;
+        public IReadOnlyDictionary<int, int> _indexClusterNumbers;
 
-        public ClusterNumberWriter(Dictionary<int, int> indexClusterNumbers)
+        public ClusterNumberWriter(IReadOnlyDictionary<int, int> indexClusterNumbers)
         {
             _indexClusterNumbers = indexClusterNumbers;
         }

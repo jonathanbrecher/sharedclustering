@@ -33,7 +33,7 @@ namespace SharedClustering.HierarchicalClustering
 
         public abstract IEnumerable<LeafNode> GetOrderedLeafNodes();
 
-        public HashSet<int> GetOrderedLeafNodesIndexes() => new HashSet<int>(GetOrderedLeafNodes().Select(leafNode => leafNode.Index));
+        public HashSet<int> GetOrderedLeafNodesIndexes() => GetOrderedLeafNodes().Select(leafNode => leafNode.Index).ToHashSet();
 
         public IEnumerable<ClusterNode> GetParents()
         {

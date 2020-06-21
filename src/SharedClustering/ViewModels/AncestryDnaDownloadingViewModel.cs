@@ -324,7 +324,7 @@ namespace AncestryDnaClustering.ViewModels
                     : _matchCountsData.TotalMatches;
                 ProgressData.Reset("Downloading matches...", numMatchesToRetrieve);
                 var tags = await _matchesRetriever.GetTagsAsync(guid, throttle);
-                var tagIds = new HashSet<int>(tags.Select(tag => tag.TagId));
+                var tagIds = tags.Select(tag => tag.TagId).ToHashSet();
                 var matches = await _matchesRetriever.GetMatchesAsync(guid, numMatchesToRetrieve, tagIds, true, throttle, ProgressData);
 
                 // Make sure there are no duplicates among the matches
