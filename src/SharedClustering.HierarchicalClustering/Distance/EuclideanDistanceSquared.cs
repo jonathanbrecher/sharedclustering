@@ -11,7 +11,7 @@ namespace SharedClustering.HierarchicalClustering.Distance
     /// </summary>
     internal class EuclideanDistanceSquared : IDistanceMetric
     {
-        public double Calculate(Dictionary<int, double> coords1, Dictionary<int, double> coords2)
+        public double Calculate(IReadOnlyDictionary<int, double> coords1, IReadOnlyDictionary<int, double> coords2)
         {
             var fewerCoords = coords1.Count < coords2.Count ? coords1 : coords2;
             var moreCoords = fewerCoords == coords1 ? coords2 : coords1;
@@ -43,6 +43,6 @@ namespace SharedClustering.HierarchicalClustering.Distance
             return distSquared;
         }
 
-        public IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords) => coords.Keys;
+        public IEnumerable<int> SignificantCoordinates(IReadOnlyDictionary<int, double> coords) => coords.Keys;
     }
 }

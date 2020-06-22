@@ -74,9 +74,11 @@ namespace AncestryDnaClustering.Models
                 }
             }
 
-            if (input == null)
+            var validationMessage = input?.Validate();
+
+            if (input == null || validationMessage != null)
             {
-                MessageBox.Show(errorMessage);
+                MessageBox.Show(validationMessage ?? errorMessage);
                 return (null, null, null);
             }
 
@@ -90,7 +92,7 @@ namespace AncestryDnaClustering.Models
                 (message, title) => MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes,
                 progressData);
 
-            var testTakerTestId = anonymizer?.GetAnonymizedGuid(input.TestTakerTestId) ?? input.TestTakerTestId;
+            var testTakerTestId = anonymizer?.GetObfuscatedGuid(input.TestTakerTestId) ?? input.TestTakerTestId;
             var tags = anonymizer == null ? input.Tags : input.Tags?.Select((tag, index) => new Tag { TagId = tag.TagId, Color = tag.Color, Label = $"Group{index}" }).ToList(); 
             return (testTakerTestId, clusterableMatches, tags);
         }

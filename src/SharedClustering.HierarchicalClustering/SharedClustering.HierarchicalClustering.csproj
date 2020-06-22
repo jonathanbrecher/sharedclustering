@@ -41,7 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClusterableMatch.cs" />
-    <Compile Include="IClusterExgtender.cs" />
+    <Compile Include="IClusterExtender.cs" />
     <Compile Include="IClusterBuilder.cs" />
     <Compile Include="ClusterNode.cs" />
     <Compile Include="ColumnWriters\ClusterNumberWriter.cs" />

@@ -14,7 +14,7 @@ namespace SharedClustering.HierarchicalClustering.Distance
     /// </summary>
     internal class Overlap : IDistanceMetric
     {
-        public double Calculate(Dictionary<int, double> coords1, Dictionary<int, double> coords2)
+        public double Calculate(IReadOnlyDictionary<int, double> coords1, IReadOnlyDictionary<int, double> coords2)
         {
             var overlapCount = 0.0;
             foreach (var coord in coords1)
@@ -27,6 +27,6 @@ namespace SharedClustering.HierarchicalClustering.Distance
             return -overlapCount * overlapCount / coords1.Values.Sum() / coords2.Values.Sum();
         }
 
-        public IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords) => coords.Keys;
+        public IEnumerable<int> SignificantCoordinates(IReadOnlyDictionary<int, double> coords) => coords.Keys;
     }
 }

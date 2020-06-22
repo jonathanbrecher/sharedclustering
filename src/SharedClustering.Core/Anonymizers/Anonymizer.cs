@@ -8,13 +8,14 @@ namespace SharedClustering.Core.Anonymizers
         // A large prime value smaller than the count of _randomizedLastNames
         const int _largePrime = 4999;
 
-        public string GetAnonymizedGuid(string originalGuid)
+        public string GetObfuscatedGuid(string originalGuid)
         {
             if (originalGuid == null)
             {
                 return null;
             }
 
+            // This is a simple replacement cipher. It can easily be reversed by anyone who knows the replacment rules, but it's obfuscated by sight.
             return string.Join("", originalGuid.Select(c =>
             {
                 switch (char.ToUpper(c))
@@ -54,7 +55,6 @@ namespace SharedClustering.Core.Anonymizers
             var newName = GetRandomLastName(originalLastName);
 
             // Something that looks like a username
-
             // Preserve any numbers at the end
             newName += string.Join("", originalLastName.Where(c => char.IsDigit(c)));
 
@@ -104,6 +104,7 @@ namespace SharedClustering.Core.Anonymizers
             return newName;
         }
 
+        // This is a non-reversable replacement, where many input names might be converted to the same output name by hashcode lookup.
         private string GetRandomLastName(string originalLastName) => _alphabeticalLastNames[Math.Abs(originalLastName.GetHashCode()) % _largePrime];
 
         // Top 5000 most common last names in the United States

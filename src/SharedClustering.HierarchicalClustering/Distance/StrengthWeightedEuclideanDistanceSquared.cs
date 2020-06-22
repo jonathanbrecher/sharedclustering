@@ -12,7 +12,7 @@ namespace SharedClustering.HierarchicalClustering.Distance
     /// </summary>
     internal class StrengthWeightedEuclideanDistanceSquared : IDistanceMetric
     {
-        public double Calculate(Dictionary<int, double> coords1, Dictionary<int, double> coords2)
+        public double Calculate(IReadOnlyDictionary<int, double> coords1, IReadOnlyDictionary<int, double> coords2)
         {
             const double strongCutoff = 0.1;
             const double weakCutoff = 0.01;
@@ -64,6 +64,6 @@ namespace SharedClustering.HierarchicalClustering.Distance
             return distSquaredStrong + distSquaredMedium + distSquaredWeak;
         }
 
-        public IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords) => coords.Keys;
+        public IEnumerable<int> SignificantCoordinates(IReadOnlyDictionary<int, double> coords) => coords.Keys;
     }
 }

@@ -23,34 +23,41 @@ namespace SharedClustering.HierarchicalClustering
 
             return await Task.Run(() =>
             {
-                var strongMatches = matches.Where(match => match.SharedCentimorgans >= minCentimorgansToCluster).ToList();
-                var maxMatchIndex = strongMatches.Count - 1;
-                var maxIcwIndex = Math.Min(maxMatchIndex, matches.Count(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches) + 1);
+                // This method assumes that the incoming data has already been validated for data integrity, see Serialized.Validate()
+
+                // The caller may specify a subset of matches to load.
+                var matchesToLoad = matches.Where(match => match.SharedCentimorgans >= minCentimorgansToCluster).ToList();
+
+                // We only need to load in-common-with data for the matches that will actually be loaded.
+                var maxIcwIndex = Math.Min(matchesToLoad.Count - 1, matches.Count(match => match.SharedCentimorgans >= minCentimorgansInSharedMatches) + 1);
                 maxIcwIndex = Math.Min(maxIcwIndex, matches.Count - 1);
-                var strongMatchesGuids = strongMatches.Select(match => match.TestGuid).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var matchesToLoadGuids = matchesToLoad.Select(match => match.TestGuid).ToHashSet(StringComparer.OrdinalIgnoreCase);
                 var icw = rawIcw
-                    .Where(kvp => strongMatchesGuids.Contains(kvp.Key))
+                    .Where(kvp => matchesToLoadGuids.Contains(kvp.Key))
                     .OrderBy(kvp => matchIndexes.TryGetValue(kvp.Key, out var index) ? index : matchIndexes.Count)
                     .ToDictionary(
                     kvp => kvp.Key,
                     kvp => kvp.Value.Where(index => index <= maxIcwIndex).ToList()
                     );
-                var matchesDictionary = strongMatches.ToDictionary(match => match.TestGuid);
-                var clusterableMatches = icw
+
+                // Merge matches with their corresponding ICW data.
+                var matchesDictionary = matchesToLoad.ToDictionary(match => match.TestGuid);
+                var clusterableMatches = matchesToLoad
                     .AsParallel().AsOrdered()
-                    .Select((kvp, index) =>
+                    .Select((match, index) =>
                     {
-                        var match = matchesDictionary[kvp.Key];
                         match = GetAnonymizedMatch(match, anonymizer);
-                        return (IClusterableMatch)new ClusterableMatch(index, match, kvp.Value);
-                    }
-                    )
+                        var matchIcw = icw.TryGetValue(match.TestGuid, out var result) ? result : new List<int>();
+                        return (IClusterableMatch)new ClusterableMatch(index, match, matchIcw);
+                    })
                     .ToList();
 
                 return MaybeFilterMassivelySharedMatches(clusterableMatches, askYesNoFunc);
             });
         }
 
+        // Optionally exclude matche with massive numbers of shared matches, as sometimes seen in the presence of endogamy.
+        // Matches with massive numbers of shared matches will overwhelm the clustering process and won't produce useful clusters anyway.
         private static List<IClusterableMatch> MaybeFilterMassivelySharedMatches(List<IClusterableMatch> clusterableMatches, Func<string, string, bool> askYesNoFunc)
         {
             var clusterableMatchesOver20cM = clusterableMatches.Where(match => match.Match.SharedCentimorgans > 20).ToList();
@@ -88,6 +95,7 @@ namespace SharedClustering.HierarchicalClustering
             return clusterableMatches;
         }
 
+        // Optionally anonymize match data, according to anonymization behavior of the anonymizer.
         private static Match GetAnonymizedMatch(Match match, IAnonymizer anonymizer)
         {
             if (anonymizer == null)
@@ -99,18 +107,18 @@ namespace SharedClustering.HierarchicalClustering
             {        
                 MatchTestAdminDisplayName = anonymizer.GetAnonymizedName(match.MatchTestAdminDisplayName),
                 MatchTestDisplayName = anonymizer.GetAnonymizedName(match.MatchTestDisplayName),
-                TestGuid = anonymizer.GetAnonymizedGuid(match.TestGuid),
+                TestGuid = anonymizer.GetObfuscatedGuid(match.TestGuid),
                 SharedCentimorgans = match.SharedCentimorgans,
                 SharedSegments = match.SharedSegments,
                 LongestBlock = match.LongestBlock,
                 TreeType = match.TreeType,
-                TreeUrl = match.TreeUrl == null ? null : "https://invalid",
+                TreeUrl = match.TreeUrl == null ? null : "https://invalid", // Tree URLs are opaque data, so they cannot be anonymized in place. They have to be excluded completely.
                 TreeSize = match.TreeSize,
                 HasCommonAncestors = match.HasCommonAncestors,
                 CommonAncestors = match.CommonAncestors?.Select(commonAncestor => anonymizer.GetAnonymizedName(commonAncestor)).ToList(),
                 Starred = match.Starred,
                 HasHint = match.HasHint,
-                Note = null,
+                Note = null, // Notes are free-entry data, so they cannot be anonymized in place. They have to be excluded completely.
                 TagIds = match.TagIds,
                 IsFather = match.IsFather,
                 IsMother = match.IsMother,

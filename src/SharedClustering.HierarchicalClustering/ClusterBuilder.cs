@@ -143,6 +143,7 @@ namespace SharedClustering.HierarchicalClustering
 
             progressData.Reset($"Calculating coordinates for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
 
+            // Create raw leaf nodes based on the provided clusterableMatches and matrix. No information about neighbors is available yet.
             var leafNodes = await Task.Run(() =>
             {
                 return clusterableMatches
@@ -153,6 +154,7 @@ namespace SharedClustering.HierarchicalClustering
 
             progressData.Reset($"Finding closest pairwise distances for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
 
+            // Populate nearest neighbors for each leaf node.
             await CalculateNeighborsAsync(leafNodes, leafNodes, distanceMetric, progressData);
 
             var result = leafNodes.ToList<Node>();
@@ -163,6 +165,11 @@ namespace SharedClustering.HierarchicalClustering
 
         private static async Task CalculateNeighborsAsync(List<LeafNode> leafNodesAll, List<LeafNode> leafNodesToRecalculate, IDistanceMetric distanceMetric, IProgressData progressData)
         {
+            // Calculating nearest neighbors is nominally an O(N^2) operation.
+            // But, the process of DNA analysis usually produces nodes that only have a small number of shared matches.
+            // A significant optimization is possible by bucketing the matches according to their shared matches.
+            // As a result, it is then possible only to look at the distances between matches that have at least one shared match in common.
+            // All other matches with no matches in common at all are considered to have infinite distance and need not be considered explicitly in the list of neighbors.
             var buckets = leafNodesAll
                .SelectMany(leafNode => distanceMetric.SignificantCoordinates(leafNode.Coords).Select(coord => new { Coord = coord, LeafNode = leafNode }))
                .GroupBy(pair => pair.Coord, pair => pair.LeafNode)
@@ -192,7 +199,7 @@ namespace SharedClustering.HierarchicalClustering
 
         private static async Task<IEnumerable<LeafNode>> RemoveNodesAsync(ICollection<Node> nodes, List<LeafNode> nodesToRemove)
         {
-            // If at least one node is unavailable for further clustering, then remove those nodes from the lists of neighbors.
+            // If at least one node is unavailable for further clustering, then remove those nodes from the lists of neighbors of all other nodes.
             if (nodesToRemove.Count > 0)
             {
                 // Find the exposed leaf nodes that might have the the unavailable nodes as potential neighbors.

@@ -12,11 +12,11 @@ namespace SharedClustering.HierarchicalClustering.Distance
     /// </summary>
     internal class Antiproximity : IDistanceMetric
     {
-        public double Calculate(Dictionary<int, double> coords1, Dictionary<int, double> coords2)
+        public double Calculate(IReadOnlyDictionary<int, double> coords1, IReadOnlyDictionary<int, double> coords2)
         {
             return coords1.Sum(coord => coords2.TryGetValue(coord.Key, out var otherCoord) ? -coord.Value * otherCoord : 0);
         }
 
-        public IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords) => coords.Keys;
+        public IEnumerable<int> SignificantCoordinates(IReadOnlyDictionary<int, double> coords) => coords.Keys;
     }
 }

@@ -49,8 +49,52 @@ namespace SharedClustering.HierarchicalClustering
             return nodes;
         }
 
+        private async Task<Dictionary<Node, List<IClusterableMatch>>> ExtendClustersAsync(IEnumerable<IClusterableMatch> clusterableMatches, IReadOnlyCollection<Node> primaryClusters, IReadOnlyCollection<LeafNode> leafNodes, double minCentimorgansToCluster)
+        {
+            // Identify other matches that have not been clustered yet, which are eligible to be added to existing clusters.
+            var maxClusteredIndex = leafNodes.Max(leafNode => leafNode.Index);
+            var otherMatches = clusterableMatches
+                .Where(match => match.Index > maxClusteredIndex && match.Match.SharedCentimorgans >= minCentimorgansToCluster && match.Coords.Count >= _minClusterSize).ToList();
+
+            var leafNodesByMatchIndex = leafNodes.ToDictionary(leafNode => leafNode.Index);
+
+            _progressData.Reset($"Extending clusters with {otherMatches.Count} matches...", otherMatches.Count);
+
+            var extendedClusters = await Task.Run(() => otherMatches.Select(match =>
+            {
+                // Identify all clusters that contain at least one shared match to this match.
+                var parentClusters = match.Coords
+                    .Select(coord => leafNodesByMatchIndex.TryGetValue(coord, out var leafNode) ? leafNode : null)
+                    .Where(leafNode => leafNode != null)
+                    .SelectMany(leafNode => leafNode.GetParents().OfType<Node>().Concat(new[] { leafNode }))
+                    .ToList();
+
+                // This match should be added to the existing cluster that contains the largest number of shared matches
+                // (as long as the existing cluster contains at least _minClusterSize of the shared matches).
+                var bestParentCluster = parentClusters
+                    .Where(primaryClusters.Contains)
+                    .GroupBy(c => c)
+                    .Select(g => new { ParentCluster = g.Key, OverlapCount = g.Key.GetOrderedLeafNodesIndexes().Intersect(match.Coords).Count() })
+                    .Where(pair => pair.OverlapCount >= _minClusterSize)
+                    .OrderByDescending(pair => pair.OverlapCount)
+                    .Select(pair => pair.ParentCluster)
+                    .FirstOrDefault();
+
+                _progressData.Increment();
+
+                return new { Match = match, BestParentCluster = bestParentCluster };
+            })
+            .Where(pair => pair.BestParentCluster != null)
+            .GroupBy(pair => pair.BestParentCluster, pair => pair.Match)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(match => match.Match.SharedCentimorgans).ToList()));
+
+            _progressData.Reset("Done");
+
+            return extendedClusters;
+        }
+
         // Optimize the appearance of existing clusters within an existing cluster diagram,
-        // for example after additional matches were added to extend the existing clusters.
+        // after additional matches were added to extend the existing clusters.
         private async Task Recluster(
             List<ClusterNode> nodes,
             IReadOnlyDictionary<Node, List<IClusterableMatch>> extendedClusters,
@@ -125,45 +169,6 @@ namespace SharedClustering.HierarchicalClustering
             await Task.WhenAll(primaryClustersTasks);
 
             _progressData.Reset();
-        }
-
-        private async Task<Dictionary<Node, List<IClusterableMatch>>> ExtendClustersAsync(IEnumerable<IClusterableMatch> clusterableMatches, IReadOnlyCollection<Node> primaryClusters, IReadOnlyCollection<LeafNode> leafNodes, double minCentimorgansToCluster)
-        {
-            var maxClusteredIndex = leafNodes.Max(leafNode => leafNode.Index);
-            var otherMatches = clusterableMatches
-                .Where(match => match.Index > maxClusteredIndex && match.Match.SharedCentimorgans >= minCentimorgansToCluster && match.Coords.Count >= _minClusterSize).ToList();
-            var leafNodesByMatchIndex = leafNodes.ToDictionary(leafNode => leafNode.Index);
-
-            _progressData.Reset($"Extending clusters with {otherMatches.Count} matches...", otherMatches.Count);
-
-            var extendedClusters = await Task.Run(() => otherMatches.Select(match =>
-            {
-                var parentClusters = match.Coords
-                    .Select(coord => leafNodesByMatchIndex.TryGetValue(coord, out var leafNode) ? leafNode : null)
-                    .Where(leafNode => leafNode != null)
-                    .SelectMany(leafNode => leafNode.GetParents().OfType<Node>().Concat(new[] { leafNode }))
-                    .ToList();
-
-                var bestParentCluster = parentClusters
-                    .Where(primaryClusters.Contains)
-                    .GroupBy(c => c)
-                    .Select(g => new { ParentCluster = g.Key, OverlapCount = g.Key.GetOrderedLeafNodesIndexes().Intersect(match.Coords).Count() })
-                    .Where(pair => pair.OverlapCount >= _minClusterSize)
-                    .OrderByDescending(pair => pair.OverlapCount)
-                    .Select(pair => pair.ParentCluster)
-                    .FirstOrDefault();
-
-                _progressData.Increment();
-
-                return new { Match = match, BestParentCluster = bestParentCluster };
-            })
-            .Where(pair => pair.BestParentCluster != null)
-            .GroupBy(pair => pair.BestParentCluster, pair => pair.Match)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(match => match.Match.SharedCentimorgans).ToList()));
-
-            _progressData.Reset("Done");
-
-            return extendedClusters;
         }
     }
 }

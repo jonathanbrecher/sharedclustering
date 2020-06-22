@@ -11,7 +11,7 @@ namespace SharedClustering.HierarchicalClustering.Distance
     /// </summary>
     internal class Correlation : IDistanceMetric
     {
-        public double Calculate(Dictionary<int, double> coords1, Dictionary<int, double> coords2)
+        public double Calculate(IReadOnlyDictionary<int, double> coords1, IReadOnlyDictionary<int, double> coords2)
         {
             var n = 1000;
             var sumX = 0.0;
@@ -46,6 +46,6 @@ namespace SharedClustering.HierarchicalClustering.Distance
             return covariance / stdX / stdY;
         }
 
-        public IEnumerable<int> SignificantCoordinates(Dictionary<int, double> coords) => coords.Keys;
+        public IEnumerable<int> SignificantCoordinates(IReadOnlyDictionary<int, double> coords) => coords.Keys;
     }
 }

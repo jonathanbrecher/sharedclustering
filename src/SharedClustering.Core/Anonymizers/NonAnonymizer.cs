@@ -3,6 +3,6 @@
     public class NonAnonymizer : IAnonymizer
     {
         public string GetAnonymizedName(string originalName) => originalName;
-        public string GetAnonymizedGuid(string originalGuid) => originalGuid;
+        public string GetObfuscatedGuid(string originalGuid) => originalGuid;
     }
 }
