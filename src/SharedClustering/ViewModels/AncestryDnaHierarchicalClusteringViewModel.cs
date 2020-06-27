@@ -418,7 +418,7 @@ namespace AncestryDnaClustering.ViewModels
                 var lowestClusterableCentimorgans = HierarchicalClusterer.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
 
                 var matrixBuilder = new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData);
-                var clusterBuilder = new ClusterBuilder();
+                var clusterBuilder = new ClusterBuilder(MinClusterSize);
                 var clusterExtender = new ClusterExtender(clusterBuilder, MinClusterSize, matrixBuilder, ProgressData);
                 var worksheetName = AnonymizeOutput ? "heatmap - anonymized" : "heatmap";
 

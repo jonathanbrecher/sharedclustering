@@ -8,6 +8,13 @@ namespace SharedClustering.HierarchicalClustering
 {
     public class ClusterBuilder : IClusterBuilder
     {
+        private readonly int _minClusterSize;
+
+        public ClusterBuilder(int minClusterSize)
+        {
+            _minClusterSize = minClusterSize;
+        }
+
         public async Task<List<ClusterNode>> BuildClustersAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, IReadOnlyDictionary<int, float[]> matrix, IDistanceMetric distanceMetric, IProgressData progressData)
         {
             var nodes = await GetLeafNodesAsync(clusterableMatches, matrix, distanceMetric, progressData).ConfigureAwait(false);
@@ -73,10 +80,10 @@ namespace SharedClustering.HierarchicalClustering
                         // All of the remaining nodes have at least one shared match in some other cluster.
                         // Make a larger cluster by joining the smallest cluster with the other node that has the greatest overlap with it.
                         var smallestNode = nodes.OrderBy(node => node.NumChildren).First();
-                        var smallestNodeLeafNodes = smallestNode.GetOrderedLeafNodesIndexes().ToHashSet();
+                        var smallestNodeLeafNodesCoords = smallestNode.GetOrderedLeafNodes().SelectMany(leafNode => distanceMetric.SignificantCoordinates(leafNode.Coords)).ToHashSet();
                         var otherNode = nodes
                             .Where(node => node != smallestNode)
-                            .OrderByDescending(node => smallestNodeLeafNodes.Intersect(node.GetOrderedLeafNodesIndexes()).Count())
+                            .OrderByDescending(node => node.NumSharedCoords(smallestNode))
                             .ThenBy(node => node.NumChildren)
                             .First();
                         clusterNode = new ClusterNode(otherNode, smallestNode, double.PositiveInfinity, distanceMetric);
@@ -139,6 +146,7 @@ namespace SharedClustering.HierarchicalClustering
 
         private async Task<List<Node>> GetLeafNodesAsync(IReadOnlyCollection<IClusterableMatch> clusterableMatches, IReadOnlyDictionary<int, float[]> matrix, IDistanceMetric distanceMetric, IProgressData progressData)
         {
+            clusterableMatches = clusterableMatches.Where(match => matrix.ContainsKey(match.Index)).ToList();
             var average = clusterableMatches.Average(match => match.Coords.Count);
 
             progressData.Reset($"Calculating coordinates for {clusterableMatches.Count} matches (average {average:N0} shared matches per match)...", clusterableMatches.Count);
@@ -147,7 +155,6 @@ namespace SharedClustering.HierarchicalClustering
             var leafNodes = await Task.Run(() =>
             {
                 return clusterableMatches
-                    .Where(match => matrix.ContainsKey(match.Index))
                     .Select(match => new LeafNode(match.Index, matrix[match.Index], distanceMetric))
                     .ToList();
             });
@@ -163,7 +170,7 @@ namespace SharedClustering.HierarchicalClustering
             return result;
         }
 
-        private static async Task CalculateNeighborsAsync(List<LeafNode> leafNodesAll, List<LeafNode> leafNodesToRecalculate, IDistanceMetric distanceMetric, IProgressData progressData)
+        private async Task CalculateNeighborsAsync(List<LeafNode> leafNodesAll, List<LeafNode> leafNodesToRecalculate, IDistanceMetric distanceMetric, IProgressData progressData)
         {
             // Calculating nearest neighbors is nominally an O(N^2) operation.
             // But, the process of DNA analysis usually produces nodes that only have a small number of shared matches.
@@ -175,9 +182,11 @@ namespace SharedClustering.HierarchicalClustering
                .GroupBy(pair => pair.Coord, pair => pair.LeafNode)
                .ToDictionary(g => g.Key, g => g.ToList());
 
+            var significantCoords = leafNodesAll.ToDictionary(leafNode => leafNode.Index, leafNode => distanceMetric.SignificantCoordinates(leafNode.Coords).ToList());
+
             var calculateNeighborsByDistanceTasks = leafNodesToRecalculate.Select(async leafNode =>
             {
-                leafNode.NeighborsByDistance = await Task.Run(() => GetNeighborsByDistance(leafNode, buckets, distanceMetric));
+                leafNode.NeighborsByDistance = await Task.Run(() => GetNeighborsByDistance(leafNode, buckets, significantCoords, distanceMetric));
                 progressData?.Increment();
             });
 
@@ -232,13 +241,16 @@ namespace SharedClustering.HierarchicalClustering
         // For those, the neighbors will need to be "refilled" (via MaybeRecalculateNeighborsAsync) when the last neighbor has been removed before the cluster is formed.
         private const int _maxNeighbors = 25;
 
-        private static List<Neighbor> GetNeighborsByDistance(LeafNode leafNode, IDictionary<int, List<LeafNode>> buckets, IDistanceMetric distanceMetric)
+        private List<Neighbor> GetNeighborsByDistance(LeafNode leafNode, IDictionary<int, List<LeafNode>> buckets, IDictionary<int, List<int>> significantCoords, IDistanceMetric distanceMetric)
         {
-            var neighbors = distanceMetric.SignificantCoordinates(leafNode.Coords)
+            var leafNodeSignificantCoords = distanceMetric.SignificantCoordinates(leafNode.Coords).ToList();
+            var neighbors = leafNodeSignificantCoords
                 // Get every node with at least one shared match in common
                 .SelectMany(coord => buckets.TryGetValue(coord, out var bucket) ? bucket : Enumerable.Empty<LeafNode>())
                 // We only need one direction A -> B (not also B -> A) since we're ultimately going to look at the smallest distances.
                 .Where(neighborNode => neighborNode.Index < leafNode.Index)
+                // Ignore neighbors that have fewer than _minClusterSize coords in common
+                .Where(neighborNode => significantCoords[neighborNode.Index].Intersect(leafNodeSignificantCoords).Count() >= _minClusterSize)
                 // Make sure that each node is considered only once (might have been in more than one bucket if more than one shared match in common).
                 .Distinct()
                 .Select(neighborNode => new Neighbor(neighborNode, leafNode))

@@ -46,5 +46,9 @@ namespace SharedClustering.HierarchicalClustering
         public Node GetHighestParent() => Parent?.GetHighestParent() ?? this;
 
         public double DistanceTo(Node other) => _distanceMetric.Calculate(Coords, other.Coords);
+
+        public HashSet<int> AllSignificantLeafCoords() => GetOrderedLeafNodes().SelectMany(leafNode => _distanceMetric.SignificantCoordinates(leafNode.Coords)).ToHashSet();
+        
+        public int NumSharedCoords(Node other) => AllSignificantLeafCoords().Intersect(other.AllSignificantLeafCoords()).Count();
     }
 }

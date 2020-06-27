@@ -23,10 +23,10 @@ namespace SharedClustering.HierarchicalClustering
             Distance = distance;
 
             // Calculate the pairwise distances between the two sides of each clustered node.
-            var distFirstFirst = first.FirstLeaf.DistanceTo(second.FirstLeaf);
-            var distFirstSecond = second.FirstLeaf == second.SecondLeaf ? distFirstFirst : first.FirstLeaf.DistanceTo(second.SecondLeaf);
-            var distSecondFirst = first.FirstLeaf == first.SecondLeaf ? distFirstFirst : first.SecondLeaf.DistanceTo(second.FirstLeaf);
-            var distSecondSecond = second.FirstLeaf == second.SecondLeaf ? distSecondFirst : first.SecondLeaf.DistanceTo(second.SecondLeaf);
+            var distFirstFirst = GetDirectionalDistance(first.FirstLeaf, second.FirstLeaf, distance);
+            var distFirstSecond = second.FirstLeaf == second.SecondLeaf ? distFirstFirst : GetDirectionalDistance(first.FirstLeaf, second.SecondLeaf, distance);
+            var distSecondFirst = first.FirstLeaf == first.SecondLeaf ? distFirstFirst : GetDirectionalDistance(first.SecondLeaf, second.FirstLeaf, distance);
+            var distSecondSecond = second.FirstLeaf == second.SecondLeaf ? distSecondFirst : GetDirectionalDistance(first.SecondLeaf, second.SecondLeaf, distance);
 
             // Order the two nodes so that the minimum distance is between them.
             if (Math.Min(distFirstSecond, distSecondFirst) <= Math.Min(distFirstFirst, distSecondSecond))
@@ -62,6 +62,9 @@ namespace SharedClustering.HierarchicalClustering
             FirstLeaf = First.FirstLeaf;
             SecondLeaf = Second.SecondLeaf;
         }
+
+        private double GetDirectionalDistance(LeafNode leaf1, LeafNode leaf2, double distance)
+            => distance == double.PositiveInfinity ? leaf1.NumSharedCoords(leaf2) : leaf1.DistanceTo(leaf2);
 
         // Swap the First and Second nodes, and all of their subnodes.
         public override void Reverse()

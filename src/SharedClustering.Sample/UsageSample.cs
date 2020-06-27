@@ -104,7 +104,7 @@ namespace SharedClustering.Sample
 
             // Perform the actual clustering.
             var matrixBuilder = new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, maxGrayPercentage, suppressProgress);
-            var clusterBuilder = new ClusterBuilder();
+            var clusterBuilder = new ClusterBuilder(minClusterSize);
             var clusterExtender = new ClusterExtender(clusterBuilder, minClusterSize, matrixBuilder, suppressProgress);
             var hierarchicalClustering = new HierarchicalClusterer(
                 clusterBuilder,
