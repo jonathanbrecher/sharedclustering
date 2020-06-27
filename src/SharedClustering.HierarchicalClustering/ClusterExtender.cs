@@ -123,12 +123,12 @@ namespace SharedClustering.HierarchicalClustering
                 }).ToList();
 
             var additionalMatchesDistinct = primaryClustersTaskData.SelectMany(data => data.AdditionalMatches).Distinct().ToList();
-            var maxIndex = additionalMatchesDistinct.SelectMany(match => match.Coords).DefaultIfEmpty(-1).Max();
-            if (maxIndex < 0)
+            if (additionalMatchesDistinct.Count < 0)
             {
                 _progressData.Reset();
                 return;
             }
+            var maxIndex = additionalMatchesDistinct.Select(match => match.Index).Max();
 
             _matrixBuilder.ExtendMatrix(matrix, additionalMatchesDistinct, maxIndex);
 
