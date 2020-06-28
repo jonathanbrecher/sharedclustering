@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace SharedClustering.Core
@@ -122,6 +123,18 @@ namespace SharedClustering.Core
         {
             LogException(ex, false);
             return _shouldRetryFunc(ex?.Message, action);
+        }
+
+        public void OpenUrl(string url)
+        {
+            try
+            {
+                Process.Start(url);
+            }
+            catch (Exception ex)
+            {
+                _reportErrorFunc($"Unable to show online documentation:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}Try again?", "Error");
+            }
         }
 
         private static DateTimeOffset _lastExceptionTime = DateTimeOffset.MinValue;

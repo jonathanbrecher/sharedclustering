@@ -34,6 +34,7 @@ namespace AncestryDnaClustering.SavedData
         public static string AddSuffixToFilename(string fileName, string suffix) => CoreFileUtils.AddSuffixToFilename(fileName, suffix);
         public static void WriteAllLines(string fileName, string lines, bool append, bool doThrow) => CoreFileUtils.WriteAllLines(fileName, lines, append, doThrow);
         public static void WriteAllLines(string fileName, IEnumerable<string> lines, bool doThrow) => CoreFileUtils.WriteAllLines(fileName, lines, doThrow);
+        public static void OpenUrl(string url) => CoreFileUtils.OpenUrl(url);
 
         public static bool ShouldRetry(string message, string action)
         {

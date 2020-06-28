@@ -10,96 +10,16 @@
             </Grid.Resources>
             <StackPanel Orientation="Vertical"
                     Grid.IsSharedSizeScope="True">
-            <Grid Margin="10" HorizontalAlignment="Stretch">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="A"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition MaxWidth="240"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry user name: "/>
-                <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding SignInViewModel.AncestryUserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Password: "/>
-                <PasswordBox Grid.Row="2" Grid.Column="2" x:Name="PasswordBox"/>
-                <TextBlock Grid.Row="4" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="Test: "/>
-                <Button Grid.Row="0" Grid.Column="4" Grid.RowSpan="3"
-                        Height="23" Width="120"
-                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                        Content="Sign In" 
-                        Command="{Binding SignInViewModel.SignInCommand}"
-                        CommandParameter="{Binding ElementName=PasswordBox}"
-                        IsEnabled="{Binding SignInViewModel.CanSignIn}"/>
-
-                <ComboBox Grid.Row="4" Grid.Column="2"
-                          HorizontalAlignment="Stretch"
-                          ItemsSource="{Binding SignInViewModel.Tests}"
-                          SelectedItem="{Binding SignInViewModel.SelectedTest, UpdateSourceTrigger=PropertyChanged}"
-                          DisplayMemberPath="DisplayName"/>
-                <TextBlock Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="3" VerticalAlignment="Center" Text="{Binding MatchCounts}"/>
-
-                <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Top" Text="Download completeness: "/>
-                <RadioButton Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
-                             GroupName="DownloadType"
-                             IsChecked="{Binding DownloadTypeFast, UpdateSourceTrigger=PropertyChanged}">
-                    <RadioButton.Content>
-                        <TextBlock TextWrapping="Wrap">
-                            <Run Text="Fast but incomplete"/>
-                            <LineBreak/>
-                            <Run Text="Fourth cousin matches or higher &#x2014; usually 10 minutes or less"/>
-                        </TextBlock>
-                    </RadioButton.Content>
-                </RadioButton>
-                <RadioButton Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
-                             GroupName="DownloadType"
-                             IsChecked="{Binding DownloadTypeComplete, UpdateSourceTrigger=PropertyChanged}">
-                    <RadioButton.Content>
-                        <TextBlock TextWrapping="Wrap">
-                            <Run Text="Slow and complete"/>
-                            <LineBreak/>
-                            <Run Text="All matches &#x2014; usually at least several hours, even without endogamy"/>
-                        </TextBlock>
-                    </RadioButton.Content>
-                </RadioButton>
-                <RadioButton Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
-                             GroupName="DownloadType"
-                             IsChecked="{Binding DownloadTypeEndogamy, UpdateSourceTrigger=PropertyChanged}">
-                    <RadioButton.Content>
-                        <TextBlock TextWrapping="Wrap">
-                            <Run Text="Endogamy special, for use with heavy endogamy"/>
-                            <LineBreak/>
-                            <Run Text="All matches, but only top 400 shared matches &#x2014; can take 24 hours or longer"/>
-                        </TextBlock>
-                    </RadioButton.Content>
-                </RadioButton>
-                <Button Grid.Row="10" Grid.Column="6"
-                    Height="23" Width="120"
-                    Content="Check endogamy" 
-                    Command="{Binding CheckEndogamyCommand}"
-                    IsEnabled="{Binding CanCheckEndogamy}"/>
-                </Grid>
-
-            <Expander Margin="10"
-                      Header="Advanced options:"
-                      IsExpanded="{Binding ShowAdvancedDownloadOptions, UpdateSourceTrigger=PropertyChanged}">
-                <Grid Margin="0,10,0,0">
+                <Grid Margin="10" HorizontalAlignment="Stretch">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="10"/>
                         <RowDefinition Height="Auto"/>
@@ -107,77 +27,157 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" SharedSizeGroup="A"/>
                         <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition MaxWidth="240"/>
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Ancestry user name: "/>
+                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Text="{Binding SignInViewModel.AncestryUserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Password: "/>
+                    <PasswordBox Grid.Row="2" Grid.Column="2" x:Name="PasswordBox"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="Test: "/>
+                    <Button Grid.Row="0" Grid.Column="4" Grid.RowSpan="3"
+                        Height="23" Width="120"
+                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Content="Sign In" 
+                        Command="{Binding SignInViewModel.SignInCommand}"
+                        CommandParameter="{Binding ElementName=PasswordBox}"
+                        IsEnabled="{Binding SignInViewModel.CanSignIn}"/>
+
+                    <ComboBox Grid.Row="4" Grid.Column="2"
+                          HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding SignInViewModel.Tests}"
+                          SelectedItem="{Binding SignInViewModel.SelectedTest, UpdateSourceTrigger=PropertyChanged}"
+                          DisplayMemberPath="DisplayName"/>
+                    <TextBlock Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="3" VerticalAlignment="Center" Text="{Binding MatchCounts}"/>
+
+                    <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Top" Text="Download completeness: "/>
+                    <RadioButton Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
+                             GroupName="DownloadType"
+                             IsChecked="{Binding DownloadTypeFast, UpdateSourceTrigger=PropertyChanged}">
+                        <RadioButton.Content>
+                            <TextBlock TextWrapping="Wrap">
+                            <Run Text="Fast but incomplete"/>
+                            <LineBreak/>
+                            <Run Text="Fourth cousin matches or higher &#x2014; usually 10 minutes or less"/>
+                            </TextBlock>
+                        </RadioButton.Content>
+                    </RadioButton>
+                    <RadioButton Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
+                             GroupName="DownloadType"
+                             IsChecked="{Binding DownloadTypeComplete, UpdateSourceTrigger=PropertyChanged}">
+                        <RadioButton.Content>
+                            <TextBlock TextWrapping="Wrap">
+                            <Run Text="Slow and complete"/>
+                            <LineBreak/>
+                            <Run Text="All matches &#x2014; usually at least several hours, even without endogamy"/>
+                            </TextBlock>
+                        </RadioButton.Content>
+                    </RadioButton>
+                    <RadioButton Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Center"
+                             GroupName="DownloadType"
+                             IsChecked="{Binding DownloadTypeEndogamy, UpdateSourceTrigger=PropertyChanged}">
+                        <RadioButton.Content>
+                            <TextBlock TextWrapping="Wrap">
+                            <Run Text="Endogamy special, for use with heavy endogamy"/>
+                            <LineBreak/>
+                            <Run Text="All matches, but only top 400 shared matches &#x2014; can take 24 hours or longer"/>
+                            </TextBlock>
+                        </RadioButton.Content>
+                    </RadioButton>
+                    <Button Grid.Row="10" Grid.Column="6"
+                    Height="23" Width="120"
+                    Content="Check endogamy" 
+                    Command="{Binding CheckEndogamyCommand}"
+                    IsEnabled="{Binding CanCheckEndogamy}"/>
+                </Grid>
+
+                <Expander Margin="10"
+                      Header="Advanced options:"
+                      IsExpanded="{Binding ShowAdvancedDownloadOptions, UpdateSourceTrigger=PropertyChanged}">
+                    <Grid Margin="0,10,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="A"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
                                Text="Lowest centimorgans to retrieve: "/>
-                    <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch"
+                        <TextBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch"
                              Text="{Binding MinCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
-                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" 
+                        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" 
                                Text="Lowest centimorgans of shared matches: "/>
-                    <TextBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" 
+                        <TextBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" 
                              Text="{Binding MinSharedMatchesCentimorgansToRetrieve, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
-                    <TextBlock Grid.Row="2" Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                        <TextBlock Grid.Row="2" Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                Text="No shared matches will be downloaded. Clustering will not be possible."
                                Visibility="{Binding NoSharedMatches, Converter={StaticResource BooleanToVisibility}}"
                                Foreground="Red"/>
-                </Grid>
-            </Expander>
+                    </Grid>
+                </Expander>
 
-            <Grid Margin="10">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="0"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="0"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.Resources>
-                    <views:PercentageNullZeroConverter x:Key="PercentageNullZeroConverter"/>
-                </Grid.Resources>
-                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding ProgressData.Description}"/>
-                <ProgressBar Grid.Row="2" Grid.Column="0"
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.Resources>
+                        <views:PercentageNullZeroConverter x:Key="PercentageNullZeroConverter"/>
+                    </Grid.Resources>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding ProgressData.Description}"/>
+                    <ProgressBar Grid.Row="2" Grid.Column="0"
                              HorizontalAlignment="Stretch"
                              Maximum="{Binding ProgressData.Maximum}"
                              Value="{Binding ProgressData.Value}"/>
-                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding ProgressData.Percent, Converter={StaticResource PercentageNullZeroConverter}}" MinWidth="50"/>
-                <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding ProgressData.TimeLeftString}"/>
-                <Button Grid.Row="6" Grid.Column="0"
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding ProgressData.Percent, Converter={StaticResource PercentageNullZeroConverter}}" MinWidth="50"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding ProgressData.TimeLeftString}"/>
+                    <Button Grid.Row="6" Grid.Column="0"
                         Height="23" Width="120"
                         Content="Get DNA Matches" 
                         Command="{Binding GetDnaMatchesCommand}"
                         IsEnabled="{Binding CanGetDnaMatches}"/>
-                <Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center"
+                    <Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center"
                         Visibility="{Binding ContinueInClusterTabVisible, Converter={StaticResource BooleanToVisibility}}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="Last file downloaded:"/>
-                    <TextBox Grid.Column="2" IsReadOnly="True" Background="Transparent" BorderThickness="0" VerticalAlignment="Center"
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="Last file downloaded:"/>
+                        <TextBox Grid.Column="2" IsReadOnly="True" Background="Transparent" BorderThickness="0" VerticalAlignment="Center"
                              TextWrapping="Wrap"
                              Text="{Binding LastFileDownloaded}"/>
-                    <Button Grid.Column="4" Height="23" Width="150"
+                        <Button Grid.Column="4" Height="23" Width="150"
                             Content="Continue in Cluster tab" 
                             Command="{Binding ContinueInClusterTabCommand}"/>
+                    </Grid>
                 </Grid>
-            </Grid>
-        </StackPanel>
-        <Rectangle Fill="Black" Opacity="0.25"/>
+            </StackPanel>
+            <Rectangle Fill="Black" Opacity="0.25"/>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -190,13 +190,16 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Background="White" Padding="10">
-                <Run Text="May, 2020 -- Downloading is currently disabled while the Ancestry website goes through a period of rapid change. When things settle down on their end, I'll see what they end up with, and look at whether downloading can be re-enabled at that time."/>
-                <LineBreak/>
-                <LineBreak/>
-                <Run Text="Clustering can still be performed on data files that have already been downloaded from Ancestry using Shared Clustering, or on icw_*.csv files from DNAGedcom or *.csv files from AutoCluster."/>
+                    <Run Text="May, 2020 -- Downloading is currently disabled while the Ancestry website goes through a period of rapid change. When things settle down on their end, I'll see what they end up with, and look at whether downloading can be re-enabled at that time."/>
+                    <LineBreak/>
+                    <LineBreak/>
+                    <Run Text="Clustering can still be performed on data files that have already been downloaded from Ancestry using Shared Clustering, or on icw_*.csv files from DNAGedcom or *.csv files from AutoCluster."/>
+                    <LineBreak/>
+                    <LineBreak/>
+                    <Run Text="Clustering can also be performed on data files that are entered manually, from any site (see"/>
+                    <Hyperlink Command="{Binding ShowManualDocumentationCommand}">instructions</Hyperlink><Run Text=")."/>
                 </TextBlock>
             </Grid>
         </Grid>
-</DataTemplate>
-    
+    </DataTemplate>
 </ResourceDictionary>

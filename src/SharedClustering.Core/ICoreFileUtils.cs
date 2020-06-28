@@ -12,6 +12,7 @@ namespace SharedClustering.Core
         bool ShouldRetry(string message, string action);
         bool MaybeRetry(Exception ex, string action);
         bool AskYesNo(string message, string action);
+        void OpenUrl(string url);
         void LogException(Exception ex, bool showMessage);
     }
 }

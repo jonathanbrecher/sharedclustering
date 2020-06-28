@@ -54,6 +54,9 @@ namespace AncestryDnaClustering.ViewModels
         public ICommand CheckEndogamyCommand { get; }
         public ICommand ContinueInClusterTabCommand { get; }
 
+        public ICommand ShowManualDocumentationCommand { get; } 
+            = new RelayCommand(() => FileUtils.OpenUrl("https://github.com/jonathanbrecher/sharedclustering/wiki/Clustering-without-downloading-data"));
+
         private void SelectedTestChanged(object sender, EventArgs e)
         {
             _matchCountsData = null;
