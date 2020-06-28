@@ -43,7 +43,7 @@ namespace AncestryDnaClustering.Models
             return null;
         }
 
-        public async Task UpdateNotesAsync(string guid, string matchFile, Throttle throttle, IProgressData progressData)
+        public async Task UpdateNotesAsync(string guid, string matchFile, bool isSignedIn, Throttle throttle, IProgressData progressData)
         {
             var originalTags = await _matchesRetriever.GetTagsAsync(guid, throttle);
             var originalTagIds = originalTags.Select(tag => tag.TagId).ToHashSet();
@@ -51,7 +51,12 @@ namespace AncestryDnaClustering.Models
             var notes = ReadMatchFile(matchFile, originalTags, progressData).ToList();
             var originalNumNotes = notes.Count;
 
-            await MaybeUpdateFilesAsync(notes);
+            await MaybeUpdateFilesAsync(notes, isSignedIn);
+
+            if (!isSignedIn)
+            {
+                return;
+            }
 
             notes = (await FilterModifiedNodesAsync(guid, notes, originalTagIds, throttle, progressData)).ToList();
 
@@ -253,7 +258,7 @@ namespace AncestryDnaClustering.Models
             }
         }
 
-        private async Task MaybeUpdateFilesAsync(List<NotesData> notes)
+        private async Task MaybeUpdateFilesAsync(List<NotesData> notes, bool isSignedIn)
         {
             var notesByIdGroups = notes.GroupBy(note => note.TestId).ToList();
 
@@ -270,7 +275,8 @@ namespace AncestryDnaClustering.Models
 
             var notesById = notesByIdGroups.ToDictionary(g => g.Key, g => g.First());
 
-            if (MessageBox.Show(
+            // Only ask about updating local files if also signed in. If not signed in, then updating the local files is the only option.
+            if (isSignedIn && MessageBox.Show(
                 "Do you also want to update data files that you already downloaded from Ancestry and have saved locally?",
                 "Also update local saved data files",
                 MessageBoxButton.YesNo,

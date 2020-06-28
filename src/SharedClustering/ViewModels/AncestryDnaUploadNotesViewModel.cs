@@ -4,7 +4,6 @@ using System.Windows.Input;
 using AncestryDnaClustering.Models;
 using AncestryDnaClustering.Properties;
 using AncestryDnaClustering.SavedData;
-using SharedClustering.Core;
 
 namespace AncestryDnaClustering.ViewModels
 {
@@ -24,21 +23,12 @@ namespace AncestryDnaClustering.ViewModels
             SignInViewModel = signInViewModel;
             _ancestryNotesUpdater = ancestryNotesUpdater;
 
-            SignInViewModel.OnSelectedTestChanged += SelectedTestChanged;
-
             UploadNotesCommand = new RelayCommand(async () => await UploadNotesAsync());
         }
 
         public ICommand UploadNotesCommand { get; }
 
-        private void SelectedTestChanged(object sender, EventArgs e)
-        {
-            CheckCanUploadNotes();
-        }
-
-        private bool CheckCanUploadNotes() => CanUploadNotes = SignInViewModel.Tests?.Count > 0;
-
-        private bool _canUploadNotes;
+        private bool _canUploadNotes = true;
         public bool CanUploadNotes
         {
             get => _canUploadNotes;
@@ -48,6 +38,11 @@ namespace AncestryDnaClustering.ViewModels
         private async Task UploadNotesAsync()
         {
             Settings.Default.Save();
+
+            if (!SignInViewModel.IsSignedIn && !FileUtils.CoreFileUtils.AskYesNo("You are not signed in to your Ancestry account, so you will only be able to update local files. Continue anyway?", "Not signed in"))
+            {
+                return;
+            }
 
             var fileName = _ancestryNotesUpdater.SelectFile("");
             if (string.IsNullOrEmpty(fileName))
@@ -59,7 +54,7 @@ namespace AncestryDnaClustering.ViewModels
             {
                 var throttle = new Throttle(50);
 
-                await _ancestryNotesUpdater.UpdateNotesAsync(SignInViewModel.SelectedTest.TestGuid, fileName, throttle, ProgressData);
+                await _ancestryNotesUpdater.UpdateNotesAsync(SignInViewModel.SelectedTest.TestGuid, fileName, SignInViewModel.IsSignedIn, throttle, ProgressData);
             }
             catch (Exception ex)
             {

@@ -473,7 +473,7 @@ namespace AncestryDnaClustering.ViewModels
             }
 
             // Don't warn if not loading data from an Excel file or a CSV file.
-            if (!new[] { "xlsx", "csv" }.Contains(Path.GetExtension(Filename).ToLower()))
+            if (!new[] { ".xlsx", ".csv" }.Contains(Path.GetExtension(Filename).ToLower()))
             {
                 return true;
             }

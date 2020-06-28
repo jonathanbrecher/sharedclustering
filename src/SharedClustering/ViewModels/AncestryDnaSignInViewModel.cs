@@ -90,9 +90,17 @@ namespace AncestryDnaClustering.ViewModels
                 if (SetFieldValue(ref _selectedTest, value, nameof(SelectedTest)))
                 {
                     Settings.Default.SelectedTestId = SelectedTest?.DisplayName;
+                    IsSignedIn = SelectedTest != null;
                     OnSelectedTestChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
+        }
+
+        private bool _isSignedIn;
+        public bool IsSignedIn
+        {
+            get => _isSignedIn;
+            set => SetFieldValue(ref _isSignedIn, value, nameof(IsSignedIn));
         }
 
         private async Task SignInAsync(PasswordBox password)
