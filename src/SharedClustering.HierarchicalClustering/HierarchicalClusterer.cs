@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Threading.Tasks;
 using SharedClustering.Core;
@@ -69,6 +70,33 @@ namespace SharedClustering.HierarchicalClustering
                 .Min();
 
             return lowestSharedCentimorgans;
+        }
+
+        // Clusterable matches are normally symmetric: If A is a shared match to B, then B should be a shared match to A.
+        // Matches under 20 cM at Ancestry are an exception, and can be excluded via the lowestClusterableCentimorgans parameter.
+        public static List<(IClusterableMatch, IClusterableMatch)> FindAsymmetricData(List<IClusterableMatch> matches, double lowestClusterableCentimorgans)
+        {
+            // Find all matches above lowestClusterableCentimorgans.
+            var clusterableMatchesByIndex = matches
+                .Where(match => match.Match.SharedCentimorgans >= lowestClusterableCentimorgans)
+                .ToDictionary(match => match.Index);
+
+            // Find the highest index (the index of the match with the lowest clusterable centimorgans).
+            var lowestClusterableMatchIndex = clusterableMatchesByIndex.Values
+                .Select(match => match.Index)
+                .DefaultIfEmpty(-1)
+                .Max();
+
+            // Generate pairs of each match and shared match.
+            var allMatchPairs = clusterableMatchesByIndex.Values
+                .SelectMany(match => match.Coords.Where(coord => coord <= lowestClusterableMatchIndex), (match, coord) => (match.Index, Coord: coord))
+                .ToHashSet();
+
+            // An asymmetric pair is a pair where (match, sharedMatch) is included in the data, but (sharedMatch, match) is not.
+            return allMatchPairs
+                .Where(pair => !allMatchPairs.Contains((pair.Coord, pair.Index)))
+                .Select(pair => (clusterableMatchesByIndex[pair.Index], clusterableMatchesByIndex[pair.Coord]))
+                .ToList();
         }
 
         public async Task<List<string>> ClusterAsync(

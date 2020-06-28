@@ -22,11 +22,15 @@ namespace SharedClustering.HierarchicalClustering
         {
             Distance = distance;
 
+            // If the distance between the two nodes is infinite, then the four pairwise distances between leaf noes will also all be infinite.
+            // Instead, calculate the distance so that the two leaf nodes with the largest number of shared coordinates have ths amallest distance.
+            var distanceBasedOnNumSharedCoords = double.IsPositiveInfinity(distance);
+
             // Calculate the pairwise distances between the two sides of each clustered node.
-            var distFirstFirst = GetDirectionalDistance(first.FirstLeaf, second.FirstLeaf, distance);
-            var distFirstSecond = second.FirstLeaf == second.SecondLeaf ? distFirstFirst : GetDirectionalDistance(first.FirstLeaf, second.SecondLeaf, distance);
-            var distSecondFirst = first.FirstLeaf == first.SecondLeaf ? distFirstFirst : GetDirectionalDistance(first.SecondLeaf, second.FirstLeaf, distance);
-            var distSecondSecond = second.FirstLeaf == second.SecondLeaf ? distSecondFirst : GetDirectionalDistance(first.SecondLeaf, second.SecondLeaf, distance);
+            var distFirstFirst = distanceBasedOnNumSharedCoords ? -first.FirstLeaf.NumSharedCoords(second.FirstLeaf) : first.FirstLeaf.DistanceTo(second.FirstLeaf);
+            var distFirstSecond = second.FirstLeaf == second.SecondLeaf ? distFirstFirst : distanceBasedOnNumSharedCoords ? -first.FirstLeaf.NumSharedCoords(second.SecondLeaf): first.FirstLeaf.DistanceTo(second.SecondLeaf);
+            var distSecondFirst = first.FirstLeaf == first.SecondLeaf ? distFirstFirst : distanceBasedOnNumSharedCoords ? -first.SecondLeaf.NumSharedCoords(second.FirstLeaf) : first.SecondLeaf.DistanceTo(second.FirstLeaf);
+            var distSecondSecond = second.FirstLeaf == second.SecondLeaf ? distSecondFirst : distanceBasedOnNumSharedCoords ? -first.SecondLeaf.NumSharedCoords(second.SecondLeaf) : first.SecondLeaf.DistanceTo(second.SecondLeaf);
 
             // Order the two nodes so that the minimum distance is between them.
             if (Math.Min(distFirstSecond, distSecondFirst) <= Math.Min(distFirstFirst, distSecondSecond))
@@ -62,9 +66,6 @@ namespace SharedClustering.HierarchicalClustering
             FirstLeaf = First.FirstLeaf;
             SecondLeaf = Second.SecondLeaf;
         }
-
-        private double GetDirectionalDistance(LeafNode leaf1, LeafNode leaf2, double distance)
-            => distance == double.PositiveInfinity ? leaf1.NumSharedCoords(leaf2) : leaf1.DistanceTo(leaf2);
 
         // Swap the First and Second nodes, and all of their subnodes.
         public override void Reverse()

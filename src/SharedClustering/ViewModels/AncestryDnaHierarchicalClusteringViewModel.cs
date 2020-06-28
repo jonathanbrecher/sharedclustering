@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -417,6 +418,11 @@ namespace AncestryDnaClustering.ViewModels
 
                 var lowestClusterableCentimorgans = HierarchicalClusterer.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
 
+                if (!ValidateSymmetry(HierarchicalClusterer.FindAsymmetricData(filteredMatches, lowestClusterableCentimorgans)))
+                {
+                    return;
+                }
+
                 var matrixBuilder = new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, MaxGrayPercentage / 100, ProgressData);
                 var clusterBuilder = new ClusterBuilder(MinClusterSize);
                 var clusterExtender = new ClusterExtender(clusterBuilder, MinClusterSize, matrixBuilder, ProgressData);
@@ -455,6 +461,43 @@ namespace AncestryDnaClustering.ViewModels
                 ProgressData.Reset(DateTime.Now - startTime, "Done");
                 UpdateCanProcessSavedData();
             }
+        }
+
+        // Provide a warning if there are asymmetric entries in the data.
+        private bool ValidateSymmetry(List<(IClusterableMatch Match, IClusterableMatch SharedMatch)> asymmetricPairs)
+        {
+            // Don't warn if there are no errors.
+            if (asymmetricPairs.Count == 0)
+            {
+                return true;
+            }
+
+            // Don't warn if not loading data from an Excel file or a CSV file.
+            if (!new[] { "xlsx", "csv" }.Contains(Path.GetExtension(Filename).ToLower()))
+            {
+                return true;
+            }
+
+            var truncatedAsymmetricPairs = asymmetricPairs.Take(5).ToList();
+
+            var message = "DNA match data is usually symmetric (if A is a shared match to B, then B is a shared match to A). "
+                + (asymmetricPairs.Count == 1 ? $"There is {asymmetricPairs.Count} asymmetric entry in this file" : $"There are {asymmetricPairs.Count} asymmetric entries in this file")
+                + (asymmetricPairs.Count > truncatedAsymmetricPairs.Count ? $", the first {truncatedAsymmetricPairs.Count} asymmetric pairs are" : "")
+                + ": "
+                + Environment.NewLine + Environment.NewLine
+                + "row / column"
+                + Environment.NewLine
+                + string.Join(Environment.NewLine, truncatedAsymmetricPairs.Select(pair => $"{pair.SharedMatch.Match.Name} / {pair.Match.Match.Name}"))
+                + Environment.NewLine + Environment.NewLine
+                + "This normally indicates an error in the data and may lead to inaccurate results."
+                + Environment.NewLine + Environment.NewLine
+                + "Continue anyway?";
+
+            return MessageBox.Show(
+                message,
+                "Asymmetric data",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) == MessageBoxResult.Yes;
         }
     }
 }
