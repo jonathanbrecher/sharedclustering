@@ -123,7 +123,7 @@ namespace SharedClustering.HierarchicalClustering
                 }).ToList();
 
             var additionalMatchesDistinct = primaryClustersTaskData.SelectMany(data => data.AdditionalMatches).Distinct().ToList();
-            if (additionalMatchesDistinct.Count < 0)
+            if (additionalMatchesDistinct.Count <= 0)
             {
                 _progressData.Reset();
                 return;
