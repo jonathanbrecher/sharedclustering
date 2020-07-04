@@ -162,10 +162,18 @@ namespace AncestryDnaClustering.SavedData
                         }
 
                         lastMatchFieldIndex = firstMatchFieldIndex;
-                        while (ws.Cells[1, lastMatchFieldIndex + 1].Value != null)
+                        do
                         {
-                            lastMatchFieldIndex++;
-                        }
+                            var nextMatchFieldCell = ws.Cells[1, lastMatchFieldIndex + 1];
+                            if (nextMatchFieldCell?.Value == null || (nextMatchFieldCell.GetValue<string>() == "0" && nextMatchFieldCell.Style?.Numberformat?.Format == "0;\\-0;;@"))
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                lastMatchFieldIndex++;
+                            }
+                        } while (true);
 
                         var maxRow = 1;
                         while ((totalSharedCmColumn > 0 && ws.Cells[maxRow + 1, totalSharedCmColumn].Value != null) 
@@ -294,6 +302,12 @@ namespace AncestryDnaClustering.SavedData
                             serialized.Matches.Add(resultMatch);
                             serialized.MatchIndexes[resultMatch.TestGuid] = matchIndex;
                             serialized.Icw[resultMatch.TestGuid] = icw;
+                        }
+
+                        // If there are only a few clustered indexes found, assume a data entry error with a stray '2' in the file somewhere.
+                        if (clusteredIndexes.Count < serialized.Matches.Count(match => match.SharedCentimorgans > 20) / 10)
+                        {
+                            clusteredIndexes.Clear();
                         }
 
                         if (clusteredIndexes.Count > 0)
