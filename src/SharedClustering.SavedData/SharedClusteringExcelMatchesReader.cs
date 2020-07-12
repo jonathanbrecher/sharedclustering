@@ -205,7 +205,7 @@ namespace AncestryDnaClustering.SavedData
                             {
                                 resultMatch.TestGuid = ws.Cells[row, identifierColumn].GetValue<string>();
                             }
-                            else
+                            if (string.IsNullOrEmpty(resultMatch.TestGuid))
                             {
                                 resultMatch.TestGuid = $"row_{row}";
                             }
