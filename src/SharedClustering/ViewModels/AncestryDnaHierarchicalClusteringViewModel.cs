@@ -418,7 +418,7 @@ namespace AncestryDnaClustering.ViewModels
 
                 var lowestClusterableCentimorgans = HierarchicalClusterer.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
 
-                if (!ValidateSymmetry(HierarchicalClusterer.FindAsymmetricData(filteredMatches, lowestClusterableCentimorgans)))
+                if (!ValidateSymmetry(HierarchicalClusterer.FindAsymmetricData(clusterableMatches, lowestClusterableCentimorgans)))
                 {
                     return;
                 }

@@ -77,8 +77,10 @@ namespace SharedClustering.HierarchicalClustering
         public static List<(IClusterableMatch, IClusterableMatch)> FindAsymmetricData(List<IClusterableMatch> matches, double lowestClusterableCentimorgans)
         {
             // Find all matches above lowestClusterableCentimorgans.
+            // This test intentionally ignores matches with exactly lowestClusterableCentimorgans. 
+            // Ancestry rounds their centimorgan values, so some matches reported as 20 cM are clusterable, while some are not.
             var clusterableMatchesByIndex = matches
-                .Where(match => match.Match.SharedCentimorgans >= lowestClusterableCentimorgans)
+                .Where(match => match.Match.SharedCentimorgans > lowestClusterableCentimorgans)
                 .ToDictionary(match => match.Index);
 
             // Find the highest index (the index of the match with the lowest clusterable centimorgans).
@@ -94,7 +96,7 @@ namespace SharedClustering.HierarchicalClustering
 
             // An asymmetric pair is a pair where (match, sharedMatch) is included in the data, but (sharedMatch, match) is not.
             return allMatchPairs
-                .Where(pair => !allMatchPairs.Contains((pair.Coord, pair.Index)))
+                .Where(pair => !allMatchPairs.Contains((pair.Coord, pair.Index)) && clusterableMatchesByIndex.ContainsKey(pair.Index) && clusterableMatchesByIndex.ContainsKey(pair.Coord))
                 .Select(pair => (clusterableMatchesByIndex[pair.Index], clusterableMatchesByIndex[pair.Coord]))
                 .ToList();
         }
