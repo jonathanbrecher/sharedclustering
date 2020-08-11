@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace SharedClustering.Core
 {
@@ -15,11 +16,14 @@ namespace SharedClustering.Core
 
         private Action<string, string> _reportErrorFunc;
 
-        public CoreFileUtils(Func<string, string, bool> shouldRetryFunc, Func<string, string, bool> askYesNoFunc, Action<string, string> reportErrorFunc)
+        private string _version;
+
+        public CoreFileUtils(Func<string, string, bool> shouldRetryFunc, Func<string, string, bool> askYesNoFunc, Action<string, string> reportErrorFunc, string version)
         {
             _shouldRetryFunc = shouldRetryFunc;
             _askYesNoFunc = askYesNoFunc;
             _reportErrorFunc = reportErrorFunc;
+            _version = version;
         }
 
         public void WriteAllLines(string fileName, string lines, bool append, bool doThrow)
@@ -38,7 +42,7 @@ namespace SharedClustering.Core
                     }
                     catch (Exception) { }
 
-                    File.WriteAllText(fileName, prefix + lines);
+                    File.WriteAllText(fileName, prefix + $"Version {_version}" + Environment.NewLine + lines);
                     return;
                 }
                 catch (Exception ex)
@@ -64,7 +68,7 @@ namespace SharedClustering.Core
             {
                 try
                 {
-                    File.WriteAllLines(fileName, lines);
+                    File.WriteAllLines(fileName, new[] { $"Version {_version}" }.Concat(lines));
                     return;
                 }
                 catch (Exception ex)
