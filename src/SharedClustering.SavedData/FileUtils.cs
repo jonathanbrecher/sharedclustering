@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Deployment.Application;
 using System.IO;
 using System.Windows;
 using Newtonsoft.Json;
@@ -28,7 +29,9 @@ namespace AncestryDnaClustering.SavedData
             MessageBox.Show(errorMessage, title, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
-        public static ICoreFileUtils CoreFileUtils { get; } = new CoreFileUtils(ShouldRetryFunc, AskYesNo, ReportErrorFunc);
+        private static string _version => ApplicationDeployment.IsNetworkDeployed ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString() : "";
+        
+        public static ICoreFileUtils CoreFileUtils { get; } = new CoreFileUtils(ShouldRetryFunc, AskYesNo, ReportErrorFunc, _version);
 
         public static void LogException(Exception ex, bool showMessage) => CoreFileUtils.LogException(ex, showMessage);
         public static string AddSuffixToFilename(string fileName, string suffix) => CoreFileUtils.AddSuffixToFilename(fileName, suffix);

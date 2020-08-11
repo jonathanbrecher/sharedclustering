@@ -39,7 +39,7 @@ namespace SharedClustering.Sample
             var suppressProgress = new SuppressProgress();
 
             // Define some file utilities, with no retries or error reporting.
-            var fileUtils = new CoreFileUtils((a, b) => false, (a, b) => false, (message, title) => { });
+            var fileUtils = new CoreFileUtils((a, b) => false, (a, b) => false, (message, title) => { }, "");
 
 
 
