@@ -1,7 +1,8 @@
 ﻿using SharedClustering.Core;
 using SharedClustering.Core.Anonymizers;
+using SharedClustering.Export;
+using SharedClustering.Export.CorrelationWriters;
 using SharedClustering.HierarchicalClustering;
-using SharedClustering.HierarchicalClustering.CorrelationWriters;
 using SharedClustering.HierarchicalClustering.Distance;
 using SharedClustering.HierarchicalClustering.MatrixBuilders;
 using SharedClustering.HierarchicalClustering.PrimaryClusterFinders;
@@ -39,7 +40,7 @@ namespace SharedClustering.Sample
             var suppressProgress = new SuppressProgress();
 
             // Define some file utilities, with no retries or error reporting.
-            var fileUtils = new CoreFileUtils((a, b) => false, (a, b) => false, (message, title) => { }, "");
+            var fileUtils = new CoreFileUtils((a, b) => false, (a, b) => false, (message, title) => { });
 
 
 
@@ -100,12 +101,13 @@ namespace SharedClustering.Sample
             }
 
             // Ancestry doesn't report shared matches below 20 cM. This number could be lowered if generating clusters from other sites.
-            var lowestClusterableCentimorgans = HierarchicalClusterer.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
+            var diagramPreparer = new DiagramPreparer(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
 
             // Perform the actual clustering.
-            var matrixBuilder = new AppearanceWeightedMatrixBuilder(lowestClusterableCentimorgans, maxGrayPercentage, suppressProgress);
+            var matrixBuilder = new AppearanceWeightedMatrixBuilder(diagramPreparer.LowestClusterableCentimorgans, maxGrayPercentage, suppressProgress);
             var clusterBuilder = new ClusterBuilder(minClusterSize);
             var clusterExtender = new ClusterExtender(clusterBuilder, minClusterSize, matrixBuilder, suppressProgress);
+            var correlationWriter = new ExcelCorrelationWriter(outputFileName, tags, worksheetName, testTakerTestId, ancestryHostName, minClusterSize, maxMatchesPerClusterFile, fileUtils, suppressProgress);
             var hierarchicalClustering = new HierarchicalClusterer(
                 clusterBuilder,
                 clusterExtender,
@@ -113,11 +115,14 @@ namespace SharedClustering.Sample
                 _ => new OverlapWeightedEuclideanDistanceSquared(),
                 matrixBuilder,
                 new HalfMatchPrimaryClusterFinder(),
-                new ExcelCorrelationWriter(outputFileName, tags, worksheetName, testTakerTestId, ancestryHostName, minClusterSize, maxMatchesPerClusterFile, lowestClusterableCentimorgans, fileUtils, suppressProgress),
+                correlationWriter.MaxColumns,
                 fileUtils.AskYesNo,
                 suppressProgress);
 
-            var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, minCentimorgansToCluster);
+            var lowestClusterableCentimorgans = diagramPreparer.LowestClusterableCentimorgans;
+            var nodes = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, minCentimorgansToCluster);
+            var clusterAnalyer = new ClusterAnalyzer(nodes, matchesByIndex, new GrowthBasedPrimaryClusterFinder(minClusterSize), lowestClusterableCentimorgans);
+            var files = await correlationWriter.OutputCorrelationAsync(clusterAnalyer);
         }
 
         /// <summary>

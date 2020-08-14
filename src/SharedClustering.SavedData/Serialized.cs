@@ -1,9 +1,8 @@
 ﻿using SharedClustering.Core;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AncestryDnaClustering.SavedData
+namespace SharedClustering.SavedData
 {
     public class Serialized
     {

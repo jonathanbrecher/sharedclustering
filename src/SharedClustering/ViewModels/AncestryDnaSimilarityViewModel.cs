@@ -1,18 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Win32;
+using SharedClustering.Export.Similarity;
+using SharedClustering.SavedData;
+using SharedClustering.Models;
+using SharedClustering.Properties;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using AncestryDnaClustering.Models.SimilarityFinding;
-using AncestryDnaClustering.Properties;
-using Microsoft.Win32;
 using System.Windows;
-using AncestryDnaClustering.Models;
-using AncestryDnaClustering.SavedData;
+using System.Windows.Input;
 
-namespace AncestryDnaClustering.ViewModels
+namespace SharedClustering.ViewModels
 {
     /// <summary>
     /// A ViewModel that manages configuration for generating clusters from already-downloaded DNA data.
@@ -242,7 +241,7 @@ namespace AncestryDnaClustering.ViewModels
                 clusterableMatches = clusterableMatches.Where(match => match.Match.SharedCentimorgans >= MinCentimorgansToCompareSimilarity).ToList();
 
                 var SimilarityFinder = new SimilarityFinder(MinClusterSizeSimilarity, ProgressData);
-                Func<string, ISimilarityWriter> getSimilarityWriter = fileNameSuffix => new ExcelSimilarityWriter(testTakerTestId, AncestryHostName, clusterableMatches, tags, SimilarityFilename, fileNameSuffix);
+                Func<string, ISimilarityWriter> getSimilarityWriter = fileNameSuffix => new ExcelSimilarityWriter(testTakerTestId, AncestryHostName, clusterableMatches, tags, SimilarityFilename, fileNameSuffix, FileUtils.CoreFileUtils);
 
                 if (!string.IsNullOrEmpty(SimilarityBasisIds))
                 {

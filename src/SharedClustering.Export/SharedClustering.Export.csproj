@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{75A3CA93-3DB9-4295-BBE5-05EDAC706F7D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SharedClustering.Export</RootNamespace>
+    <AssemblyName>SharedClustering.Export</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EPPlus, Version=4.5.2.1, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EPPlus.4.5.2.1\lib\net40\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ColumnWriters\ClusterNumbersWriter.cs" />
+    <Compile Include="ColumnWriters\ClusterNumberWriter.cs" />
+    <Compile Include="ColumnWriters\ColumnWritersCollection.cs" />
+    <Compile Include="ColumnWriters\CommonAncestorsWriter.cs" />
+    <Compile Include="ColumnWriters\CorrelatedClustersWriter.cs" />
+    <Compile Include="ColumnWriters\CorrelatedOverlappingClustersWriter.cs" />
+    <Compile Include="ColumnWriters\CountWriter.cs" />
+    <Compile Include="ColumnWriters\GenericObjectWriter.cs" />
+    <Compile Include="ColumnWriters\IColumnWriter.cs" />
+    <Compile Include="ColumnWriters\LinkWriter.cs" />
+    <Compile Include="ColumnWriters\LongestBlockWriter.cs" />
+    <Compile Include="ColumnWriters\NameWriter.cs" />
+    <Compile Include="ColumnWriters\NoteWriter.cs" />
+    <Compile Include="ColumnWriters\SharedAncestorHintWriter.cs" />
+    <Compile Include="ColumnWriters\SharedCentimorgansWriter.cs" />
+    <Compile Include="ColumnWriters\SharedSegmentsWriter.cs" />
+    <Compile Include="ColumnWriters\StarredWriter.cs" />
+    <Compile Include="ColumnWriters\TagWriter.cs" />
+    <Compile Include="ColumnWriters\TestIdWriter.cs" />
+    <Compile Include="ColumnWriters\TreeSizeWriter.cs" />
+    <Compile Include="ColumnWriters\TreeTypeWriter.cs" />
+    <Compile Include="ColumnWriters\TreeUrlWriter.cs" />
+    <Compile Include="CorrelationWriters\DiagramPreparer.cs" />
+    <Compile Include="CorrelationWriters\ExcelCorrelationWriter.cs" />
+    <Compile Include="CorrelationWriters\ExcelOutputWriter.cs" />
+    <Compile Include="CorrelationWriters\ExcelPackageExtensions.cs" />
+    <Compile Include="CorrelationWriters\ICorrelationWriter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Similarity\ExcelSimilarityWriter.cs" />
+    <Compile Include="Similarity\ISimilarityWriter.cs" />
+    <Compile Include="Similarity\SimilarityFinder.cs" />
+    <Compile Include="Similarity\TextSimilarityWriter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SharedClustering.Core\SharedClustering.Core.csproj">
+      <Project>{DD6B84DD-B15B-40F1-96D3-4128E7690DCB}</Project>
+      <Name>SharedClustering.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SharedClustering.HierarchicalClustering\SharedClustering.HierarchicalClustering.csproj">
+      <Project>{47E211C5-80F4-4605-8360-9519BFE0D091}</Project>
+      <Name>SharedClustering.HierarchicalClustering</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

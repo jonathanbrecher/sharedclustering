@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace AncestryDnaClustering.Views
+namespace SharedClustering.Views
 {
     /// <summary>
     /// Display a value as percentage if non-zero, blank if zero

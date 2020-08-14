@@ -1,5 +1,4 @@
-﻿using AncestryDnaClustering.Models;
-using AncestryDnaClustering.SavedData;
+﻿using SharedClustering.SavedData;
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -8,7 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 
-namespace AncestryDnaClustering
+namespace SharedClustering
 {
     public partial class AncestryWebsiteBrowser : Window
     {

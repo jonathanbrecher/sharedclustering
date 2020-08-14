@@ -1,6 +1,6 @@
-﻿using System;
+﻿using SharedClustering.Core;
+using System;
 using System.Collections.Generic;
-using SharedClustering.Core;
 
 namespace SharedClustering.HierarchicalClustering
 {

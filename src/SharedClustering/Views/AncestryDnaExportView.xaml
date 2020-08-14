@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:viewmodels="clr-namespace:AncestryDnaClustering.ViewModels"
-                    xmlns:views="clr-namespace:AncestryDnaClustering.Views">
+                    xmlns:viewmodels="clr-namespace:SharedClustering.ViewModels"
+                    xmlns:views="clr-namespace:SharedClustering.Views">
 
     <DataTemplate DataType="{x:Type viewmodels:AncestryDnaExportViewModel}">
         <StackPanel Orientation="Vertical">

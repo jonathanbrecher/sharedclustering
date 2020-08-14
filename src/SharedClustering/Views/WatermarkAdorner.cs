@@ -4,7 +4,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace AncestryDnaClustering.Views
+namespace SharedClustering.Views
 {
     /// <summary>
     /// Adorner for the watermark

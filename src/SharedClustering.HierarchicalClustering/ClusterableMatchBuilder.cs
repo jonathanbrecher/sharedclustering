@@ -1,9 +1,9 @@
-﻿using System;
+﻿using SharedClustering.Core;
+using SharedClustering.Core.Anonymizers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SharedClustering.Core;
-using SharedClustering.Core.Anonymizers;
 
 namespace SharedClustering.HierarchicalClustering
 {

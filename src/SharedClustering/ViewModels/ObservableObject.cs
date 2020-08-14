@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace AncestryDnaClustering.ViewModels
+namespace SharedClustering.ViewModels
 {
     public class ObservableObject : INotifyPropertyChanged
     {

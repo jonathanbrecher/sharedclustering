@@ -1,4 +1,15 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using SharedClustering.Core.Anonymizers;
+using SharedClustering.Export;
+using SharedClustering.Export.CorrelationWriters;
+using SharedClustering.HierarchicalClustering;
+using SharedClustering.HierarchicalClustering.Distance;
+using SharedClustering.HierarchicalClustering.MatrixBuilders;
+using SharedClustering.HierarchicalClustering.PrimaryClusterFinders;
+using SharedClustering.Models;
+using SharedClustering.Properties;
+using SharedClustering.SavedData;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,18 +17,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using AncestryDnaClustering.Models;
-using AncestryDnaClustering.Properties;
-using AncestryDnaClustering.SavedData;
-using Microsoft.Win32;
-using SharedClustering.Core.Anonymizers;
-using SharedClustering.HierarchicalClustering;
-using SharedClustering.HierarchicalClustering.CorrelationWriters;
-using SharedClustering.HierarchicalClustering.Distance;
-using SharedClustering.HierarchicalClustering.MatrixBuilders;
-using SharedClustering.HierarchicalClustering.PrimaryClusterFinders;
 
-namespace AncestryDnaClustering.ViewModels
+namespace SharedClustering.ViewModels
 {
     /// <summary>
     /// A ViewModel that manages configuration for generating clusters from already-downloaded DNA data.
@@ -416,7 +417,8 @@ namespace AncestryDnaClustering.ViewModels
                     return;
                 }
 
-                var lowestClusterableCentimorgans = HierarchicalClusterer.GetLowestClusterableCentimorgans(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
+                var diagramPreparer = new DiagramPreparer(clusterableCoords, filteredMatches, matchesByIndex, testIdsToFilter);
+                var lowestClusterableCentimorgans = diagramPreparer.LowestClusterableCentimorgans;
 
                 if (!ValidateSymmetry(HierarchicalClusterer.FindAsymmetricData(clusterableMatches, lowestClusterableCentimorgans)))
                 {
@@ -428,6 +430,8 @@ namespace AncestryDnaClustering.ViewModels
                 var clusterExtender = new ClusterExtender(clusterBuilder, MinClusterSize, matrixBuilder, ProgressData);
                 var worksheetName = AnonymizeOutput ? "heatmap - anonymized" : "heatmap";
 
+                var correlationWriter = new ExcelCorrelationWriter(CorrelationFilename, tags, worksheetName, testTakerTestId, AncestryHostName, MinClusterSize, MaxMatchesPerClusterFile, FileUtils.CoreFileUtils, ProgressData);
+
                 var hierarchicalClustering = new HierarchicalClusterer(
                     clusterBuilder,
                     clusterExtender,
@@ -435,7 +439,7 @@ namespace AncestryDnaClustering.ViewModels
                     _ => new OverlapWeightedEuclideanDistanceSquared(),
                     matrixBuilder,
                     new HalfMatchPrimaryClusterFinder(),
-                    new ExcelCorrelationWriter(CorrelationFilename, tags, worksheetName, testTakerTestId, AncestryHostName, _minClusterSize, MaxMatchesPerClusterFile, lowestClusterableCentimorgans, FileUtils.CoreFileUtils, ProgressData),
+                    correlationWriter.MaxColumns,
                     FileUtils.CoreFileUtils.AskYesNo,
                     ProgressData);
 
@@ -446,7 +450,12 @@ namespace AncestryDnaClustering.ViewModels
                     return;
                 }
 
-                var files = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
+                var nodes = await hierarchicalClustering.ClusterAsync(clusterableMatches, matchesByIndex, testIdsToFilter, lowestClusterableCentimorgans, MinCentimorgansToCluster);
+
+                var clusterAnalyer = new ClusterAnalyzer(nodes, matchesByIndex, new GrowthBasedPrimaryClusterFinder(_minClusterSize), lowestClusterableCentimorgans);
+
+                // Save the final cluster diagram to the desired output file.
+                var files = await correlationWriter.OutputCorrelationAsync(clusterAnalyer);
 
                 if (OpenClusterFileWhenComplete)
                 {

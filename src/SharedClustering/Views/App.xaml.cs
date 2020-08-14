@@ -1,12 +1,11 @@
-﻿using System;
+﻿using SharedClustering.SavedData;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
-using AncestryDnaClustering.Models;
-using AncestryDnaClustering.SavedData;
 
-namespace AncestryDnaClustering
+namespace SharedClustering
 {
     /// <summary>
     /// Interaction logic for App.xaml

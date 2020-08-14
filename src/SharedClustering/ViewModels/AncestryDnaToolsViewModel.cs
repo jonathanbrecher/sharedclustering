@@ -1,16 +1,16 @@
-﻿using System;
+﻿using SharedClustering.Core.Anonymizers;
+using SharedClustering.Models;
+using SharedClustering.Properties;
+using SharedClustering.SavedData;
+using System;
 using System.Collections.Generic;
 using System.Deployment.Application;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Windows.Input;
-using AncestryDnaClustering.Models;
-using AncestryDnaClustering.Properties;
-using AncestryDnaClustering.SavedData;
-using SharedClustering.Core.Anonymizers;
 
-namespace AncestryDnaClustering.ViewModels
+namespace SharedClustering.ViewModels
 {
     /// <summary>
     /// Main ViewModel for the application.

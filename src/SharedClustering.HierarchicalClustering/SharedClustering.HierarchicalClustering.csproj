@@ -41,32 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClusterableMatch.cs" />
+    <Compile Include="ClusterAnalyzer.cs" />
     <Compile Include="IClusterExtender.cs" />
     <Compile Include="IClusterBuilder.cs" />
     <Compile Include="ClusterNode.cs" />
-    <Compile Include="ColumnWriters\ClusterNumberWriter.cs" />
-    <Compile Include="ColumnWriters\ColumnWritersCollection.cs" />
-    <Compile Include="ColumnWriters\CommonAncestorsWriter.cs" />
-    <Compile Include="ColumnWriters\CorrelatedClustersWriter.cs" />
-    <Compile Include="ColumnWriters\CountWriter.cs" />
-    <Compile Include="ColumnWriters\GenericObjectWriter.cs" />
-    <Compile Include="ColumnWriters\IColumnWriter.cs" />
-    <Compile Include="ColumnWriters\LinkWriter.cs" />
-    <Compile Include="ColumnWriters\LongestBlockWriter.cs" />
-    <Compile Include="ColumnWriters\NameWriter.cs" />
-    <Compile Include="ColumnWriters\NoteWriter.cs" />
-    <Compile Include="ColumnWriters\SharedAncestorHintWriter.cs" />
-    <Compile Include="ColumnWriters\SharedCentimorgansWriter.cs" />
-    <Compile Include="ColumnWriters\SharedSegmentsWriter.cs" />
-    <Compile Include="ColumnWriters\StarredWriter.cs" />
-    <Compile Include="ColumnWriters\TagWriter.cs" />
-    <Compile Include="ColumnWriters\TestIdWriter.cs" />
-    <Compile Include="ColumnWriters\TreeSizeWriter.cs" />
-    <Compile Include="ColumnWriters\TreeTypeWriter.cs" />
-    <Compile Include="ColumnWriters\TreeUrlWriter.cs" />
-    <Compile Include="CorrelationWriters\ExcelCorrelationWriter.cs" />
-    <Compile Include="CorrelationWriters\ExcelOutputWriter.cs" />
-    <Compile Include="CorrelationWriters\ICorrelationWriter.cs" />
     <Compile Include="Distance\Antiproximity.cs" />
     <Compile Include="Distance\Correlation.cs" />
     <Compile Include="Distance\EuclideanDistanceSquared.cs" />
@@ -75,7 +53,6 @@
     <Compile Include="Distance\OverlapAndCloseWeightedEuclideanDistanceSquared.cs" />
     <Compile Include="Distance\OverlapWeightedEuclideanDistanceSquared.cs" />
     <Compile Include="Distance\StrengthWeightedEuclideanDistanceSquared.cs" />
-    <Compile Include="CorrelationWriters\ExcelPackageExtensions.cs" />
     <Compile Include="ClusterExtender.cs" />
     <Compile Include="ClusterBuilder.cs" />
     <Compile Include="LargeClusterExcluder.cs" />
@@ -88,17 +65,14 @@
     <Compile Include="MatrixBuilders\IMatrixBuilder.cs" />
     <Compile Include="Neighbor.cs" />
     <Compile Include="Node.cs" />
+    <Compile Include="PrimaryClusterFinders\MatchMatrix.cs" />
+    <Compile Include="PrimaryClusterFinders\GrowthBasedPrimaryClusterFinder.cs" />
     <Compile Include="PrimaryClusterFinders\HalfMatchPrimaryClusterFinder.cs" />
     <Compile Include="PrimaryClusterFinders\IPrimaryClusterFinder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
     <AppDesigner Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="EPPlus">
-      <Version>4.5.2.1</Version>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SharedClustering.Core\SharedClustering.Core.csproj">

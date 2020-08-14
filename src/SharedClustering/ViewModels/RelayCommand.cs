@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace AncestryDnaClustering.ViewModels
+namespace SharedClustering.ViewModels
 {
     public class RelayCommand : RelayCommand<object>
     {

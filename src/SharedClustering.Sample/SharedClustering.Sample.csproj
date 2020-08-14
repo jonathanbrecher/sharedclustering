@@ -49,6 +49,10 @@
       <Project>{dd6b84dd-b15b-40f1-96d3-4128e7690dcb}</Project>
       <Name>SharedClustering.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SharedClustering.Export\SharedClustering.Export.csproj">
+      <Project>{75A3CA93-3DB9-4295-BBE5-05EDAC706F7D}</Project>
+      <Name>SharedClustering.Export</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SharedClustering.HierarchicalClustering\SharedClustering.HierarchicalClustering.csproj">
       <Project>{47e211c5-80f4-4605-8360-9519bfe0d091}</Project>
       <Name>SharedClustering.HierarchicalClustering</Name>

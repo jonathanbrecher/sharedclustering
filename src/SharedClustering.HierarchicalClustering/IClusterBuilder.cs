@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using SharedClustering.Core;
+﻿using SharedClustering.Core;
 using SharedClustering.HierarchicalClustering.Distance;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SharedClustering.HierarchicalClustering
 {

@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using SharedClustering.Core;
+﻿using SharedClustering.Core;
 using SharedClustering.Core.Anonymizers;
 using SharedClustering.HierarchicalClustering;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace AncestryDnaClustering.Models
+namespace SharedClustering.Models
 {
     public interface IMatchesLoader
     {

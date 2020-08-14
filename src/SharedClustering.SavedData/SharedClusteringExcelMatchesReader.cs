@@ -1,13 +1,13 @@
-﻿using System;
+﻿using OfficeOpenXml;
+using SharedClustering.Core;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using OfficeOpenXml;
-using SharedClustering.Core;
 
-namespace AncestryDnaClustering.SavedData
+namespace SharedClustering.SavedData
 {
     /// <summary>
     /// Read cluster diagrams saved by Shared Clustering.

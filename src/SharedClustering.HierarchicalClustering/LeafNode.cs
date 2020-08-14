@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using SharedClustering.HierarchicalClustering.Distance;
+using System.Collections.Generic;
 using System.Linq;
-using SharedClustering.HierarchicalClustering.Distance;
 
 namespace SharedClustering.HierarchicalClustering
 {

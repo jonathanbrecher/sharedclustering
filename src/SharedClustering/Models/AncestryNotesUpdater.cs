@@ -1,9 +1,9 @@
-﻿using AncestryDnaClustering.Properties;
-using AncestryDnaClustering.SavedData;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using OfficeOpenXml;
 using SharedClustering.Core;
-using SharedClustering.HierarchicalClustering;
+using SharedClustering.Export.CorrelationWriters;
+using SharedClustering.Properties;
+using SharedClustering.SavedData;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace AncestryDnaClustering.Models
+namespace SharedClustering.Models
 {
     internal class AncestryNotesUpdater
     {

@@ -1,14 +1,14 @@
-﻿using System;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
+using SharedClustering.Core;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using CsvHelper;
-using CsvHelper.Configuration;
-using SharedClustering.Core;
 
-namespace AncestryDnaClustering.SavedData
+namespace SharedClustering.SavedData
 {
     /// <summary>
     /// Read files saved by AutoCluster.

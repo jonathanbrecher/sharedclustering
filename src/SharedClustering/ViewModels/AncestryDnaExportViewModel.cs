@@ -1,19 +1,19 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using SharedClustering.Core;
+using SharedClustering.Export.CorrelationWriters;
+using SharedClustering.HierarchicalClustering;
+using SharedClustering.Models;
+using SharedClustering.Properties;
+using SharedClustering.SavedData;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using AncestryDnaClustering.Models;
-using AncestryDnaClustering.Properties;
-using AncestryDnaClustering.SavedData;
-using Microsoft.Win32;
-using SharedClustering.Core;
-using SharedClustering.HierarchicalClustering;
-using SharedClustering.HierarchicalClustering.CorrelationWriters;
 
-namespace AncestryDnaClustering.ViewModels
+namespace SharedClustering.ViewModels
 {
     /// <summary>
     /// A ViewModel that manages configuration for generating clusters from already-downloaded DNA data.

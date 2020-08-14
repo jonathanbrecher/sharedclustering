@@ -1,14 +1,14 @@
-﻿using System;
+﻿using SharedClustering.Core;
+using SharedClustering.HierarchicalClustering;
+using SharedClustering.Models;
+using SharedClustering.Properties;
+using SharedClustering.SavedData;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AncestryDnaClustering.Models;
-using AncestryDnaClustering.Properties;
-using AncestryDnaClustering.SavedData;
-using SharedClustering.Core;
-using SharedClustering.HierarchicalClustering;
 
-namespace AncestryDnaClustering.ViewModels
+namespace SharedClustering.ViewModels
 {
     internal class AncestrySavedDataExtender
     {

@@ -1,10 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿using SharedClustering.Core;
+using SharedClustering.HierarchicalClustering.Distance;
+using SharedClustering.HierarchicalClustering.MatrixBuilders;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SharedClustering.Core;
-using SharedClustering.HierarchicalClustering.Distance;
-using SharedClustering.HierarchicalClustering.MatrixBuilders;
 
 namespace SharedClustering.HierarchicalClustering
 {

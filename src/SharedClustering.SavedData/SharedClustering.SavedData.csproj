@@ -39,7 +39,6 @@
   <ItemGroup>
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
-    <Reference Include="System.Deployment" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CsvHelper">

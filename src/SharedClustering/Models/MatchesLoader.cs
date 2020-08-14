@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Win32;
+using SharedClustering.Core;
+using SharedClustering.Core.Anonymizers;
+using SharedClustering.HierarchicalClustering;
+using SharedClustering.Properties;
+using SharedClustering.SavedData;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using AncestryDnaClustering.Properties;
-using AncestryDnaClustering.SavedData;
-using Microsoft.Win32;
-using SharedClustering.Core;
-using SharedClustering.Core.Anonymizers;
-using SharedClustering.HierarchicalClustering;
 
-namespace AncestryDnaClustering.Models
+namespace SharedClustering.Models
 {
     public class MatchesLoader : IMatchesLoader
     {

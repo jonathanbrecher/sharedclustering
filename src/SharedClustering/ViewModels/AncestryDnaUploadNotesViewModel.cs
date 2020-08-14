@@ -1,11 +1,11 @@
-﻿using System;
+﻿using SharedClustering.Models;
+using SharedClustering.Properties;
+using SharedClustering.SavedData;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using AncestryDnaClustering.Models;
-using AncestryDnaClustering.Properties;
-using AncestryDnaClustering.SavedData;
 
-namespace AncestryDnaClustering.ViewModels
+namespace SharedClustering.ViewModels
 {
     internal class AncestryDnaUploadNotesViewModel : ObservableObject
     {

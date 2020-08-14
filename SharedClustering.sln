@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.Sample", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.SavedData", "src\SharedClustering.SavedData\SharedClustering.SavedData.csproj", "{785430DC-292A-4B59-8674-611F97499101}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.HierarchicalClustering.UnitTests", "src\SharedClustering.HierarchicalClustering.UnitTests\SharedClustering.HierarchicalClustering.UnitTests.csproj", "{BFC98F23-B7EE-4D86-8780-F6FD3A227F73}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedClustering.Export", "src\SharedClustering.Export\SharedClustering.Export.csproj", "{75A3CA93-3DB9-4295-BBE5-05EDAC706F7D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{785430DC-292A-4B59-8674-611F97499101}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{785430DC-292A-4B59-8674-611F97499101}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{785430DC-292A-4B59-8674-611F97499101}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFC98F23-B7EE-4D86-8780-F6FD3A227F73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFC98F23-B7EE-4D86-8780-F6FD3A227F73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFC98F23-B7EE-4D86-8780-F6FD3A227F73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFC98F23-B7EE-4D86-8780-F6FD3A227F73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75A3CA93-3DB9-4295-BBE5-05EDAC706F7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75A3CA93-3DB9-4295-BBE5-05EDAC706F7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75A3CA93-3DB9-4295-BBE5-05EDAC706F7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75A3CA93-3DB9-4295-BBE5-05EDAC706F7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

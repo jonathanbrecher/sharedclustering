@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace AncestryDnaClustering.Models
+namespace SharedClustering.Models
 {
     internal class AncestryTestsRetriever
     {

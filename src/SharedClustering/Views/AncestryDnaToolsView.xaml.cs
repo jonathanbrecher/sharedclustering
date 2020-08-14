@@ -1,7 +1,7 @@
-﻿using AncestryDnaClustering.ViewModels;
+﻿using SharedClustering.ViewModels;
 using System.Windows;
 
-namespace AncestryDnaClustering
+namespace SharedClustering
 {
     /// <summary>
     /// Interaction logic for AncestryDnaClusteringView.xaml

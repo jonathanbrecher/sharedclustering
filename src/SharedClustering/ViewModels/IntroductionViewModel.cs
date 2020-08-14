@@ -1,11 +1,7 @@
-﻿using AncestryDnaClustering.SavedData;
-using SharedClustering.Core;
-using System;
-using System.Diagnostics;
-using System.Windows;
+﻿using SharedClustering.SavedData;
 using System.Windows.Input;
 
-namespace AncestryDnaClustering.ViewModels
+namespace SharedClustering.ViewModels
 {
     // A very simple ViewModel that implements a comment to show documentation from an online source.
     public class IntroductionViewModel : ObservableObject

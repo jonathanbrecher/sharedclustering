@@ -1,8 +1,8 @@
-﻿using System;
+﻿using SharedClustering.Properties;
+using System;
 using System.IO;
-using AncestryDnaClustering.Properties;
 
-namespace AncestryDnaClustering.Models
+namespace SharedClustering.Models
 {
     public static class DirectoryUtils
     {

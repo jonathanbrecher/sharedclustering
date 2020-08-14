@@ -1,4 +1,4 @@
-﻿namespace AncestryDnaClustering.Models
+﻿namespace SharedClustering.Models
 {
     public class AncestryDnaClusteringModel
     {

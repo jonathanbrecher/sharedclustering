@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
-namespace AncestryDnaClustering.Models
+namespace SharedClustering.Models
 {
     internal class EndogamyProber
     {

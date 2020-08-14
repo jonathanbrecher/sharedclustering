@@ -1,8 +1,8 @@
-﻿using System.IO;
+﻿using SharedClustering.Core;
+using System.IO;
 using System.Threading.Tasks;
-using SharedClustering.Core;
 
-namespace AncestryDnaClustering.SavedData
+namespace SharedClustering.SavedData
 {
     /// <summary>
     /// Read files saved natively by Shared Clustering.

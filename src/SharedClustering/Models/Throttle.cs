@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AncestryDnaClustering.Models
+namespace SharedClustering.Models
 {
     public class Throttle
     {

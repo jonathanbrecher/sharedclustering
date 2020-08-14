@@ -1,4 +1,4 @@
-﻿namespace AncestryDnaClustering.SavedData
+﻿namespace SharedClustering.SavedData
 {
     public interface ISerializedMatchesWriter
     {

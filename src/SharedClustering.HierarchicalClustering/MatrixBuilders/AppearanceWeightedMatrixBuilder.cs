@@ -1,9 +1,9 @@
-﻿using System;
+﻿using SharedClustering.Core;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SharedClustering.Core;
 
 namespace SharedClustering.HierarchicalClustering.MatrixBuilders
 {
