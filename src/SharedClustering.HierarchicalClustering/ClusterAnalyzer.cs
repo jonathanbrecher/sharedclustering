@@ -9,6 +9,7 @@ namespace SharedClustering.HierarchicalClustering
         public IReadOnlyCollection<ClusterNode> Nodes { get; }
         public IReadOnlyDictionary<int, IClusterableMatch> MatchesByIndex { get; }
         public List<LeafNode> LeafNodes { get; }
+        public Dictionary<int, int> LeafNodeIndexes { get; }
         public List<IClusterableMatch> Matches { get; }
         public List<IClusterableMatch> NonDistantMatches { get; }
         public List<int> OrderedIndexes { get; }
@@ -31,6 +32,7 @@ namespace SharedClustering.HierarchicalClustering
 
             // All nodes, in order. These will become rows/columns in the Excel file.
             LeafNodes = nodes.First().GetOrderedLeafNodes().ToList();
+            LeafNodeIndexes = LeafNodes.Select((leafNode, index) => (leafNode, index)).ToDictionary(pair => pair.leafNode.Index, pair => pair.index);
 
             (Matches, NonDistantMatches) = GetMatchesAndNonDistantMatches(LeafNodes, matchesByIndex, lowestClusterableCentimorgans);
 
@@ -48,12 +50,13 @@ namespace SharedClustering.HierarchicalClustering
             // Identify which matches are members of which clusters.
             // Since clusters can overlap, one match can be a member of more than one cluster.
             Clusters = _clusterFinder.GetClusters(LeafNodes, NonDistantMatches, ImmediateFamilyIndexes).ToList();
-            var leafNodeIndexes = LeafNodes.Select((leafNode, index) => (leafNode, index)).ToDictionary(pair => pair.leafNode.Index, pair => pair.index);
             IndexClusterNumbers = Clusters
-                .SelectMany((cluster, clusterIndex) => Enumerable.Range(cluster.Start, cluster.End - cluster.Start + 1).Select(i => (LeafNodeIndex: LeafNodes[i].Index, ClusterIndex: clusterIndex + 1)))
+                .SelectMany((cluster, clusterIndex) => Enumerable.Range(cluster.Start, cluster.End - cluster.Start + 1).Select(i => (LeafNodeIndex: NonDistantMatches[i].Index, ClusterIndex: clusterIndex + 1)))
                 .GroupBy(pair => pair.LeafNodeIndex, pair => pair.ClusterIndex)
                 .ToDictionary(g => g.Key, g => g.ToList());
         }
+
+        public int RowNbrFromColumnNbr(int columnNbr) => LeafNodeIndexes[NonDistantMatches[columnNbr].Index];
 
         private (List<IClusterableMatch> matches, List<IClusterableMatch> nonDistantMatches) GetMatchesAndNonDistantMatches(
             List<LeafNode> leafNodes,

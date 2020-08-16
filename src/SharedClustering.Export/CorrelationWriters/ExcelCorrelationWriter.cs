@@ -233,14 +233,13 @@ namespace SharedClustering.Export.CorrelationWriters
                     threeColorScale.HighValue.Color = Color.DarkRed;
 
                     // Add borders around clusters
-                    var leafNodeIndexes = clusterAnalyzer.LeafNodes.Select((leafNode, index) => (leafNode, index)).ToDictionary(pair => pair.leafNode.Index, pair => pair.index);
                     foreach (var (start, end) in clusterAnalyzer.Clusters)
                     {
                         AddBorder(ws,
                             left: firstMatrixDataColumn + start,
-                            top: firstMatrixDataRow + leafNodeIndexes[clusterAnalyzer.NonDistantMatches[start].Index],
+                            top: firstMatrixDataRow + clusterAnalyzer.RowNbrFromColumnNbr(start),
                             right: firstMatrixDataColumn + end,
-                            bottom: firstMatrixDataRow + leafNodeIndexes[clusterAnalyzer.NonDistantMatches[end].Index],
+                            bottom: firstMatrixDataRow + clusterAnalyzer.RowNbrFromColumnNbr(end),
                             Color.MidnightBlue
                         );
                     }
