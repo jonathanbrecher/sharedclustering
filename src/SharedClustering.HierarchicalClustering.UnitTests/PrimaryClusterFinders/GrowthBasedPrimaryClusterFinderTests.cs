@@ -142,6 +142,29 @@ namespace SharedClustering.HierarchicalClustering.UnitTests
         }
 
         [TestMethod]
+        public void BackingUp_BacksUpFarEnough()
+        {
+            var matrix = Convert(new[]
+            {
+                1,1,0,0,1,1,1,0,0,0,0,0,
+                1,1,1,1,1,1,1,0,0,0,0,0,
+                0,1,1,1,1,1,1,0,0,1,1,0,
+                0,1,1,1,1,1,1,1,1,0,1,0,
+                1,1,1,1,1,1,1,1,1,1,1,1,
+                1,1,1,1,1,1,1,1,1,1,1,0,
+                1,1,1,1,1,1,1,1,1,1,0,0,
+                0,0,0,1,1,1,1,1,1,1,0,0,
+                0,0,0,1,1,1,1,1,1,1,1,1,
+                0,0,1,1,1,1,1,1,1,1,1,0,
+                0,0,1,1,1,1,0,0,1,1,1,1,
+                0,0,0,0,1,1,0,0,1,0,1,1,
+            }, 12);
+
+            var clusters = new MatchMatrix(matrix, 3).GetClusters().ToList();
+            CollectionAssert.AreEqual(new[] { (0, 6), (2, 9), (8, 11) }, clusters);
+        }
+
+        [TestMethod]
         public void BackingUp_DoesntBackUpTooFar2()
         {
             var matrix = Convert(new[]
@@ -182,7 +205,7 @@ namespace SharedClustering.HierarchicalClustering.UnitTests
             }, 33);
 
             var clusters = new MatchMatrix(matrix, 3).GetClusters().ToList();
-            CollectionAssert.AreEqual(new[] { (0, 9), (4, 23), (22, 32) }, clusters);
+            CollectionAssert.AreEqual(new[] { (0, 8), (4, 23), (22, 32) }, clusters);
         }
 
         [TestMethod]

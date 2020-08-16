@@ -54,7 +54,10 @@ namespace SharedClustering.HierarchicalClustering.PrimaryClusterFinders
                             && IsValidRangeExtendingUpward(altRange))
                         {
                             range = altRange;
-                            break;
+                            if (range.End <= nextIndexToCluster + 1)
+                            {
+                                break;
+                            }
                         }
                         else
                         {
