@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Match = SharedClustering.Core.Match;
 
 namespace SharedClustering.SavedData
 {
@@ -67,27 +69,30 @@ namespace SharedClustering.SavedData
                     {
                         var nameColumn = 0;
                         var identifierColumn = 0;
+                        var linkColumn = 0;
                         var totalSharedCmColumn = 0;
                         var totalSharedSegmentsColumn = 0;
                         var treeTypeColumn = 0;
                         var treeSizeColumn = 0;
                         var commonAncestorsColumn = 0;
+                        var starredColumn = 0;
                         var notesColumn = 0;
                         var firstMatchFieldIndex = 0;
                         var lastMatchFieldIndex = 0;
 
-                        var tagColumns = new Dictionary<int, Tag>();
-                        foreach (var cf in ws.ConditionalFormatting)
-                        {
-                            if (cf.Address.Start.Column == cf.Address.End.Column && cf.Style.Fill.BackgroundColor.Color != null)
-                            {
-                                tagColumns[cf.Address.Start.Column] = new Tag
+                        var tagColumns = ws.ConditionalFormatting
+                            .Where(cf => cf.Address.Start.Column == cf.Address.End.Column && cf.Style.Fill.BackgroundColor.Color != null)
+                            .GroupBy(cf => cf.Address.Start.Column)
+                            .Select((g, index) =>
+                            (
+                                Column: g.Key,
+                                Tag: new Tag
                                 {
-                                    TagId = tagColumns.Count + 1001,
-                                    Color = ColorTranslator.ToHtml(cf.Style.Fill.BackgroundColor.Color.Value),
-                                };
-                            }
-                        }
+                                    TagId = index + 1001,
+                                    Color = ColorTranslator.ToHtml(g.First().Style.Fill.BackgroundColor.Color.Value),
+                                }
+                            ))
+                            .ToDictionary(pair => pair.Column, pair => pair.Tag);
 
                         var firstNameCellValue = "";
 
@@ -109,6 +114,10 @@ namespace SharedClustering.SavedData
                             {
                                 identifierColumn = col;
                             }
+                            else if (cellValue.Equals("Link", StringComparison.OrdinalIgnoreCase))
+                            {
+                                linkColumn = col;
+                            }
                             else if (cellValue.Equals("Shared Centimorgans", StringComparison.OrdinalIgnoreCase))
                             {
                                 totalSharedCmColumn = col;
@@ -128,6 +137,10 @@ namespace SharedClustering.SavedData
                             else if (cellValue.Equals("Common Ancestors", StringComparison.OrdinalIgnoreCase))
                             {
                                 commonAncestorsColumn = col;
+                            }
+                            else if (cellValue.Equals("Starred", StringComparison.OrdinalIgnoreCase))
+                            {
+                                starredColumn = col;
                             }
                             else if (tagColumns.TryGetValue(col, out var tag))
                             {
@@ -205,6 +218,12 @@ namespace SharedClustering.SavedData
                             {
                                 resultMatch.TestGuid = ws.Cells[row, identifierColumn].GetValue<string>();
                             }
+                            if (linkColumn != 0 && serialized.TestTakerTestId == null)
+                            {
+                                var hyperlink = ws.Cells[row, linkColumn].Hyperlink?.ToString();
+                                var regexMatch = hyperlink == null ? null : Regex.Match(hyperlink, "/(?<guid>[a-zA-z0-9-]*)/with/", RegexOptions.Compiled);
+                                serialized.TestTakerTestId = regexMatch?.Success == true ? regexMatch.Groups["guid"].Value : null;
+                            }
                             if (string.IsNullOrEmpty(resultMatch.TestGuid))
                             {
                                 resultMatch.TestGuid = $"row_{row}";
@@ -249,6 +268,10 @@ namespace SharedClustering.SavedData
                             if (commonAncestorsColumn != 0)
                             {
                                 resultMatch.CommonAncestors = ws.Cells[row, commonAncestorsColumn].GetValue<string>()?.Split(',').Select(name => name.Trim()).ToList();
+                            }
+                            if (starredColumn != 0)
+                            {
+                                resultMatch.Starred = ws.Cells[row, starredColumn].GetValue<string>() == "*";
                             }
                             if (tagColumns.Count > 0)
                             {
