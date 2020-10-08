@@ -57,6 +57,32 @@ namespace SharedClustering.SavedData
             return (serialized, null);
         }
 
+        private static HashSet<string> _sharedCentimorganColumnNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Shared Centimorgans",
+            "hared Centimorgans",
+            "Sared Centimorgans",
+            "Shred Centimorgans",
+            "Shaed Centimorgans",
+            "Shard Centimorgans",
+            "Share Centimorgans",
+            "SharedCentimorgans",
+            "Shared entimorgans",
+            "Shared Cntimorgans",
+            "Shared Cetimorgans",
+            "Shared Cenimorgans",
+            "Shared Centmorgans",
+            "Shared Centiorgans",
+            "Shared Centimrgans",
+            "Shared Centimogans",
+            "Shared Centimorans",
+            "Shared Centimorgns",
+            "Shared Centimorgas",
+            "Shared Centimorgan",
+            "Shared cM",
+            "Shared cMs",
+        };
+
         private static void ReadMatchFile(Serialized serialized, string matchFile, IProgressData progressData)
         {
             using (var fileStream = new FileStream(matchFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -100,7 +126,7 @@ namespace SharedClustering.SavedData
                         for (var col = 1; col < 1000; ++col)
                         {
                             var cell = ws.Cells[1, col];
-                            var cellValue = cell.GetValue<string>();
+                            var cellValue = cell.GetValue<string>()?.Trim();
                             if (cellValue == null)
                             {
                                 break;
@@ -118,7 +144,7 @@ namespace SharedClustering.SavedData
                             {
                                 linkColumn = col;
                             }
-                            else if (cellValue.Equals("Shared Centimorgans", StringComparison.OrdinalIgnoreCase))
+                            else if (_sharedCentimorganColumnNames.Contains(cellValue))
                             {
                                 totalSharedCmColumn = col;
                             }
@@ -164,7 +190,7 @@ namespace SharedClustering.SavedData
                             throw new Exception("Could not find either a Name column or a Shared Centimorgans column.");
                         }
 
-                        if (totalSharedCmColumn == 0 && firstMatchFieldIndex == 0)
+                        if (totalSharedCmColumn == 0)
                         {
                             throw new Exception("Could not find a Shared Centimorgans column.");
                         }
@@ -306,7 +332,7 @@ namespace SharedClustering.SavedData
                                     }
                                     catch
                                     {
-                                        value = string.IsNullOrEmpty(ws.Cells[row, col].GetValue<string>()) ? 0.0 : 1.0;
+                                        value = string.IsNullOrWhiteSpace(ws.Cells[row, col].GetValue<string>()) ? 0.0 : 1.0;
                                     }
                                     return (Index: index, Value: value);
                                 })
