@@ -60,7 +60,7 @@ namespace SharedClustering.SavedData
             using (var package = new ExcelPackage(fileStream))
             {
                 var numWorksheets = package.Workbook.Worksheets.Count;
-                for (var worksheetNumber = 1; worksheetNumber <= numWorksheets; ++worksheetNumber)
+                for (var worksheetNumber = 1; worksheetNumber <= numWorksheets && serialized.Matches.Count == 0; ++worksheetNumber)
                 { 
                     using (var ws = package.Workbook.Worksheets[worksheetNumber])
                     {
@@ -190,6 +190,15 @@ namespace SharedClustering.SavedData
                                 }
                                 catch
                                 {
+                                    try
+                                    {
+                                        // FTDNA format
+                                        resultMatch.TestGuid = ws.Cells[row, identifierColumn].GetValue<string>();
+                                        resultMatch.MatchTestDisplayName = ws.Cells[row, hyperlinkColumn].GetValue<string>();
+                                    }
+                                    catch
+                                    {
+                                    }
                                 }
                             }
                             if (totalSharedCmColumn != 0)

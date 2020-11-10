@@ -16,7 +16,7 @@ namespace SharedClustering.Export.ColumnWriters
             _writers = writers;
 
             const string hyperlinkStyleName = "HyperLink";  // Language-dependent
-            if (!string.IsNullOrEmpty(testTakerTestId) && !p.Workbook.Styles.NamedStyles.Any(style => style.Name == hyperlinkStyleName))
+            if (!p.Workbook.Styles.NamedStyles.Any(style => style.Name == hyperlinkStyleName))
             {
                 // Google Sheets does not support HyperlinkBase
                 // p.Workbook.Properties.HyperlinkBase = new Uri($"https://www.ancestry.com/dna/tests/{_testTakerTestId}/match/");
