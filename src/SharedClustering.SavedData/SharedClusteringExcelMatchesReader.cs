@@ -226,6 +226,8 @@ namespace SharedClustering.SavedData
                             throw new Exception("No rows found.");
                         }
 
+                        var matchesAreSquare = lastMatchFieldIndex - firstMatchFieldIndex + 1 == maxRow - 1;
+
                         progressData.Reset("Loading data.", maxRow - 1);
 
                         var clusteredIndexes = new List<int>();
@@ -342,9 +344,14 @@ namespace SharedClustering.SavedData
 
                             var icw = columnValues.Where(pair => pair.Value >= 1).Select(pair => pair.Index).ToList();
 
-                            // A self-match should be exactly 2.00 but leave a bit of room for rounding.
                             if (columnValues.Any(pair => pair.Value > 1.95))
                             {
+                                // A self-match should be exactly 2.00 but leave a bit of room for rounding.
+                                clusteredIndexes.Add(matchIndex);
+                            }
+                            else if(matchesAreSquare)
+                            {
+                                // If the matches are square -- same number of rows and columns -- assume that every match is a self-natch on the diagonal
                                 clusteredIndexes.Add(matchIndex);
                             }
 
